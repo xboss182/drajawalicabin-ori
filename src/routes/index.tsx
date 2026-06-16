@@ -185,7 +185,7 @@ function AvailabilitySearch() {
     <section id="book" className="relative z-20 -mt-24 px-6 lg:px-10">
       <form
         onSubmit={submit}
-        className="mx-auto grid max-w-6xl grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-2xl shadow-forest/20 md:grid-cols-[1fr_1fr_1fr_1fr_auto]"
+        className="mx-auto grid max-w-6xl grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-2xl shadow-forest/20 md:grid-cols-[1fr_1fr_0.7fr_1fr_auto]"
       >
         <Field label="Check-in" type="date" value={checkin} min={today} onChange={setCheckin} />
         <Field label="Check-out" type="date" value={checkout} min={checkin} onChange={setCheckout} />
@@ -203,9 +203,9 @@ function AvailabilitySearch() {
         />
         <button
           type="submit"
-          className="bg-forest px-8 py-6 text-sm font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90"
+          className="whitespace-nowrap bg-forest px-8 py-6 text-sm font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90"
         >
-          Search availability
+          Search
         </button>
       </form>
       <p className="mx-auto mt-3 max-w-6xl text-center text-xs text-stone">
