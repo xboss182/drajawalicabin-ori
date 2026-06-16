@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinsExterior from "@/assets/cabins-exterior.jpg";
@@ -174,11 +174,14 @@ function AvailabilitySearch() {
   const [checkout, setCheckout] = useState(tomorrow);
   const [guests, setGuests] = useState("2");
   const [room, setRoom] = useState("Any cabin");
+  const navigate = useNavigate();
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const msg = `Hi Rajawali D'Cabin! I'd like to check availability.%0A%0ACheck-in: ${checkin}%0ACheck-out: ${checkout}%0AGuests: ${guests}%0ARoom type: ${room}`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
+    navigate({
+      to: "/book",
+      search: { checkin, checkout, guests, room },
+    });
   }
 
   return (
@@ -209,7 +212,7 @@ function AvailabilitySearch() {
         </button>
       </form>
       <p className="mx-auto mt-3 max-w-6xl text-center text-xs text-stone">
-        Real-time availability coming soon. For now, our team confirms your dates personally via WhatsApp — usually within minutes.
+        We'll take your details on the next step. Your dates are personally confirmed — usually within a few hours.
       </p>
     </section>
   );
