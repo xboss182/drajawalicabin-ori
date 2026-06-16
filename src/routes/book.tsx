@@ -1,7 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { supabase } from "@/integrations/supabase/client";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 
@@ -10,15 +9,23 @@ const ROOMS = ["Any cabin", "Deluxe Queen", "Deluxe Twin", "Family Suite", "Trip
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
-const searchSchema = z.object({
-  checkin: fallback(z.string(), today()).default(today()),
-  checkout: fallback(z.string(), tomorrow()).default(tomorrow()),
-  guests: fallback(z.string(), "2").default("2"),
-  room: fallback(z.enum(ROOMS), "Any cabin").default("Any cabin"),
-});
+type BookSearch = {
+  checkin: string;
+  checkout: string;
+  guests: string;
+  room: string;
+};
 
 export const Route = createFileRoute("/book")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (raw: Record<string, unknown>): BookSearch => ({
+    checkin: typeof raw.checkin === "string" ? raw.checkin : today(),
+    checkout: typeof raw.checkout === "string" ? raw.checkout : tomorrow(),
+    guests: typeof raw.guests === "string" ? raw.guests : "2",
+    room:
+      typeof raw.room === "string" && (ROOMS as readonly string[]).includes(raw.room)
+        ? raw.room
+        : "Any cabin",
+  }),
   head: () => ({
     meta: [
       { title: "Book your stay — Rajawali D'Cabin Chalet" },
@@ -31,7 +38,6 @@ export const Route = createFileRoute("/book")({
 
 function BookPage() {
   const search = Route.useSearch();
-  const navigate = useNavigate({ from: "/book" });
 
   const [checkin, setCheckin] = useState(search.checkin);
   const [checkout, setCheckout] = useState(search.checkout);
@@ -141,10 +147,10 @@ function BookPage() {
           </h1>
 
           <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-            <Field label="Check-in" type="date" value={checkin} min={today()} onChange={(v) => { setCheckin(v); navigate({ search: (p) => ({ ...p, checkin: v }), replace: true }); }} />
-            <Field label="Check-out" type="date" value={checkout} min={checkin} onChange={(v) => { setCheckout(v); navigate({ search: (p) => ({ ...p, checkout: v }), replace: true }); }} />
-            <Select label="Guests" value={guests} onChange={(v) => { setGuests(v); navigate({ search: (p) => ({ ...p, guests: v }), replace: true }); }} options={["1","2","3","4","5","6+"]} />
-            <Select label="Cabin" value={room} onChange={(v) => { setRoom(v); navigate({ search: (p) => ({ ...p, room: v as typeof ROOMS[number] }), replace: true }); }} options={[...ROOMS]} />
+            <Field label="Check-in" type="date" value={checkin} min={today()} onChange={setCheckin} />
+            <Field label="Check-out" type="date" value={checkout} min={checkin} onChange={setCheckout} />
+            <Select label="Guests" value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
+            <Select label="Cabin" value={room} onChange={setRoom} options={[...ROOMS]} />
           </div>
 
           <p className="mt-8 mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">Step 2 — Your details</p>
