@@ -31,13 +31,17 @@ export type Database = {
           id: string
           nights: number | null
           notes: string | null
+          num_rooms: number | null
           payment_proof_path: string | null
           payment_reference: string | null
           phone: string
+          relationship: string | null
           room_type: string
           status: Database["public"]["Enums"]["booking_status"]
           subtotal: number | null
           total_amount: number | null
+          vehicle_number: string | null
+          vehicle_type: string | null
         }
         Insert: {
           cabin_id?: string | null
@@ -55,13 +59,17 @@ export type Database = {
           id?: string
           nights?: number | null
           notes?: string | null
+          num_rooms?: number | null
           payment_proof_path?: string | null
           payment_reference?: string | null
           phone: string
+          relationship?: string | null
           room_type: string
           status?: Database["public"]["Enums"]["booking_status"]
           subtotal?: number | null
           total_amount?: number | null
+          vehicle_number?: string | null
+          vehicle_type?: string | null
         }
         Update: {
           cabin_id?: string | null
@@ -79,13 +87,17 @@ export type Database = {
           id?: string
           nights?: number | null
           notes?: string | null
+          num_rooms?: number | null
           payment_proof_path?: string | null
           payment_reference?: string | null
           phone?: string
+          relationship?: string | null
           room_type?: string
           status?: Database["public"]["Enums"]["booking_status"]
           subtotal?: number | null
           total_amount?: number | null
+          vehicle_number?: string | null
+          vehicle_type?: string | null
         }
         Relationships: [
           {

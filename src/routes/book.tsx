@@ -8,9 +8,13 @@ import {
   getTakenDates,
 } from "@/lib/booking.functions";
 import heroRiverside from "@/assets/hero-riverside.jpg";
+import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+
+const todayStr = today();
+const tomorrowStr = tomorrow();
 
 type Cabin = {
   id: string;
@@ -24,15 +28,15 @@ type Cabin = {
 
 export const Route = createFileRoute("/book")({
   validateSearch: (raw: Record<string, unknown>) => ({
-    checkin: typeof raw.checkin === "string" ? raw.checkin : today(),
-    checkout: typeof raw.checkout === "string" ? raw.checkout : tomorrow(),
+    checkin: typeof raw.checkin === "string" ? raw.checkin : todayStr,
+    checkout: typeof raw.checkout === "string" ? raw.checkout : tomorrowStr,
     guests: typeof raw.guests === "string" ? raw.guests : "2",
     room: typeof raw.room === "string" ? raw.room : "",
   }),
   head: () => ({
     meta: [
-      { title: "Book your stay — Rajawali D'Cabin Chalet" },
-      { name: "description", content: "Reserve a cabin at Rajawali D'Cabin Chalet, Kuala Ibai. Only 8 cabins, personally hosted." },
+      { title: "Tempahan Bilik — Rajawali D'Cabin Chalet" },
+      { name: "description", content: "Tempah bilik di Rajawali D'Cabin Chalet, Kuala Terengganu. Hanya 8 bilik, diurus secara peribadi." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -49,11 +53,15 @@ function BookPage() {
   const [checkin, setCheckin] = useState(search.checkin);
   const [checkout, setCheckout] = useState(search.checkout);
   const [guests, setGuests] = useState(search.guests);
+  const [numRooms, setNumRooms] = useState("1");
   const [comforter, setComforter] = useState(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [relationship, setRelationship] = useState("");
+  const [vehicleType, setVehicleType] = useState("");
+  const [vehicleNumber, setVehicleNumber] = useState("");
   const [notes, setNotes] = useState("");
 
   const [price, setPrice] = useState<{ nights: number; subtotal: number; comforter_total: number; total: number } | null>(null);
@@ -77,7 +85,6 @@ function BookPage() {
         .order("display_order");
       const list = (data ?? []) as Cabin[];
       setCabins(list);
-      // pre-select based on ?room=
       const match = list.find((c) => c.name === search.room || c.cabin_type === search.room);
       setCabinId(match?.id ?? list[0]?.id ?? "");
     })();
@@ -107,7 +114,7 @@ function BookPage() {
     if (!cabinId) return;
     (async () => {
       try {
-        const from = today();
+        const from = todayStr;
         const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
         const r = await getTakenDates({ data: { cabinId, from, to } });
         setTaken(r.dates);
@@ -131,12 +138,12 @@ function BookPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!cabinId) return setError("Please select a cabin");
-    if (new Date(checkout) <= new Date(checkin)) return setError("Check-out must be after check-in");
-    if (datesOverlapTaken()) return setError("Some of those nights are already booked. Please pick different dates.");
-    if (name.trim().length < 2) return setError("Please enter your full name");
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError("Please enter a valid email");
-    if (phone.trim().length < 5) return setError("Please enter your phone/WhatsApp");
+    if (!cabinId) return setError("Sila pilih bilik");
+    if (new Date(checkout) <= new Date(checkin)) return setError("Tarikh check-out mesti selepas check-in");
+    if (datesOverlapTaken()) return setError("Bilik tidak tersedia pada tarikh tersebut. Sila pilih tarikh lain.");
+    if (name.trim().length < 2) return setError("Sila masukkan nama penuh");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError("Sila masukkan emel yang sah");
+    if (phone.trim().length < 5) return setError("Sila masukkan nombor telefon / WhatsApp");
 
     setSubmitting(true);
     try {
@@ -146,10 +153,14 @@ function BookPage() {
           checkIn: checkin,
           checkOut: checkout,
           guests: Number(guests.replace("+", "")) || 1,
+          numRooms: Number(numRooms) || 1,
           comforter,
           guestName: name.trim(),
           email: email.trim(),
           phone: phone.trim(),
+          relationship: relationship.trim() || undefined,
+          vehicleType: vehicleType.trim() || undefined,
+          vehicleNumber: vehicleNumber.trim() || undefined,
           notes: notes.trim() || undefined,
         },
       });
@@ -157,7 +168,7 @@ function BookPage() {
       setStep("payment");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Could not create booking");
+      setError(e instanceof Error ? e.message : "Gagal membuat tempahan");
     } finally {
       setSubmitting(false);
     }
@@ -180,7 +191,7 @@ function BookPage() {
       setStep("done");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setError(e instanceof Error ? e.message : "Muat naik gagal");
     } finally {
       setUploading(false);
     }
@@ -196,8 +207,10 @@ function BookPage() {
           {...{
             cabins, cabinId, setCabinId,
             checkin, setCheckin, checkout, setCheckout,
-            guests, setGuests, comforter, setComforter,
-            name, setName, email, setEmail, phone, setPhone, notes, setNotes,
+            guests, setGuests, numRooms, setNumRooms, comforter, setComforter,
+            name, setName, email, setEmail, phone, setPhone,
+            relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
+            notes, setNotes,
             price, selectedCabin, taken,
             submit, submitting, error,
           }}
@@ -230,10 +243,14 @@ function DetailsStep(props: {
   checkin: string; setCheckin: (s: string) => void;
   checkout: string; setCheckout: (s: string) => void;
   guests: string; setGuests: (s: string) => void;
+  numRooms: string; setNumRooms: (s: string) => void;
   comforter: boolean; setComforter: (b: boolean) => void;
   name: string; setName: (s: string) => void;
   email: string; setEmail: (s: string) => void;
   phone: string; setPhone: (s: string) => void;
+  relationship: string; setRelationship: (s: string) => void;
+  vehicleType: string; setVehicleType: (s: string) => void;
+  vehicleNumber: string; setVehicleNumber: (s: string) => void;
   notes: string; setNotes: (s: string) => void;
   price: { nights: number; subtotal: number; comforter_total: number; total: number } | null;
   selectedCabin?: Cabin;
@@ -244,26 +261,30 @@ function DetailsStep(props: {
 }) {
   const {
     cabins, cabinId, setCabinId, checkin, setCheckin, checkout, setCheckout,
-    guests, setGuests, comforter, setComforter,
-    name, setName, email, setEmail, phone, setPhone, notes, setNotes,
+    guests, setGuests, numRooms, setNumRooms, comforter, setComforter,
+    name, setName, email, setEmail, phone, setPhone,
+    relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
+    notes, setNotes,
     price, selectedCabin, taken, submit, submitting, error,
   } = props;
+
   return (
     <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
       <form onSubmit={submit} className="order-2 lg:order-1">
-        <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">Step 1 of 2 — Your stay</p>
-        <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">Reserve your cabin.</h1>
+        <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">Langkah 1 — Maklumat Penginapan</p>
+        <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">Tempahan Bilik.</h1>
 
         <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-          <Field label="Check-in" type="date" value={checkin} min={today()} onChange={setCheckin} />
-          <Field label="Check-out" type="date" value={checkout} min={checkin} onChange={setCheckout} />
-          <Select label="Guests" value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
-          <SelectCabin label="Cabin" value={cabinId} onChange={setCabinId} cabins={cabins} />
+          <Field label="Tarikh check in" type="date" value={checkin} min={todayStr} onChange={setCheckin} />
+          <Field label="Tarikh check out" type="date" value={checkout} min={checkin} onChange={setCheckout} />
+          <Select label="Bil Org @ pax" value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
+          <Select label="Bil bilik" value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
+          <SelectCabin label="Jenis Bilik" value={cabinId} onChange={setCabinId} cabins={cabins} />
         </div>
 
         {taken.length > 0 && (
           <p className="mt-3 text-xs text-stone">
-            Already booked for {selectedCabin?.name}:{" "}
+            Sudah ditempah untuk {selectedCabin?.name}:{" "}
             <span className="text-foreground/70">
               {taken.slice(0, 8).join(", ")}{taken.length > 8 ? "…" : ""}
             </span>
@@ -278,16 +299,24 @@ function DetailsStep(props: {
             className="h-4 w-4 accent-forest"
           />
           <span className="text-sm">
-            Add comforter set <span className="text-stone">(+RM20 / night)</span>
+            Tambah comforter set <span className="text-stone">(+RM20 / malam)</span>
           </span>
         </label>
 
-        <p className="mt-8 mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">Step 2 — Your details</p>
+        <p className="mt-8 mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">Langkah 2 — Butiran Peribadi</p>
         <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-          <Field label="Full name" type="text" value={name} onChange={setName} placeholder="Aisyah Rahman" required />
-          <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" required />
-          <Field label="Phone / WhatsApp" type="tel" value={phone} onChange={setPhone} placeholder="+60 11 5500 7204" required full />
-          <TextArea label="Notes (optional)" value={notes} onChange={setNotes} placeholder="Arrival time, special requests…" />
+          <Field label="Nama penuh" type="text" value={name} onChange={setName} placeholder="Aisyah Rahman" required />
+          <Field label="Emel" type="email" value={email} onChange={setEmail} placeholder="anda@contoh.com" required />
+          <Field label="No Telefon / WhatsApp" type="tel" value={phone} onChange={setPhone} placeholder="+60 11 5500 7204" required full />
+          <Field label="Hubungan" type="text" value={relationship} onChange={setRelationship} placeholder="Keluarga / Kawan / Rakan niaga" />
+          <Field label="Jenis Kenderaan" type="text" value={vehicleType} onChange={setVehicleType} placeholder="Kereta / Van / Motosikal" />
+          <Field label="No Kenderaan" type="text" value={vehicleNumber} onChange={setVehicleNumber} placeholder="ABC 1234" />
+          <TextArea label="Nota (pilihan)" value={notes} onChange={setNotes} placeholder="Masa ketibaan, permintaan khas…" />
+        </div>
+
+        <div className="mt-6 rounded-xl border border-dashed border-border bg-coconut px-5 py-4 text-sm text-stone">
+          <p><strong>No Bilik:</strong> Akan dimaklumkan selepas pengesahan tempahan</p>
+          <p className="mt-1"><strong>No Tempahan:</strong> Akan dimaklumkan selepas bayaran deposit</p>
         </div>
 
         {error && (
@@ -299,10 +328,10 @@ function DetailsStep(props: {
           disabled={submitting}
           className="mt-8 w-full rounded-full bg-forest px-7 py-4 text-sm font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90 disabled:opacity-60 sm:w-auto"
         >
-          {submitting ? "Holding your dates…" : "Continue to payment"}
+          {submitting ? "Memegang tarikh anda…" : "Teruskan ke pembayaran"}
         </button>
         <p className="mt-4 text-xs text-stone">
-          Your dates are held for 30 minutes while you complete payment.
+          Tarikh anda dipegang selama 30 minit sementara anda menyelesaikan pembayaran.
         </p>
       </form>
 
@@ -310,23 +339,24 @@ function DetailsStep(props: {
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <img src={heroRiverside} alt="Rajawali D'Cabin riverside" className="aspect-[4/3] w-full object-cover" />
           <div className="p-6">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Your stay</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Maklumat Penginapan</p>
             <h2 className="mt-2 font-display text-2xl text-forest">
-              {selectedCabin?.name ?? "Select a cabin"}
+              {selectedCabin?.name ?? "Pilih bilik"}
             </h2>
             {selectedCabin && (
               <p className="mt-1 text-sm text-stone">
-                Sleeps up to {selectedCabin.capacity} · RM{selectedCabin.weekday_rate}–{selectedCabin.school_holiday_rate}/night
+                Muat {selectedCabin.capacity} orang · RM{selectedCabin.weekday_rate}–{selectedCabin.school_holiday_rate}/malam
               </p>
             )}
             <dl className="mt-6 divide-y divide-border text-sm">
               <Row label="Check-in" value={fmt(checkin)} />
               <Row label="Check-out" value={fmt(checkout)} />
-              <Row label="Nights" value={String(price?.nights ?? "—")} />
-              <Row label="Guests" value={guests} />
+              <Row label="Bil malam" value={String(price?.nights ?? "—")} />
+              <Row label="Bil Org @ pax" value={guests} />
+              <Row label="Bil bilik" value={numRooms} />
               {price && (
                 <>
-                  <Row label="Room subtotal" value={`RM ${price.subtotal.toFixed(2)}`} />
+                  <Row label="Jumlah bilik" value={`RM ${price.subtotal.toFixed(2)}`} />
                   {price.comforter_total > 0 && (
                     <Row label="Comforter" value={`RM ${price.comforter_total.toFixed(2)}`} />
                   )}
@@ -335,12 +365,12 @@ function DetailsStep(props: {
             </dl>
             {price && (
               <div className="mt-4 flex items-baseline justify-between rounded-xl bg-coconut px-4 py-3">
-                <span className="text-xs uppercase tracking-widest text-stone">Total</span>
+                <span className="text-xs uppercase tracking-widest text-stone">Jumlah</span>
                 <span className="font-display text-2xl text-forest">RM {price.total.toFixed(2)}</span>
               </div>
             )}
             <p className="mt-4 text-xs text-stone">
-              Pricing varies by weekday, weekend & school holiday.
+              Harga berbeza mengikut hari biasa, hujung minggu & cuti sekolah.
             </p>
           </div>
         </div>
@@ -374,7 +404,7 @@ function PaymentStep({
 
   const acctNum = "8600095810";
   const acctName = "Mohd Fauzi Awang";
-  const bank = "CIMB Islamic (Current Account)";
+  const bank = "CIMB Islamic (Akaun Semasa)";
 
   function copy(text: string) {
     navigator.clipboard.writeText(text);
@@ -382,64 +412,74 @@ function PaymentStep({
 
   return (
     <section className="mx-auto max-w-3xl px-6 py-16 lg:px-10 lg:py-20">
-      <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Step 2 of 2 — Payment</p>
-      <h1 className="mt-2 font-display text-4xl text-forest">Pay directly to the owner.</h1>
+      <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Langkah 2 — Pembayaran</p>
+      <h1 className="mt-2 font-display text-4xl text-forest">Bayar terus ke pemilik.</h1>
       <p className="mt-3 text-foreground/75">
-        Your booking is held for{" "}
+        Tempahan anda dipegang selama{" "}
         <span className={`font-medium ${remaining < 5 * 60000 ? "text-red-700" : "text-forest"}`}>
           {mm}:{ss}
         </span>
-        . Transfer the full amount and upload your receipt below — we'll confirm on WhatsApp.
+        . Pindahkan jumlah penuh dan muat naik resit di bawah — kami akan sahkan melalui WhatsApp.
       </p>
 
       <div className="mt-8 rounded-2xl border border-border bg-card p-6">
         <div className="flex items-baseline justify-between">
           <div>
-            <p className="text-xs uppercase tracking-widest text-stone">Total to pay</p>
+            <p className="text-xs uppercase tracking-widest text-stone">Jumlah perlu bayar</p>
             <p className="font-display text-4xl text-forest">RM {booking.total.toFixed(2)}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs uppercase tracking-widest text-stone">Reference</p>
+            <p className="text-xs uppercase tracking-widest text-stone">No Rujukan</p>
             <p className="font-mono text-lg text-forest">{booking.reference}</p>
           </div>
         </div>
         <p className="mt-3 text-xs text-stone">
-          Please include the reference <strong>{booking.reference}</strong> in your transfer remark so we can match it quickly.
+          Sila sertakan rujukan <strong>{booking.reference}</strong> dalam catatan pemindahan untuk kami sahkan dengan cepat.
         </p>
+
+        <div className="mt-4 rounded-xl border border-dashed border-border bg-coconut px-5 py-4 text-sm text-stone">
+          <p><strong>No Bilik:</strong> Akan dimaklumkan selepas pengesahan tempahan</p>
+          <p className="mt-1"><strong>No Tempahan:</strong> Akan dimaklumkan selepas bayaran deposit</p>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-6">
-          <p className="text-xs uppercase tracking-widest text-stone">Bank transfer / DuitNow</p>
+          <p className="text-xs uppercase tracking-widest text-stone">Pemindahan bank / DuitNow</p>
           <p className="mt-2 font-display text-xl text-forest">{bank}</p>
           <dl className="mt-4 space-y-2 text-sm">
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-stone">Account no.</dt>
+              <dt className="text-stone">No Akaun</dt>
               <dd className="flex items-center gap-2">
                 <span className="font-mono">{acctNum}</span>
-                <button onClick={() => copy(acctNum)} className="text-[10px] uppercase tracking-widest text-forest hover:underline">Copy</button>
+                <button onClick={() => copy(acctNum)} className="text-[10px] uppercase tracking-widest text-forest hover:underline">Salin</button>
               </dd>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-stone">Account name</dt>
+              <dt className="text-stone">Nama Akaun</dt>
               <dd>{acctName}</dd>
             </div>
           </dl>
         </div>
         <div className="rounded-2xl border border-border bg-card p-6">
-          <p className="text-xs uppercase tracking-widest text-stone">E-wallet QR</p>
-          <p className="mt-2 font-display text-xl text-forest">DuitNow / TnG QR</p>
-          <div className="mt-4 flex aspect-square w-full items-center justify-center rounded-xl border border-dashed border-border bg-coconut text-center text-xs text-stone">
-            QR image placeholder<br/>(owner can upload via admin later)
+          <p className="text-xs uppercase tracking-widest text-stone">QR DuitNow</p>
+          <p className="mt-2 font-display text-xl text-forest">Imbas & Bayar</p>
+          <div className="mt-4 flex aspect-square w-full items-center justify-center rounded-xl border border-border bg-coconut overflow-hidden">
+            <img
+              src={duitnowQrAsset.url}
+              alt="DuitNow QR Code - Mohd Fauzi Bin Awang, CIMB"
+              className="h-full w-full object-contain"
+            />
           </div>
+          <p className="mt-3 text-center text-xs text-stone">{acctName}</p>
         </div>
       </div>
 
       <div className="mt-8 rounded-2xl border border-border bg-card p-6">
-        <p className="text-xs uppercase tracking-widest text-stone">Step 3 — Upload payment proof</p>
-        <h2 className="mt-2 font-display text-xl text-forest">Attach your receipt</h2>
+        <p className="text-xs uppercase tracking-widest text-stone">Langkah 3 — Muat naik bukti pembayaran</p>
+        <h2 className="mt-2 font-display text-xl text-forest">Lampirkan resit anda</h2>
         <p className="mt-1 text-sm text-foreground/70">
-          Screenshot of the transfer or e-wallet receipt. JPG / PNG / PDF, max ~5MB.
+          Screenshot pemindahan atau resit e-wallet. JPG / PNG / PDF, maks ~5MB.
         </p>
         <input
           type="file"
@@ -455,12 +495,12 @@ function PaymentStep({
           disabled={!proofFile || uploading}
           className="mt-5 rounded-full bg-forest px-7 py-3.5 text-sm font-medium uppercase tracking-widest text-coconut hover:bg-forest/90 disabled:opacity-60"
         >
-          {uploading ? "Uploading…" : "Submit payment proof"}
+          {uploading ? "Sedang muat naik…" : "Hantar bukti pembayaran"}
         </button>
       </div>
 
       <p className="mt-6 text-xs text-stone">
-        Booking summary: {name}, {cabinName}, {checkin} → {checkout}
+        Ringkasan tempahan: {name}, {cabinName}, {checkin} → {checkout}
       </p>
     </section>
   );
@@ -470,27 +510,27 @@ function PaymentStep({
 function DoneStep({ name, email, reference }: { name: string; email: string; reference: string }) {
   return (
     <section className="mx-auto max-w-2xl px-6 py-24 text-center lg:px-10">
-      <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-stone">Proof received</p>
+      <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-stone">Bukti diterima</p>
       <h1 className="font-display text-4xl leading-tight sm:text-5xl">
         Terima kasih, {name.split(" ")[0]}.
       </h1>
       <p className="mt-6 text-foreground/75">
-        We've received your payment proof for reference{" "}
-        <span className="font-mono text-forest">{reference}</span>. The owner will verify the transfer and confirm your booking by WhatsApp / email at{" "}
-        <span className="text-forest">{email}</span> — usually within a few hours.
+        Kami telah menerima bukti pembayaran anda untuk rujukan{" "}
+        <span className="font-mono text-forest">{reference}</span>. Pemilik akan sahkan pemindahan dan memaklumkan nombor bilik serta nombor tempahan anda melalui WhatsApp / emel di{" "}
+        <span className="text-forest">{email}</span> — biasanya dalam masa beberapa jam.
       </p>
       <div className="mt-10 flex flex-wrap justify-center gap-4">
         <a
           href={`https://wa.me/60115007204?text=${encodeURIComponent(
-            `Hi! I just uploaded payment proof for booking ${reference} under ${name}.`,
+            `Assalamualaikum! Saya baru muat naik bukti bayaran untuk tempahan ${reference} atas nama ${name}.`,
           )}`}
           target="_blank"
           rel="noreferrer"
           className="rounded-full bg-forest px-7 py-3.5 text-sm font-medium text-coconut hover:bg-forest/90"
         >
-          Message us on WhatsApp
+          Mesej kami di WhatsApp
         </a>
-        <Link to="/" className="rounded-full border border-border px-7 py-3.5 text-sm">Back to home</Link>
+        <Link to="/" className="rounded-full border border-border px-7 py-3.5 text-sm">Kembali ke laman utama</Link>
       </div>
     </section>
   );
@@ -502,7 +542,7 @@ function BookHeader() {
     <header className="border-b border-border bg-coconut">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
         <Link to="/" className="font-display text-lg text-forest">Rajawali D'Cabin</Link>
-        <Link to="/" className="text-xs uppercase tracking-widest text-stone hover:text-forest">← Back</Link>
+        <Link to="/" className="text-xs uppercase tracking-widest text-stone hover:text-forest">← Kembali</Link>
       </div>
     </header>
   );
@@ -553,9 +593,9 @@ function SelectCabin({ label, value, onChange, cabins }: { label: string; value:
       <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)}
         className="appearance-none bg-transparent text-base text-foreground outline-none">
-        {cabins.length === 0 && <option>Loading…</option>}
+        {cabins.length === 0 && <option>Memuatkan…</option>}
         {cabins.map((c) => (
-          <option key={c.id} value={c.id}>{c.name} · sleeps {c.capacity}</option>
+          <option key={c.id} value={c.id}>{c.name} · muat {c.capacity} orang</option>
         ))}
       </select>
     </label>
@@ -573,7 +613,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 function fmt(iso: string) {
   try {
-    return new Date(iso).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    return new Date(iso).toLocaleDateString("ms-MY", { weekday: "short", month: "short", day: "numeric" });
   } catch {
     return iso;
   }
