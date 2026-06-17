@@ -9,6 +9,7 @@ import {
 } from "@/lib/booking.functions";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
+import { LanguageToggle, useLanguage } from "@/lib/i18n";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -35,8 +36,8 @@ export const Route = createFileRoute("/book")({
   }),
   head: () => ({
     meta: [
-      { title: "Tempahan Bilik — Rajawali D'Cabin Chalet" },
-      { name: "description", content: "Tempah bilik di Rajawali D'Cabin Chalet, Kuala Terengganu. Hanya 8 bilik, diurus secara peribadi." },
+      { title: "Room Booking — Rajawali D'Cabin Chalet" },
+      { name: "description", content: "Book a cabin at Rajawali D'Cabin Chalet, Kuala Terengganu." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -47,6 +48,8 @@ type Step = "details" | "payment" | "done";
 
 function BookPage() {
   const search = Route.useSearch();
+  const { t } = useLanguage();
+  const bt = t.book;
 
   const [cabins, setCabins] = useState<Cabin[]>([]);
   const [cabinId, setCabinId] = useState<string>("");
@@ -138,12 +141,12 @@ function BookPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!cabinId) return setError("Sila pilih bilik");
-    if (new Date(checkout) <= new Date(checkin)) return setError("Tarikh check-out mesti selepas check-in");
-    if (datesOverlapTaken()) return setError("Bilik tidak tersedia pada tarikh tersebut. Sila pilih tarikh lain.");
-    if (name.trim().length < 2) return setError("Sila masukkan nama penuh");
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError("Sila masukkan emel yang sah");
-    if (phone.trim().length < 5) return setError("Sila masukkan nombor telefon / WhatsApp");
+    if (!cabinId) return setError(bt.errors.pickCabin);
+    if (new Date(checkout) <= new Date(checkin)) return setError(bt.errors.dates);
+    if (datesOverlapTaken()) return setError(bt.errors.overlap);
+    if (name.trim().length < 2) return setError(bt.errors.name);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError(bt.errors.email);
+    if (phone.trim().length < 5) return setError(bt.errors.phone);
 
     setSubmitting(true);
     try {
@@ -168,7 +171,7 @@ function BookPage() {
       setStep("payment");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Gagal membuat tempahan");
+      setError(e instanceof Error ? e.message : bt.errors.bookFailed);
     } finally {
       setSubmitting(false);
     }
@@ -191,7 +194,7 @@ function BookPage() {
       setStep("done");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Muat naik gagal");
+      setError(e instanceof Error ? e.message : bt.errors.uploadFailed);
     } finally {
       setUploading(false);
     }
