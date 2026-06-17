@@ -549,7 +549,7 @@ function BookHeader() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
         <Link to="/" className="font-display text-lg text-forest">Rajawali D'Cabin</Link>
         <div className="flex items-center gap-4">
-          <div className="text-forest"><LanguageToggle /></div>
+          <LanguageToggle variant="dark" />
           <Link to="/" className="text-xs uppercase tracking-widest text-stone hover:text-forest">{t.book.header.back}</Link>
         </div>
       </div>
