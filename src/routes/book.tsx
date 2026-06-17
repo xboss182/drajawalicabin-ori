@@ -9,6 +9,7 @@ import {
 } from "@/lib/booking.functions";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
+import { LanguageToggle, useLanguage } from "@/lib/i18n";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -35,8 +36,8 @@ export const Route = createFileRoute("/book")({
   }),
   head: () => ({
     meta: [
-      { title: "Tempahan Bilik — Rajawali D'Cabin Chalet" },
-      { name: "description", content: "Tempah bilik di Rajawali D'Cabin Chalet, Kuala Terengganu. Hanya 8 bilik, diurus secara peribadi." },
+      { title: "Room Booking — Rajawali D'Cabin Chalet" },
+      { name: "description", content: "Book a cabin at Rajawali D'Cabin Chalet, Kuala Terengganu." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -47,6 +48,8 @@ type Step = "details" | "payment" | "done";
 
 function BookPage() {
   const search = Route.useSearch();
+  const { t } = useLanguage();
+  const bt = t.book;
 
   const [cabins, setCabins] = useState<Cabin[]>([]);
   const [cabinId, setCabinId] = useState<string>("");
@@ -138,12 +141,12 @@ function BookPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!cabinId) return setError("Sila pilih bilik");
-    if (new Date(checkout) <= new Date(checkin)) return setError("Tarikh check-out mesti selepas check-in");
-    if (datesOverlapTaken()) return setError("Bilik tidak tersedia pada tarikh tersebut. Sila pilih tarikh lain.");
-    if (name.trim().length < 2) return setError("Sila masukkan nama penuh");
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError("Sila masukkan emel yang sah");
-    if (phone.trim().length < 5) return setError("Sila masukkan nombor telefon / WhatsApp");
+    if (!cabinId) return setError(bt.errors.pickCabin);
+    if (new Date(checkout) <= new Date(checkin)) return setError(bt.errors.dates);
+    if (datesOverlapTaken()) return setError(bt.errors.overlap);
+    if (name.trim().length < 2) return setError(bt.errors.name);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError(bt.errors.email);
+    if (phone.trim().length < 5) return setError(bt.errors.phone);
 
     setSubmitting(true);
     try {
@@ -168,7 +171,7 @@ function BookPage() {
       setStep("payment");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Gagal membuat tempahan");
+      setError(e instanceof Error ? e.message : bt.errors.bookFailed);
     } finally {
       setSubmitting(false);
     }
@@ -191,7 +194,7 @@ function BookPage() {
       setStep("done");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Muat naik gagal");
+      setError(e instanceof Error ? e.message : bt.errors.uploadFailed);
     } finally {
       setUploading(false);
     }
@@ -259,6 +262,8 @@ function DetailsStep(props: {
   submitting: boolean;
   error: string | null;
 }) {
+  const { t } = useLanguage();
+  const bt = t.book;
   const {
     cabins, cabinId, setCabinId, checkin, setCheckin, checkout, setCheckout,
     guests, setGuests, numRooms, setNumRooms, comforter, setComforter,
@@ -271,20 +276,20 @@ function DetailsStep(props: {
   return (
     <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
       <form onSubmit={submit} className="order-2 lg:order-1">
-        <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">Langkah 1 — Maklumat Penginapan</p>
-        <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">Tempahan Bilik.</h1>
+        <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
+        <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
         <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-          <Field label="Tarikh check in" type="date" value={checkin} min={todayStr} onChange={setCheckin} />
-          <Field label="Tarikh check out" type="date" value={checkout} min={checkin} onChange={setCheckout} />
-          <Select label="Bil Org @ pax" value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
-          <Select label="Bil bilik" value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
-          <SelectCabin label="Jenis Bilik" value={cabinId} onChange={setCabinId} cabins={cabins} />
+          <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
+          <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
+          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
+          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
+          <SelectCabin label={bt.f.cabinType} value={cabinId} onChange={setCabinId} cabins={cabins} loadingLabel={bt.f.loading} optionTpl={bt.f.cabinOption} />
         </div>
 
         {taken.length > 0 && (
           <p className="mt-3 text-xs text-stone">
-            Sudah ditempah untuk {selectedCabin?.name}:{" "}
+            {bt.takenPrefix} {selectedCabin?.name}:{" "}
             <span className="text-foreground/70">
               {taken.slice(0, 8).join(", ")}{taken.length > 8 ? "…" : ""}
             </span>
@@ -299,24 +304,24 @@ function DetailsStep(props: {
             className="h-4 w-4 accent-forest"
           />
           <span className="text-sm">
-            Tambah comforter set <span className="text-stone">(+RM20 / malam)</span>
+            {bt.comforter} <span className="text-stone">{bt.comforterPrice}</span>
           </span>
         </label>
 
-        <p className="mt-8 mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">Langkah 2 — Butiran Peribadi</p>
+        <p className="mt-8 mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step2Eyebrow}</p>
         <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-          <Field label="Nama penuh" type="text" value={name} onChange={setName} placeholder="Aisyah Rahman" required />
-          <Field label="Emel" type="email" value={email} onChange={setEmail} placeholder="anda@contoh.com" required />
-          <Field label="No Telefon / WhatsApp" type="tel" value={phone} onChange={setPhone} placeholder="+60 11 5500 7204" required full />
-          <Field label="Hubungan" type="text" value={relationship} onChange={setRelationship} placeholder="Keluarga / Kawan / Rakan niaga" />
-          <Field label="Jenis Kenderaan" type="text" value={vehicleType} onChange={setVehicleType} placeholder="Kereta / Van / Motosikal" />
-          <Field label="No Kenderaan" type="text" value={vehicleNumber} onChange={setVehicleNumber} placeholder="ABC 1234" />
-          <TextArea label="Nota (pilihan)" value={notes} onChange={setNotes} placeholder="Masa ketibaan, permintaan khas…" />
+          <Field label={bt.g.fullName} type="text" value={name} onChange={setName} placeholder={bt.g.fullNamePh} required />
+          <Field label={bt.g.email} type="email" value={email} onChange={setEmail} placeholder={bt.g.emailPh} required />
+          <Field label={bt.g.phone} type="tel" value={phone} onChange={setPhone} placeholder={bt.g.phonePh} required full />
+          <Field label={bt.g.relationship} type="text" value={relationship} onChange={setRelationship} placeholder={bt.g.relationshipPh} />
+          <Field label={bt.g.vehicleType} type="text" value={vehicleType} onChange={setVehicleType} placeholder={bt.g.vehicleTypePh} />
+          <Field label={bt.g.vehicleNumber} type="text" value={vehicleNumber} onChange={setVehicleNumber} placeholder={bt.g.vehicleNumberPh} />
+          <TextArea label={bt.g.notes} value={notes} onChange={setNotes} placeholder={bt.g.notesPh} />
         </div>
 
         <div className="mt-6 rounded-xl border border-dashed border-border bg-coconut px-5 py-4 text-sm text-stone">
-          <p><strong>No Bilik:</strong> Akan dimaklumkan selepas pengesahan tempahan</p>
-          <p className="mt-1"><strong>No Tempahan:</strong> Akan dimaklumkan selepas bayaran deposit</p>
+          <p><strong>{bt.info.roomNum}</strong> {bt.info.roomNumNote}</p>
+          <p className="mt-1"><strong>{bt.info.bookingNum}</strong> {bt.info.bookingNumNote}</p>
         </div>
 
         {error && (
@@ -328,50 +333,49 @@ function DetailsStep(props: {
           disabled={submitting}
           className="mt-8 w-full rounded-full bg-forest px-7 py-4 text-sm font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90 disabled:opacity-60 sm:w-auto"
         >
-          {submitting ? "Memegang tarikh anda…" : "Teruskan ke pembayaran"}
+          {submitting ? bt.submitting : bt.submit}
         </button>
-        <p className="mt-4 text-xs text-stone">
-          Tarikh anda dipegang selama 30 minit sementara anda menyelesaikan pembayaran.
-        </p>
+        <p className="mt-4 text-xs text-stone">{bt.holdNote}</p>
       </form>
 
       <aside className="order-1 lg:order-2">
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <img src={heroRiverside} alt="Rajawali D'Cabin riverside" className="aspect-[4/3] w-full object-cover" />
           <div className="p-6">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Maklumat Penginapan</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.summary.eyebrow}</p>
             <h2 className="mt-2 font-display text-2xl text-forest">
-              {selectedCabin?.name ?? "Pilih bilik"}
+              {selectedCabin?.name ?? bt.summary.pickCabin}
             </h2>
             {selectedCabin && (
               <p className="mt-1 text-sm text-stone">
-                Muat {selectedCabin.capacity} orang · RM{selectedCabin.weekday_rate}–{selectedCabin.school_holiday_rate}/malam
+                {bt.summary.capacityLine
+                  .replace("{cap}", String(selectedCabin.capacity))
+                  .replace("{min}", String(selectedCabin.weekday_rate))
+                  .replace("{max}", String(selectedCabin.school_holiday_rate))}
               </p>
             )}
             <dl className="mt-6 divide-y divide-border text-sm">
-              <Row label="Check-in" value={fmt(checkin)} />
-              <Row label="Check-out" value={fmt(checkout)} />
-              <Row label="Bil malam" value={String(price?.nights ?? "—")} />
-              <Row label="Bil Org @ pax" value={guests} />
-              <Row label="Bil bilik" value={numRooms} />
+              <Row label={bt.summary.checkin} value={fmt(checkin, bt.locale)} />
+              <Row label={bt.summary.checkout} value={fmt(checkout, bt.locale)} />
+              <Row label={bt.summary.nights} value={String(price?.nights ?? "—")} />
+              <Row label={bt.summary.guests} value={guests} />
+              <Row label={bt.summary.rooms} value={numRooms} />
               {price && (
                 <>
-                  <Row label="Jumlah bilik" value={`RM ${price.subtotal.toFixed(2)}`} />
+                  <Row label={bt.summary.roomSubtotal} value={`RM ${price.subtotal.toFixed(2)}`} />
                   {price.comforter_total > 0 && (
-                    <Row label="Comforter" value={`RM ${price.comforter_total.toFixed(2)}`} />
+                    <Row label={bt.summary.comforterLabel} value={`RM ${price.comforter_total.toFixed(2)}`} />
                   )}
                 </>
               )}
             </dl>
             {price && (
               <div className="mt-4 flex items-baseline justify-between rounded-xl bg-coconut px-4 py-3">
-                <span className="text-xs uppercase tracking-widest text-stone">Jumlah</span>
+                <span className="text-xs uppercase tracking-widest text-stone">{bt.summary.total}</span>
                 <span className="font-display text-2xl text-forest">RM {price.total.toFixed(2)}</span>
               </div>
             )}
-            <p className="mt-4 text-xs text-stone">
-              Harga berbeza mengikut hari biasa, hujung minggu & cuti sekolah.
-            </p>
+            <p className="mt-4 text-xs text-stone">{bt.summary.priceNote}</p>
           </div>
         </div>
       </aside>
@@ -394,6 +398,8 @@ function PaymentStep({
   checkin: string;
   checkout: string;
 }) {
+  const { t } = useLanguage();
+  const bt = t.book;
   const [remaining, setRemaining] = useState(Math.max(0, new Date(booking.holdExpiresAt).getTime() - Date.now()));
   useEffect(() => {
     const t = setInterval(() => setRemaining(Math.max(0, new Date(booking.holdExpiresAt).getTime() - Date.now())), 1000);
@@ -404,7 +410,6 @@ function PaymentStep({
 
   const acctNum = "8600095810";
   const acctName = "Mohd Fauzi Awang";
-  const bank = "CIMB Islamic (Akaun Semasa)";
 
   function copy(text: string) {
     navigator.clipboard.writeText(text);
@@ -412,58 +417,58 @@ function PaymentStep({
 
   return (
     <section className="mx-auto max-w-3xl px-6 py-16 lg:px-10 lg:py-20">
-      <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Langkah 2 — Pembayaran</p>
-      <h1 className="mt-2 font-display text-4xl text-forest">Bayar terus ke pemilik.</h1>
+      <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.pay.eyebrow}</p>
+      <h1 className="mt-2 font-display text-4xl text-forest">{bt.pay.title}</h1>
       <p className="mt-3 text-foreground/75">
-        Tempahan anda dipegang selama{" "}
+        {bt.pay.holdPrefix}{" "}
         <span className={`font-medium ${remaining < 5 * 60000 ? "text-red-700" : "text-forest"}`}>
           {mm}:{ss}
         </span>
-        . Pindahkan jumlah penuh dan muat naik resit di bawah — kami akan sahkan melalui WhatsApp.
+        {bt.pay.holdSuffix}
       </p>
 
       <div className="mt-8 rounded-2xl border border-border bg-card p-6">
         <div className="flex items-baseline justify-between">
           <div>
-            <p className="text-xs uppercase tracking-widest text-stone">Jumlah perlu bayar</p>
+            <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.amountDue}</p>
             <p className="font-display text-4xl text-forest">RM {booking.total.toFixed(2)}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs uppercase tracking-widest text-stone">No Rujukan</p>
+            <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.reference}</p>
             <p className="font-mono text-lg text-forest">{booking.reference}</p>
           </div>
         </div>
         <p className="mt-3 text-xs text-stone">
-          Sila sertakan rujukan <strong>{booking.reference}</strong> dalam catatan pemindahan untuk kami sahkan dengan cepat.
+          {bt.pay.refNote} <strong>{booking.reference}</strong> {bt.pay.refNoteSuffix}
         </p>
 
         <div className="mt-4 rounded-xl border border-dashed border-border bg-coconut px-5 py-4 text-sm text-stone">
-          <p><strong>No Bilik:</strong> Akan dimaklumkan selepas pengesahan tempahan</p>
-          <p className="mt-1"><strong>No Tempahan:</strong> Akan dimaklumkan selepas bayaran deposit</p>
+          <p><strong>{bt.info.roomNum}</strong> {bt.info.roomNumNote}</p>
+          <p className="mt-1"><strong>{bt.info.bookingNum}</strong> {bt.info.bookingNumNote}</p>
         </div>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-6">
-          <p className="text-xs uppercase tracking-widest text-stone">Pemindahan bank / DuitNow</p>
-          <p className="mt-2 font-display text-xl text-forest">{bank}</p>
+          <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.transfer}</p>
+          <p className="mt-2 font-display text-xl text-forest">{bt.pay.bank}</p>
           <dl className="mt-4 space-y-2 text-sm">
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-stone">No Akaun</dt>
+              <dt className="text-stone">{bt.pay.acctNum}</dt>
               <dd className="flex items-center gap-2">
                 <span className="font-mono">{acctNum}</span>
-                <button onClick={() => copy(acctNum)} className="text-[10px] uppercase tracking-widest text-forest hover:underline">Salin</button>
+                <button onClick={() => copy(acctNum)} className="text-[10px] uppercase tracking-widest text-forest hover:underline">{bt.pay.copy}</button>
               </dd>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-stone">Nama Akaun</dt>
+              <dt className="text-stone">{bt.pay.acctName}</dt>
               <dd>{acctName}</dd>
             </div>
           </dl>
         </div>
         <div className="rounded-2xl border border-border bg-card p-6">
-          <p className="text-xs uppercase tracking-widest text-stone">QR DuitNow</p>
-          <p className="mt-2 font-display text-xl text-forest">Imbas & Bayar</p>
+          <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.qrTitle}</p>
+          <p className="mt-2 font-display text-xl text-forest">{bt.pay.qrSub}</p>
           <div className="mt-4 flex aspect-square w-full items-center justify-center rounded-xl border border-border bg-coconut overflow-hidden">
             <img
               src={duitnowQrAsset.url}
@@ -476,11 +481,9 @@ function PaymentStep({
       </div>
 
       <div className="mt-8 rounded-2xl border border-border bg-card p-6">
-        <p className="text-xs uppercase tracking-widest text-stone">Langkah 3 — Muat naik bukti pembayaran</p>
-        <h2 className="mt-2 font-display text-xl text-forest">Lampirkan resit anda</h2>
-        <p className="mt-1 text-sm text-foreground/70">
-          Screenshot pemindahan atau resit e-wallet. JPG / PNG / PDF, maks ~5MB.
-        </p>
+        <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.uploadEyebrow}</p>
+        <h2 className="mt-2 font-display text-xl text-forest">{bt.pay.uploadTitle}</h2>
+        <p className="mt-1 text-sm text-foreground/70">{bt.pay.uploadHint}</p>
         <input
           type="file"
           accept="image/*,application/pdf"
@@ -495,12 +498,12 @@ function PaymentStep({
           disabled={!proofFile || uploading}
           className="mt-5 rounded-full bg-forest px-7 py-3.5 text-sm font-medium uppercase tracking-widest text-coconut hover:bg-forest/90 disabled:opacity-60"
         >
-          {uploading ? "Sedang muat naik…" : "Hantar bukti pembayaran"}
+          {uploading ? bt.pay.uploading : bt.pay.uploadCta}
         </button>
       </div>
 
       <p className="mt-6 text-xs text-stone">
-        Ringkasan tempahan: {name}, {cabinName}, {checkin} → {checkout}
+        {bt.pay.summary} {name}, {cabinName}, {checkin} → {checkout}
       </p>
     </section>
   );
@@ -508,29 +511,31 @@ function PaymentStep({
 
 // ============ STEP 3: done ============
 function DoneStep({ name, email, reference }: { name: string; email: string; reference: string }) {
+  const { t } = useLanguage();
+  const bt = t.book;
   return (
     <section className="mx-auto max-w-2xl px-6 py-24 text-center lg:px-10">
-      <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-stone">Bukti diterima</p>
+      <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.done.eyebrow}</p>
       <h1 className="font-display text-4xl leading-tight sm:text-5xl">
-        Terima kasih, {name.split(" ")[0]}.
+        {bt.done.thanks.replace("{name}", name.split(" ")[0])}
       </h1>
       <p className="mt-6 text-foreground/75">
-        Kami telah menerima bukti pembayaran anda untuk rujukan{" "}
-        <span className="font-mono text-forest">{reference}</span>. Pemilik akan sahkan pemindahan dan memaklumkan nombor bilik serta nombor tempahan anda melalui WhatsApp / emel di{" "}
-        <span className="text-forest">{email}</span> — biasanya dalam masa beberapa jam.
+        {bt.done.body1}{" "}
+        <span className="font-mono text-forest">{reference}</span>{bt.done.body2}{" "}
+        <span className="text-forest">{email}</span>{bt.done.bodyTail}
       </p>
       <div className="mt-10 flex flex-wrap justify-center gap-4">
         <a
           href={`https://wa.me/60115007204?text=${encodeURIComponent(
-            `Assalamualaikum! Saya baru muat naik bukti bayaran untuk tempahan ${reference} atas nama ${name}.`,
+            bt.done.whatsappText.replace("{ref}", reference).replace("{name}", name),
           )}`}
           target="_blank"
           rel="noreferrer"
           className="rounded-full bg-forest px-7 py-3.5 text-sm font-medium text-coconut hover:bg-forest/90"
         >
-          Mesej kami di WhatsApp
+          {bt.done.whatsappCta}
         </a>
-        <Link to="/" className="rounded-full border border-border px-7 py-3.5 text-sm">Kembali ke laman utama</Link>
+        <Link to="/" className="rounded-full border border-border px-7 py-3.5 text-sm">{bt.done.backHome}</Link>
       </div>
     </section>
   );
@@ -538,11 +543,15 @@ function DoneStep({ name, email, reference }: { name: string; email: string; ref
 
 // ============ shared ============
 function BookHeader() {
+  const { t } = useLanguage();
   return (
     <header className="border-b border-border bg-coconut">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
         <Link to="/" className="font-display text-lg text-forest">Rajawali D'Cabin</Link>
-        <Link to="/" className="text-xs uppercase tracking-widest text-stone hover:text-forest">← Kembali</Link>
+        <div className="flex items-center gap-4">
+          <LanguageToggle variant="dark" />
+          <Link to="/" className="text-xs uppercase tracking-widest text-stone hover:text-forest">{t.book.header.back}</Link>
+        </div>
       </div>
     </header>
   );
@@ -587,15 +596,15 @@ function Select({ label, value, onChange, options }: { label: string; value: str
   );
 }
 
-function SelectCabin({ label, value, onChange, cabins }: { label: string; value: string; onChange: (v: string) => void; cabins: Cabin[] }) {
+function SelectCabin({ label, value, onChange, cabins, loadingLabel, optionTpl }: { label: string; value: string; onChange: (v: string) => void; cabins: Cabin[]; loadingLabel: string; optionTpl: string }) {
   return (
     <label className="flex flex-col gap-1 bg-card px-5 py-4 text-left">
       <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)}
         className="appearance-none bg-transparent text-base text-foreground outline-none">
-        {cabins.length === 0 && <option>Memuatkan…</option>}
+        {cabins.length === 0 && <option>{loadingLabel}</option>}
         {cabins.map((c) => (
-          <option key={c.id} value={c.id}>{c.name} · muat {c.capacity} orang</option>
+          <option key={c.id} value={c.id}>{optionTpl.replace("{name}", c.name).replace("{cap}", String(c.capacity))}</option>
         ))}
       </select>
     </label>
@@ -611,9 +620,9 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function fmt(iso: string) {
+function fmt(iso: string, locale: string = "en-MY") {
   try {
-    return new Date(iso).toLocaleDateString("ms-MY", { weekday: "short", month: "short", day: "numeric" });
+    return new Date(iso).toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" });
   } catch {
     return iso;
   }

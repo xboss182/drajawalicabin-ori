@@ -82,6 +82,109 @@ export const translations = {
       copyright: "© {year} Rajawali D'Cabin Chalet. All rights reserved.",
       slogan: "Where peaceful stays meet the beauty of Terengganu.",
     },
+    book: {
+      locale: "en-MY",
+      metaTitle: "Room Booking — Rajawali D'Cabin Chalet",
+      metaDesc: "Book a cabin at Rajawali D'Cabin Chalet, Kuala Terengganu. Only 8 cabins, personally managed.",
+      header: { back: "← Back" },
+      step1Eyebrow: "Step 1 — Stay details",
+      title: "Room Booking.",
+      f: {
+        checkin: "Check-in date",
+        checkout: "Check-out date",
+        guests: "Guests (pax)",
+        rooms: "Number of rooms",
+        cabinType: "Cabin type",
+        loading: "Loading…",
+        cabinOption: "{name} · sleeps {cap}",
+      },
+      takenPrefix: "Already booked for",
+      comforter: "Add comforter set",
+      comforterPrice: "(+RM20 / night)",
+      step2Eyebrow: "Step 2 — Personal details",
+      g: {
+        fullName: "Full name",
+        fullNamePh: "Aisyah Rahman",
+        email: "Email",
+        emailPh: "you@example.com",
+        phone: "Phone / WhatsApp",
+        phonePh: "+60 11 5500 7204",
+        relationship: "Relationship",
+        relationshipPh: "Family / Friend / Colleague",
+        vehicleType: "Vehicle type",
+        vehicleTypePh: "Car / Van / Motorcycle",
+        vehicleNumber: "Vehicle number",
+        vehicleNumberPh: "ABC 1234",
+        notes: "Notes (optional)",
+        notesPh: "Arrival time, special requests…",
+      },
+      info: {
+        roomNum: "Room number:",
+        roomNumNote: "Will be confirmed after booking is verified",
+        bookingNum: "Booking number:",
+        bookingNumNote: "Will be confirmed after deposit payment",
+      },
+      submitting: "Holding your dates…",
+      submit: "Continue to payment",
+      holdNote: "Your dates are held for 30 minutes while you complete payment.",
+      summary: {
+        eyebrow: "Stay summary",
+        pickCabin: "Pick a cabin",
+        capacityLine: "Sleeps {cap} · RM{min}–{max}/night",
+        checkin: "Check-in",
+        checkout: "Check-out",
+        nights: "Nights",
+        guests: "Guests (pax)",
+        rooms: "Number of rooms",
+        roomSubtotal: "Room subtotal",
+        comforterLabel: "Comforter",
+        total: "Total",
+        priceNote: "Rates vary by weekday, weekend & school holidays.",
+      },
+      errors: {
+        pickCabin: "Please select a cabin",
+        dates: "Check-out date must be after check-in",
+        overlap: "Cabin not available on those dates. Please pick another date.",
+        name: "Please enter your full name",
+        email: "Please enter a valid email",
+        phone: "Please enter a phone / WhatsApp number",
+        bookFailed: "Failed to create booking",
+        uploadFailed: "Upload failed",
+      },
+      pay: {
+        eyebrow: "Step 2 — Payment",
+        title: "Pay directly to the owner.",
+        holdPrefix: "Your booking is held for",
+        holdSuffix: ". Transfer the full amount and upload your receipt below — we'll confirm via WhatsApp.",
+        amountDue: "Amount due",
+        reference: "Reference no.",
+        refNote: "Please include reference",
+        refNoteSuffix: "in the transfer remarks so we can verify quickly.",
+        transfer: "Bank transfer / DuitNow",
+        bank: "CIMB Islamic (Current Account)",
+        acctNum: "Account no.",
+        acctName: "Account name",
+        copy: "Copy",
+        qrTitle: "DuitNow QR",
+        qrSub: "Scan & Pay",
+        uploadEyebrow: "Step 3 — Upload proof of payment",
+        uploadTitle: "Attach your receipt",
+        uploadHint: "Transfer screenshot or e-wallet receipt. JPG / PNG / PDF, max ~5MB.",
+        uploading: "Uploading…",
+        uploadCta: "Submit proof of payment",
+        summary: "Booking summary:",
+      },
+      done: {
+        eyebrow: "Proof received",
+        thanks: "Thank you, {name}.",
+        body1: "We've received your payment proof for reference",
+        body2: ". The owner will verify the transfer and share your room number and booking number via WhatsApp / email at",
+        bodyTail: " — usually within a few hours.",
+        whatsappCta: "Message us on WhatsApp",
+        whatsappText: "Hi! I just uploaded payment proof for booking {ref} under {name}.",
+        backHome: "Back to home",
+      },
+    },
   },
   bm: {
     nav: { cabins: "Bilik", about: "Tentang", nearby: "Berdekatan", book: "Tempah", whatsapp: "WhatsApp Kami" },
@@ -162,6 +265,109 @@ export const translations = {
       copyright: "© {year} Rajawali D'Cabin Chalet. Hak cipta terpelihara.",
       slogan: "Tempat penginapan tenang bertemu keindahan Terengganu.",
     },
+    book: {
+      locale: "ms-MY",
+      metaTitle: "Tempahan Bilik — Rajawali D'Cabin Chalet",
+      metaDesc: "Tempah bilik di Rajawali D'Cabin Chalet, Kuala Terengganu. Hanya 8 bilik, diurus secara peribadi.",
+      header: { back: "← Kembali" },
+      step1Eyebrow: "Langkah 1 — Maklumat Penginapan",
+      title: "Tempahan Bilik.",
+      f: {
+        checkin: "Tarikh check in",
+        checkout: "Tarikh check out",
+        guests: "Bil Org @ pax",
+        rooms: "Bil bilik",
+        cabinType: "Jenis Bilik",
+        loading: "Memuatkan…",
+        cabinOption: "{name} · muat {cap} orang",
+      },
+      takenPrefix: "Sudah ditempah untuk",
+      comforter: "Tambah comforter set",
+      comforterPrice: "(+RM20 / malam)",
+      step2Eyebrow: "Langkah 2 — Butiran Peribadi",
+      g: {
+        fullName: "Nama penuh",
+        fullNamePh: "Aisyah Rahman",
+        email: "Emel",
+        emailPh: "anda@contoh.com",
+        phone: "No Telefon / WhatsApp",
+        phonePh: "+60 11 5500 7204",
+        relationship: "Hubungan",
+        relationshipPh: "Keluarga / Kawan / Rakan niaga",
+        vehicleType: "Jenis Kenderaan",
+        vehicleTypePh: "Kereta / Van / Motosikal",
+        vehicleNumber: "No Kenderaan",
+        vehicleNumberPh: "ABC 1234",
+        notes: "Nota (pilihan)",
+        notesPh: "Masa ketibaan, permintaan khas…",
+      },
+      info: {
+        roomNum: "No Bilik:",
+        roomNumNote: "Akan dimaklumkan selepas pengesahan tempahan",
+        bookingNum: "No Tempahan:",
+        bookingNumNote: "Akan dimaklumkan selepas bayaran deposit",
+      },
+      submitting: "Memegang tarikh anda…",
+      submit: "Teruskan ke pembayaran",
+      holdNote: "Tarikh anda dipegang selama 30 minit sementara anda menyelesaikan pembayaran.",
+      summary: {
+        eyebrow: "Maklumat Penginapan",
+        pickCabin: "Pilih bilik",
+        capacityLine: "Muat {cap} orang · RM{min}–{max}/malam",
+        checkin: "Check-in",
+        checkout: "Check-out",
+        nights: "Bil malam",
+        guests: "Bil Org @ pax",
+        rooms: "Bil bilik",
+        roomSubtotal: "Jumlah bilik",
+        comforterLabel: "Comforter",
+        total: "Jumlah",
+        priceNote: "Harga berbeza mengikut hari biasa, hujung minggu & cuti sekolah.",
+      },
+      errors: {
+        pickCabin: "Sila pilih bilik",
+        dates: "Tarikh check-out mesti selepas check-in",
+        overlap: "Bilik tidak tersedia pada tarikh tersebut. Sila pilih tarikh lain.",
+        name: "Sila masukkan nama penuh",
+        email: "Sila masukkan emel yang sah",
+        phone: "Sila masukkan nombor telefon / WhatsApp",
+        bookFailed: "Gagal membuat tempahan",
+        uploadFailed: "Muat naik gagal",
+      },
+      pay: {
+        eyebrow: "Langkah 2 — Pembayaran",
+        title: "Bayar terus ke pemilik.",
+        holdPrefix: "Tempahan anda dipegang selama",
+        holdSuffix: ". Pindahkan jumlah penuh dan muat naik resit di bawah — kami akan sahkan melalui WhatsApp.",
+        amountDue: "Jumlah perlu bayar",
+        reference: "No Rujukan",
+        refNote: "Sila sertakan rujukan",
+        refNoteSuffix: "dalam catatan pemindahan untuk kami sahkan dengan cepat.",
+        transfer: "Pemindahan bank / DuitNow",
+        bank: "CIMB Islamic (Akaun Semasa)",
+        acctNum: "No Akaun",
+        acctName: "Nama Akaun",
+        copy: "Salin",
+        qrTitle: "QR DuitNow",
+        qrSub: "Imbas & Bayar",
+        uploadEyebrow: "Langkah 3 — Muat naik bukti pembayaran",
+        uploadTitle: "Lampirkan resit anda",
+        uploadHint: "Screenshot pemindahan atau resit e-wallet. JPG / PNG / PDF, maks ~5MB.",
+        uploading: "Sedang muat naik…",
+        uploadCta: "Hantar bukti pembayaran",
+        summary: "Ringkasan tempahan:",
+      },
+      done: {
+        eyebrow: "Bukti diterima",
+        thanks: "Terima kasih, {name}.",
+        body1: "Kami telah menerima bukti pembayaran anda untuk rujukan",
+        body2: ". Pemilik akan sahkan pemindahan dan memaklumkan nombor bilik serta nombor tempahan anda melalui WhatsApp / emel di",
+        bodyTail: " — biasanya dalam masa beberapa jam.",
+        whatsappCta: "Mesej kami di WhatsApp",
+        whatsappText: "Assalamualaikum! Saya baru muat naik bukti bayaran untuk tempahan {ref} atas nama {name}.",
+        backHome: "Kembali ke laman utama",
+      },
+    },
   },
 };
 
@@ -198,11 +404,17 @@ export function useLanguage() {
   return ctx;
 }
 
-export function LanguageToggle({ className = "" }: { className?: string }) {
+export function LanguageToggle({ className = "", variant = "light" }: { className?: string; variant?: "light" | "dark" }) {
   const { lang, setLang } = useLanguage();
+  const isDark = variant === "dark";
+  const containerCls = isDark
+    ? "border-forest/30 bg-forest/10"
+    : "border-coconut/40 bg-coconut/10";
+  const inactive = isDark ? "text-forest/80 hover:text-forest" : "text-coconut hover:text-coconut";
+  const active = isDark ? "bg-forest text-coconut" : "bg-coconut text-forest";
   return (
     <div
-      className={`inline-flex items-center rounded-full border border-coconut/40 bg-coconut/10 p-0.5 text-[11px] uppercase tracking-widest backdrop-blur ${className}`}
+      className={`inline-flex items-center rounded-full border ${containerCls} p-0.5 text-[11px] uppercase tracking-widest backdrop-blur ${className}`}
       role="group"
       aria-label="Language selector"
     >
@@ -210,9 +422,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
         type="button"
         onClick={() => setLang("en")}
         aria-pressed={lang === "en"}
-        className={`rounded-full px-3 py-1 transition ${
-          lang === "en" ? "bg-coconut text-forest" : "text-coconut hover:text-coconut"
-        }`}
+        className={`rounded-full px-3 py-1 transition ${lang === "en" ? active : inactive}`}
       >
         EN
       </button>
@@ -220,9 +430,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
         type="button"
         onClick={() => setLang("bm")}
         aria-pressed={lang === "bm"}
-        className={`rounded-full px-3 py-1 transition ${
-          lang === "bm" ? "bg-coconut text-forest" : "text-coconut hover:text-coconut"
-        }`}
+        className={`rounded-full px-3 py-1 transition ${lang === "bm" ? active : inactive}`}
       >
         BM
       </button>
