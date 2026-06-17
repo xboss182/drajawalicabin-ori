@@ -404,11 +404,17 @@ export function useLanguage() {
   return ctx;
 }
 
-export function LanguageToggle({ className = "" }: { className?: string }) {
+export function LanguageToggle({ className = "", variant = "light" }: { className?: string; variant?: "light" | "dark" }) {
   const { lang, setLang } = useLanguage();
+  const isDark = variant === "dark";
+  const containerCls = isDark
+    ? "border-forest/30 bg-forest/10"
+    : "border-coconut/40 bg-coconut/10";
+  const inactive = isDark ? "text-forest/80 hover:text-forest" : "text-coconut hover:text-coconut";
+  const active = isDark ? "bg-forest text-coconut" : "bg-coconut text-forest";
   return (
     <div
-      className={`inline-flex items-center rounded-full border border-coconut/40 bg-coconut/10 p-0.5 text-[11px] uppercase tracking-widest backdrop-blur ${className}`}
+      className={`inline-flex items-center rounded-full border ${containerCls} p-0.5 text-[11px] uppercase tracking-widest backdrop-blur ${className}`}
       role="group"
       aria-label="Language selector"
     >
@@ -416,9 +422,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
         type="button"
         onClick={() => setLang("en")}
         aria-pressed={lang === "en"}
-        className={`rounded-full px-3 py-1 transition ${
-          lang === "en" ? "bg-coconut text-forest" : "text-coconut hover:text-coconut"
-        }`}
+        className={`rounded-full px-3 py-1 transition ${lang === "en" ? active : inactive}`}
       >
         EN
       </button>
@@ -426,9 +430,7 @@ export function LanguageToggle({ className = "" }: { className?: string }) {
         type="button"
         onClick={() => setLang("bm")}
         aria-pressed={lang === "bm"}
-        className={`rounded-full px-3 py-1 transition ${
-          lang === "bm" ? "bg-coconut text-forest" : "text-coconut hover:text-coconut"
-        }`}
+        className={`rounded-full px-3 py-1 transition ${lang === "bm" ? active : inactive}`}
       >
         BM
       </button>
