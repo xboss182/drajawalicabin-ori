@@ -2,8 +2,6 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 export type Lang = "en" | "bm";
 
-type Dict = typeof translations.en;
-
 export const translations = {
   en: {
     nav: { cabins: "Cabins", about: "About", nearby: "Nearby", book: "Book", whatsapp: "WhatsApp Us" },
@@ -165,7 +163,9 @@ export const translations = {
       slogan: "Tempat penginapan tenang bertemu keindahan Terengganu.",
     },
   },
-} as const;
+};
+
+type Dict = (typeof translations)["en"];
 
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: Dict };
 const LanguageContext = createContext<Ctx | null>(null);
