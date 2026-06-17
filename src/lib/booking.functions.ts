@@ -12,10 +12,14 @@ const createSchema = z.object({
   checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   guests: z.number().int().min(1).max(12),
+  numRooms: z.number().int().min(1).max(8).default(1),
   comforter: z.boolean(),
   guestName: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
   phone: z.string().trim().min(5).max(30),
+  relationship: z.string().trim().max(100).optional(),
+  vehicleType: z.string().trim().max(100).optional(),
+  vehicleNumber: z.string().trim().max(50).optional(),
   notes: z.string().trim().max(1000).optional(),
 });
 
@@ -61,27 +65,33 @@ export const createBooking = createServerFn({ method: "POST" })
     const holdMinutes = 30;
     const holdExpires = new Date(Date.now() + holdMinutes * 60_000).toISOString();
 
+    const insertPayload = {
+      guest_name: data.guestName,
+      email: data.email,
+      phone: data.phone,
+      check_in: data.checkIn,
+      check_out: data.checkOut,
+      guests: data.guests,
+      num_rooms: data.numRooms,
+      room_type: cabin?.name ?? "Cabin",
+      notes: data.notes ?? null,
+      relationship: data.relationship ?? null,
+      vehicle_type: data.vehicleType ?? null,
+      vehicle_number: data.vehicleNumber ?? null,
+      cabin_id: data.cabinId,
+      nights: price.nights,
+      subtotal: price.subtotal,
+      comforter: data.comforter,
+      comforter_total: price.comforter_total,
+      total_amount: price.total,
+      payment_reference: reference,
+      hold_expires_at: holdExpires,
+      status: "pending_payment",
+    };
+
     const { data: inserted, error: insErr } = await supabaseAdmin
       .from("booking_requests")
-      .insert({
-        guest_name: data.guestName,
-        email: data.email,
-        phone: data.phone,
-        check_in: data.checkIn,
-        check_out: data.checkOut,
-        guests: data.guests,
-        room_type: cabin?.name ?? "Cabin",
-        notes: data.notes ?? null,
-        cabin_id: data.cabinId,
-        nights: price.nights,
-        subtotal: price.subtotal,
-        comforter: data.comforter,
-        comforter_total: price.comforter_total,
-        total_amount: price.total,
-        payment_reference: reference,
-        hold_expires_at: holdExpires,
-        status: "pending_payment",
-      })
+      .insert(insertPayload as any)
       .select("id, payment_reference, total_amount, hold_expires_at")
       .single();
     if (insErr) throw new Error(insErr.message);
