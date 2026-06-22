@@ -152,6 +152,9 @@ function AvailabilitySearch() {
 
   return (
     <section id="book" className="relative z-20 -mt-24 px-6 lg:px-10">
+      <p className="mx-auto -mt-16 mb-6 max-w-3xl text-center text-sm font-medium text-coconut [text-shadow:0_2px_12px_rgba(0,0,0,0.55)] sm:text-base">
+        {t.search.note}
+      </p>
       <form
         onSubmit={submit}
         className="mx-auto grid max-w-6xl grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-2xl shadow-forest/20 md:grid-cols-[1fr_1fr_0.7fr_1fr_auto]"
@@ -177,9 +180,6 @@ function AvailabilitySearch() {
           {t.search.submit}
         </button>
       </form>
-      <p className="mx-auto mt-3 max-w-6xl text-center text-xs text-stone">
-        {t.search.note}
-      </p>
     </section>
   );
 }
