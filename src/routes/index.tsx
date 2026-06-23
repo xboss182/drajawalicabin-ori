@@ -42,6 +42,7 @@ function Index() {
       <WhyStay />
       <NearbySection />
       <Footer />
+      <MobileCtaBar />
     </main>
   );
 }
@@ -96,7 +97,7 @@ function Leaf() {
 function Hero() {
   const { t } = useLanguage();
   return (
-    <section id="top" className="relative min-h-[100svh] w-full overflow-hidden">
+    <section id="top" className="relative min-h-[78svh] w-full overflow-hidden lg:min-h-[82svh]">
       <img
         src={heroRiverside}
         alt="Twilight over the river at Kuala Ibai"
@@ -105,17 +106,17 @@ function Hero() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/30 to-forest/85" />
-      <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-end px-6 pb-24 pt-40 text-coconut lg:px-10">
+      <div className="relative mx-auto flex min-h-[78svh] max-w-7xl flex-col justify-end px-6 pb-28 pt-32 text-coconut lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
         <span className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.3em] backdrop-blur">
           <span className="size-1.5 rounded-full bg-coconut" /> {t.hero.badge}
         </span>
-        <h1 className="max-w-3xl font-display text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">
+        <h1 className="max-w-3xl font-display text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
           {t.hero.title1}<br />{t.hero.title2}
         </h1>
-        <p className="mt-6 max-w-xl text-base text-coconut/85 sm:text-lg">
+        <p className="mt-5 max-w-xl text-base text-coconut/85 sm:text-lg">
           {t.hero.body}
         </p>
-        <div className="mt-10 flex flex-wrap items-center gap-4">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
           <a
             href="#book"
             className="rounded-full bg-coconut px-7 py-3.5 text-sm font-medium text-forest transition hover:bg-sand"
@@ -125,6 +126,13 @@ function Hero() {
           <a href="#stay" className="text-sm text-coconut/85 underline-offset-4 hover:underline">
             {t.hero.view}
           </a>
+        </div>
+        <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70">
+          <span>8 private cabins</span>
+          <span className="hidden sm:inline opacity-50">·</span>
+          <span>Riverside · Kuala Ibai</span>
+          <span className="hidden sm:inline opacity-50">·</span>
+          <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="hover:text-coconut">WhatsApp booking</a>
         </div>
       </div>
     </section>
@@ -151,7 +159,7 @@ function AvailabilitySearch() {
   }
 
   return (
-    <section id="book" className="relative z-20 -mt-24 px-6 lg:px-10">
+    <section id="book" className="relative z-20 -mt-20 px-6 lg:px-10">
       <form
         onSubmit={submit}
         className="mx-auto grid max-w-6xl grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-2xl shadow-forest/20 md:grid-cols-[1fr_1fr_0.7fr_1fr_auto]"
@@ -172,12 +180,12 @@ function AvailabilitySearch() {
         />
         <button
           type="submit"
-          className="whitespace-nowrap bg-forest px-8 py-6 text-sm font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90"
+          className="whitespace-nowrap bg-forest px-8 py-5 text-sm font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90 md:py-6"
         >
           {t.search.submit}
         </button>
       </form>
-      <p className="mx-auto mt-5 max-w-3xl text-center text-sm font-medium text-foreground sm:text-base">
+      <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
         {t.search.note}
       </p>
     </section>
@@ -198,7 +206,7 @@ function Field({
   min?: string;
 }) {
   return (
-    <label className="flex flex-col gap-1 bg-card px-5 py-4 text-left">
+    <label className="flex flex-col gap-1 bg-card px-5 py-3.5 text-left">
       <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>
       <input
         type={type}
@@ -223,7 +231,7 @@ function SelectField({
   options: string[];
 }) {
   return (
-    <label className="flex flex-col gap-1 bg-card px-5 py-4 text-left">
+    <label className="flex flex-col gap-1 bg-card px-5 py-3.5 text-left">
       <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>
       <select
         value={value}
@@ -242,17 +250,26 @@ function SelectField({
 function About() {
   const { t } = useLanguage();
   return (
-    <section id="about" className="mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-36">
-      <div className="grid gap-16 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+    <section id="about" className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
+      <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
         <div>
-          <p className="mb-6 text-[11px] uppercase tracking-[0.3em] text-stone">{t.about.eyebrow}</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.about.eyebrow}</p>
           <h2 className="font-display text-4xl leading-tight sm:text-5xl">
             {t.about.title1}<br />{t.about.title2}
           </h2>
-          <div className="mt-8 space-y-5 text-base leading-relaxed text-foreground/80">
+          <div className="mt-6 space-y-4 text-base leading-relaxed text-foreground/80">
             <p>{t.about.p1}</p>
             <p>{t.about.p2}</p>
             <p className="text-forest">{t.about.p3}</p>
+          </div>
+          <div className="mt-8 flex items-center gap-5 border-t border-border pt-6">
+            <div>
+              <p className="font-display text-3xl text-forest leading-none">{t.about.badgeNum}</p>
+              <p className="mt-1 text-[11px] uppercase tracking-widest text-stone">{t.about.badgeLabel}</p>
+            </div>
+            <a href="#stay" className="ml-auto inline-flex items-center gap-2 text-sm text-forest hover:gap-3 transition-all">
+              Explore the cabins →
+            </a>
           </div>
         </div>
         <div className="relative">
@@ -262,12 +279,8 @@ function About() {
             width={1600}
             height={1067}
             loading="lazy"
-            className="aspect-[4/3] w-full rounded-sm object-cover"
+            className="aspect-[4/3] w-full rounded-lg object-cover"
           />
-          <div className="absolute -bottom-6 -left-6 hidden rounded-sm border border-border bg-coconut p-6 shadow-xl shadow-forest/10 lg:block">
-            <p className="font-display text-3xl text-forest">{t.about.badgeNum}</p>
-            <p className="text-xs uppercase tracking-widest text-stone">{t.about.badgeLabel}</p>
-          </div>
         </div>
       </div>
     </section>
@@ -278,11 +291,11 @@ function About() {
 function Accommodation() {
   const { t } = useLanguage();
   return (
-    <section id="stay" className="bg-secondary/40 py-28 lg:py-36">
+    <section id="stay" className="bg-secondary/40 py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <div className="mb-14 flex flex-wrap items-end justify-between gap-6">
+        <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-stone">{t.stay.eyebrow}</p>
+            <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.stay.eyebrow}</p>
             <h2 className="max-w-2xl font-display text-4xl leading-tight sm:text-5xl">
               {t.stay.title1}<br />{t.stay.title2}
             </h2>
@@ -291,10 +304,10 @@ function Accommodation() {
             {t.stay.intro}
           </p>
         </div>
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {t.stay.cabins.map((c, idx) => (
-            <article key={c.name} className="group flex flex-col overflow-hidden rounded-sm bg-card">
-              <div className="aspect-[4/5] overflow-hidden">
+            <article key={c.name} className="group flex flex-col overflow-hidden rounded-lg bg-card shadow-sm">
+              <div className="relative aspect-[4/3] overflow-hidden">
                 <img
                   src={cabinImages[idx]}
                   alt={`${c.name} interior`}
@@ -303,23 +316,23 @@ function Accommodation() {
                   loading="lazy"
                   className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                 />
+                <span className="absolute left-3 top-3 rounded-full bg-coconut/95 px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest text-forest backdrop-blur">
+                  {c.sleeps}
+                </span>
               </div>
-              <div className="flex flex-1 flex-col gap-4 p-6">
-                <div>
-                  <h3 className="font-display text-2xl">{c.name}</h3>
-                  <p className="mt-1 text-xs uppercase tracking-widest text-stone">{c.sleeps}</p>
-                </div>
-                <ul className="space-y-1.5 text-sm text-foreground/75">
+              <div className="flex flex-1 flex-col gap-3 p-5">
+                <h3 className="font-display text-xl leading-tight">{c.name}</h3>
+                <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px] text-foreground/75">
                   {c.features.map((f) => (
-                    <li key={f} className="flex gap-2">
-                      <span className="mt-2 size-1 rounded-full bg-forest/60" />
-                      {f}
+                    <li key={f} className="flex gap-1.5">
+                      <span className="mt-[7px] size-1 shrink-0 rounded-full bg-forest/60" />
+                      <span className="min-w-0">{f}</span>
                     </li>
                   ))}
                 </ul>
                 <a
                   href="#book"
-                  className="mt-auto inline-flex w-fit items-center gap-2 text-sm text-forest hover:gap-3 transition-all"
+                  className="mt-auto inline-flex items-center justify-center gap-2 rounded-full bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90"
                 >
                   {t.stay.cta}
                 </a>
@@ -336,12 +349,12 @@ function Accommodation() {
 function WhyStay() {
   const { t } = useLanguage();
   return (
-    <section className="mx-auto max-w-7xl px-6 py-28 lg:px-10 lg:py-36">
-      <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
-      <h2 className="mb-16 max-w-3xl font-display text-4xl leading-tight sm:text-5xl">
+    <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
+      <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
+      <h2 className="mb-10 max-w-3xl font-display text-4xl leading-tight sm:text-5xl">
         {t.why.title1}<br />{t.why.title2}
       </h2>
-      <div className="grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-x-10 gap-y-10 sm:grid-cols-2 md:grid-cols-3">
         {t.why.reasons.map((r, i) => (
           <div key={r.title} className="border-t border-border pt-6">
             <p className="text-xs text-stone">0{i + 1}</p>
@@ -358,21 +371,24 @@ function WhyStay() {
 function NearbySection() {
   const { t } = useLanguage();
   return (
-    <section id="nearby" className="bg-forest text-coconut py-28 lg:py-36">
+    <section id="nearby" className="bg-forest text-coconut py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <div className="mb-14 max-w-2xl">
-          <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-coconut/60">{t.nearby.eyebrow}</p>
+        <div className="mb-10 max-w-2xl">
+          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-coconut/60">{t.nearby.eyebrow}</p>
           <h2 className="font-display text-4xl leading-tight sm:text-5xl">
             {t.nearby.title}
           </h2>
-          <p className="mt-5 text-coconut/75">
+          <p className="mt-4 text-coconut/75">
             {t.nearby.body}
           </p>
+          <p className="mt-4 text-sm text-coconut/65">
+            <span className="text-coconut">{t.nearby.alsoLabel}</span> {t.nearby.also}
+          </p>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-3">
           {t.nearby.items.map((n, idx) => (
-            <figure key={n.name} className="group overflow-hidden rounded-sm">
-              <div className="aspect-[4/5] overflow-hidden">
+            <figure key={n.name} className="group overflow-hidden rounded-lg">
+              <div className="aspect-[3/4] overflow-hidden">
                 <img
                   src={nearbyImages[idx]}
                   alt={n.name}
@@ -388,11 +404,6 @@ function NearbySection() {
               </figcaption>
             </figure>
           ))}
-        </div>
-        <div className="mt-12 grid gap-4 text-sm text-coconut/75 sm:grid-cols-2">
-          <p>
-            <span className="text-coconut">{t.nearby.alsoLabel}</span> {t.nearby.also}
-          </p>
         </div>
       </div>
     </section>
@@ -453,5 +464,30 @@ function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+/* ---------------- Mobile sticky CTA bar ---------------- */
+function MobileCtaBar() {
+  const { t } = useLanguage();
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
+      <div className="flex items-center gap-2">
+        <a
+          href="#book"
+          className="flex-1 rounded-full bg-forest px-4 py-3 text-center text-xs font-medium uppercase tracking-widest text-coconut"
+        >
+          {t.search.submit}
+        </a>
+        <a
+          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex-1 rounded-full border border-forest/30 bg-card px-4 py-3 text-center text-xs font-medium uppercase tracking-widest text-forest"
+        >
+          {t.nav.whatsapp}
+        </a>
+      </div>
+    </div>
   );
 }

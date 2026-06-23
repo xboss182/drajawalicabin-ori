@@ -1,70 +1,60 @@
-## Goal
+# Homepage Layout & Density Refinement
 
-Let guests pay the owner directly (Maybank/CIMB transfer, DuitNow QR, TnG eWallet QR) and have the calendar auto-block only after the owner confirms the payment landed in their account. You (the builder) never touch the money.
+Scope: `src/routes/index.tsx` only (presentation). No copy or business logic changes.
 
-## How the booking lifecycle works
+## 1. Hero — reclaim screen space
+- Drop hero from `min-h-[100svh]` to `min-h-[78svh] lg:min-h-[82svh]`.
+- Reduce top/bottom padding (`pt-32 pb-32` → `pt-28 pb-40`) so the search panel overlap feels intentional.
+- Shrink headline scale one step (`text-5xl sm:text-6xl lg:text-7xl` → `text-4xl sm:text-5xl lg:text-6xl`) and tighten body copy max-width.
+- Add a compact inline "quick facts" row directly under the CTAs (8 cabins · Riverside · Kuala Ibai · WhatsApp booking) so key info lands above the fold.
 
-```
-guest submits form  →  status: pending_payment   (calendar shows "on hold" for 30 min)
-guest uploads proof →  status: awaiting_review   (calendar still on hold)
-owner confirms      →  status: confirmed         (calendar BLOCKED — dates unavailable)
-owner rejects /     →  status: cancelled / expired (hold released, dates free again)
-hold expires
-```
+## 2. Booking surfaced earlier
+- Keep `AvailabilitySearch` overlapping the hero (`-mt-20`) but make it visually denser: smaller field padding (`py-3.5`), tighter label sizing, sticky submit on mobile.
+- Move the "We'll take your details…" note into the form footer row (inline, muted) instead of a standalone paragraph block — removes a whole spacing band.
+- Add a small "From RM xxx / night · 8 cabins available" hint strip above the form on desktop to set pricing expectations early.
 
-The calendar is blocked by the database, not by Stripe/Paddle. So a manual processor works exactly the same — we just need a row marked `confirmed` for those dates.
+## 3. Section rhythm — cut vertical bloat
+Standardize section padding to `py-20 lg:py-24` (down from `py-28 lg:py-36`). Apply to About, Accommodation, WhyStay, Nearby.
 
-## What the guest sees
+## 4. About — better flow into cabins
+- Compress to a tighter 2-col grid with `gap-12` (was `gap-16`).
+- Move the floating "8 cabins" badge into the copy column as an inline stat block so mobile doesn't get a hidden element.
+- Add a thin divider/CTA row at the bottom ("Explore the cabins ↓") to bridge into the Accommodation section.
 
-1. Fills out the existing booking form at `/book` (name, email, phone, dates, cabin).
-2. Confirmation screen shows:
-   - Total: `nights × nightly_rate` (we'll need the per-cabin prices from you)
-   - **Payment options panel** with three tabs:
-     - **Bank transfer** — owner's bank, account name, account number, copy-to-clipboard button, reference code (e.g. `RJW-4821`)
-     - **DuitNow QR** — QR image
-     - **TnG eWallet** — QR image
-   - "Upload payment proof" button (image/PDF, stored in Lovable Cloud storage)
-   - "Hold expires in 29:58" countdown
-3. After upload: thank-you screen — "We'll confirm within a few hours via WhatsApp."
+## 5. Accommodation — stronger hierarchy & density
+- Change card aspect from `4/5` to `4/3` so 4 cards fit more compactly.
+- Each card gets a clear price line (`From RM xxx / night`) and sleeps badge at top — pricing visible without clicking.
+- Replace bullet list with a 2-column micro-grid of amenities (denser, scannable).
+- Per-card "Book this cabin" button (primary style) instead of a text link — CTA always visible.
+- Section header collapses to a single row on desktop (eyebrow + title left, intro right) with reduced bottom margin (`mb-10`).
 
-## What the owner sees
+## 6. Why Stay — tighten
+- Reduce title bottom margin (`mb-16` → `mb-10`).
+- Switch to 3-col on `md:` (currently 2-col until `lg`) so the section is shorter on tablets.
 
-A simple password-protected `/admin` page (single shared passcode you give the owner, no full auth system) listing:
-- Pending bookings with guest details, dates, amount, reference code, and the uploaded proof image
-- **Confirm payment** button → status becomes `confirmed`, calendar is now blocked, guest gets a WhatsApp deep-link / email confirmation
-- **Reject** button → status becomes `cancelled`, hold released
+## 7. Nearby — align with rest
+- Card aspect `4/5` → `3/4`, gap `gap-6` → `gap-5`.
+- Move the "also nearby" line into the header intro so the bottom isn't a stranded paragraph.
 
-## Calendar blocking
+## 8. Sticky mobile CTA bar
+Add a fixed bottom bar on `<md` screens with two actions: **Check Availability** (scrolls to `#book`) and **WhatsApp**. Hidden on desktop. Ensures booking CTAs are always reachable on mobile.
 
-- The booking form's date picker queries `booking_requests` for any row where `status IN ('pending_payment','awaiting_review','confirmed')` AND the requested dates overlap AND (for pending rows) the hold hasn't expired.
-- Overlapping dates for the same cabin are disabled in the picker, and the server re-checks on submit to prevent race conditions.
-- A small homepage "Availability" widget can show the next 60 days per cabin using the same query.
+## 9. Consistent alignment & spacing tokens
+- Standardize section container to `mx-auto max-w-7xl px-6 lg:px-10`.
+- Standardize eyebrow → title → body gaps: `mb-3`, `mb-8`, `mt-5`.
+- Standardize card radius to `rounded-lg` across cabins/nearby for cohesion.
 
-## Data model changes
+## 10. Mobile polish
+- Hero CTA row stacks cleanly with `gap-3`.
+- Search form already responsive; ensure submit button spans full width on mobile (`md:w-auto w-full`).
+- Apply `min-w-0` / `truncate` patterns to nav and card headings to prevent overflow.
 
-Extend `booking_requests`:
-- `cabin_id` (or keep `room_type`) — needed so two different cabins can be booked the same night
-- `nightly_rate`, `nights`, `total_amount` (snapshot at booking time)
-- `payment_reference` (e.g. `RJW-4821`, shown to guest, used by owner to match transfers)
-- `payment_proof_url` (storage path)
-- `hold_expires_at` (timestamp, default `now() + 30 min`)
-- `confirmed_at`, `confirmed_by`
+## Out of scope
+- Copy/i18n strings (no edits to `src/lib/i18n.tsx`).
+- Color tokens / typography system (`src/styles.css` untouched).
+- New routes, data, or backend changes.
 
-New table `cabins` (id, name, nightly_rate, capacity, image) so prices/inventory live in the DB instead of being hardcoded. 8 rows seeded.
+## Files touched
+- `src/routes/index.tsx` (single file)
 
-Status enum: `pending_payment | awaiting_review | confirmed | cancelled | expired`.
-
-New storage bucket `payment-proofs` (private, signed URLs for the admin).
-
-## Admin auth
-
-Lightest option: a single `ADMIN_PASSCODE` secret. `/admin` asks for it once, stores a signed cookie. Good enough for one owner. If you'd rather, we can do real email/password auth on the owner's account — slightly more setup.
-
-## What I need from you before building
-
-1. **Per-cabin nightly rates** (Queen / Twin / Family / Triple — RM amounts).
-2. **Owner's payment details** — bank name, account name, account number, plus the QR images (DuitNow + TnG) to upload. If you don't have them yet, I'll use placeholders and you can swap them in.
-3. **Hold duration** — default 30 minutes from submission, OK?
-4. **Admin access** — shared passcode (simplest) or proper login for the owner?
-
-Once you answer those, I'll build it.
+After implementing, I'll verify visually via Playwright at desktop + mobile viewports and screenshot each section to confirm spacing/hierarchy improvements.
