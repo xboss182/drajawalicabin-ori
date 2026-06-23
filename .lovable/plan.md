@@ -1,60 +1,67 @@
-# Homepage Layout & Density Refinement
+## Update Malay (BM) translations for landing page
 
-Scope: `src/routes/index.tsx` only (presentation). No copy or business logic changes.
+Replace the `bm` strings in `src/lib/i18n.tsx` (sections: `hero`, `search`, `about`, `stay`, `why`, `nearby`, `footer`) with the user-provided Malay copy. English (`en`) and `book` flow strings stay untouched.
 
-## 1. Hero — reclaim screen space
-- Drop hero from `min-h-[100svh]` to `min-h-[78svh] lg:min-h-[82svh]`.
-- Reduce top/bottom padding (`pt-32 pb-32` → `pt-28 pb-40`) so the search panel overlap feels intentional.
-- Shrink headline scale one step (`text-5xl sm:text-6xl lg:text-7xl` → `text-4xl sm:text-5xl lg:text-6xl`) and tighten body copy max-width.
-- Add a compact inline "quick facts" row directly under the CTAs (8 cabins · Riverside · Kuala Ibai · WhatsApp booking) so key info lands above the fold.
+### Key string changes
 
-## 2. Booking surfaced earlier
-- Keep `AvailabilitySearch` overlapping the hero (`-mt-20`) but make it visually denser: smaller field padding (`py-3.5`), tighter label sizing, sticky submit on mobile.
-- Move the "We'll take your details…" note into the form footer row (inline, muted) instead of a standalone paragraph block — removes a whole spacing band.
-- Add a small "From RM xxx / night · 8 cabins available" hint strip above the form on desktop to set pricing expectations early.
+**hero**
+- badge: `Hanya 8 buah kabin · Kuala Ibai`
+- title1: `Kembali ke alam,`
+- title2: `nikmati keselesaan.`
+- body: `Kabin persendirian di Kuala Ibai, Kuala Terengganu. Destinasi tenang buat keluarga, pasangan, dan pengembara yang inginkan kicauan burung berbanding bunyi notifikasi telefon.`
+- cta: `Semak kekosongan`
+- view: `Lihat kabin kami →`
 
-## 3. Section rhythm — cut vertical bloat
-Standardize section padding to `py-20 lg:py-24` (down from `py-28 lg:py-36`). Apply to About, Accommodation, WhyStay, Nearby.
+**search**
+- checkin: `Daftar masuk` · checkout: `Daftar keluar` · guests: `Tetamu` · room: `Jenis bilik` · anyCabin: `Mana-mana kabin` · submit: `Cari`
+- note: `Maklumat anda akan diambil pada langkah seterusnya. Tarikh anda akan disahkan secara peribadi — biasanya dalam masa beberapa jam.`
 
-## 4. About — better flow into cabins
-- Compress to a tighter 2-col grid with `gap-12` (was `gap-16`).
-- Move the floating "8 cabins" badge into the copy column as an inline stat block so mobile doesn't get a hidden element.
-- Add a thin divider/CTA row at the bottom ("Explore the cabins ↓") to bridge into the Accommodation section.
+**about**
+- eyebrow: `Tentang chalet`
+- title1: `Percutian tenang berhampiran`
+- title2: `Kuala Terengganu.`
+- p1: `Tersembunyi di dalam kehijauan alam Kuala Ibai, Rajawali D'Cabin Chalet menawarkan pilihan kabin kayu persendirian yang eksklusif — cukup dekat dengan bandar untuk urusan harian, cukup jauh untuk anda melupakan peti masuk e-mel anda.`
+- p2: `Sama ada anda merancang percutian keluarga, hujung minggu memancing, perjalanan kerja yang santai, atau hari Ahad yang tenang bersama yang tersayang, kabin kami menawarkan privasi dan ketenangan yang jarang ditemui di hotel biasa.`
+- p3: `Hanya 8 buah kabin. Tiada lobi. Tiada kesesakan. Cuma sebuah tempat untuk anda berehat dan beristirahat.`
+- badgeLabel: `kabin persendirian`
 
-## 5. Accommodation — stronger hierarchy & density
-- Change card aspect from `4/5` to `4/3` so 4 cards fit more compactly.
-- Each card gets a clear price line (`From RM xxx / night`) and sleeps badge at top — pricing visible without clicking.
-- Replace bullet list with a 2-column micro-grid of amenities (denser, scannable).
-- Per-card "Book this cabin" button (primary style) instead of a text link — CTA always visible.
-- Section header collapses to a single row on desktop (eyebrow + title left, intro right) with reduced bottom margin (`mb-10`).
+**stay**
+- eyebrow: `Pilih kabin anda`
+- title1: `Empat gaya kabin.`
+- title2: `Direka khas untuk ketenangan.`
+- intro: `Setiap kabin dilengkapi penghawa dingin, privasi penuh, dan suasana yang tenang. Pilih yang paling sesuai untuk kumpulan anda — kami akan sediakan segalanya.`
+- cta: `Semak kekosongan →`
+- cabins[0] Deluxe Queen: sleeps `Muat 2 orang`, features `[Katil Queen, Penghawa dingin, Bilik air peribadi, Smart TV, WiFi percuma]`
+- cabins[1] Deluxe Twin: sleeps `Muat 2 orang — rakan`, features `[Dua katil Single, Penghawa dingin, Bilik air peribadi, WiFi percuma]`
+- cabins[2] Family Suite: sleeps `Muat 4 orang — keluarga`, features `[Dua katil Double, Ruang yang luas, Bilik air peribadi, TV & WiFi]`
+- cabins[3] Triple Suite: sleeps `Muat 3 orang — fleksibel`, features `[1 Double + 1 Single, Sesuai untuk keluarga kecil, Penghawa dingin, WiFi percuma]`
 
-## 6. Why Stay — tighten
-- Reduce title bottom margin (`mb-16` → `mb-10`).
-- Switch to 3-col on `md:` (currently 2-col until `lg`) so the section is shorter on tablets.
+**why**
+- eyebrow: `Kenapa tetamu memilih kami`
+- title1: `Perkara kecil yang kami`
+- title2: `sediakan dengan sempurna.`
+- reasons:
+  1. `Suasana yang tenang` — `Dikelilingi kehijauan alam, pemandangan sungai, dan langit pantai yang luas.`
+  2. `Minit ke pusat bandar` — `Hanya beberapa minit memandu ke pusat bandar Kuala Terengganu, pantai, dan pasar kraf.`
+  3. `Mesra keluarga` — `Kabin peribadi yang selesa, sangat sesuai untuk keluarga dan kumpulan kecil.`
+  4. `Tempat letak kenderaan peribadi` — `Tempat letak kenderaan percuma disediakan betul-betul di sebelah pintu kabin anda.`
+  5. `WiFi berkelajuan tinggi` — `Kekal berhubung bila perlu — dan putuskan talian apabila anda ingin berehat.`
+  6. `Hanya 8 buah kabin` — `Tiada kesesakan, tiada barisan panjang. Setiap penginapan terasa tenang, peribadi, dan santai.`
 
-## 7. Nearby — align with rest
-- Card aspect `4/5` → `3/4`, gap `gap-6` → `gap-5`.
-- Move the "also nearby" line into the header intro so the bottom isn't a stranded paragraph.
+**nearby**
+- eyebrow: `Terokai kawasan sekitar`
+- title: `Terengganu, betul-betul di hadapan mata anda.`
+- body: `Kabin kami terletak hanya beberapa minit dari masjid terapung, pusat kraf tradisional, pantai berpasir halus, dan taman lagun — memudahkan anda merancang hari yang indah selepas pagi yang santai.`
+- alsoLabel: `Turut berdekatan:`
+- also: `Jambatan Kuala Ibai · Taman Lagun · Pantai Teluk Kalong · Pasar Malam Chendering`
+- items: `Masjid Terapung Kuala Ibai` / `Masjid terapung yang indah di atas lagun.` · `Pantai Batu Buruk` / `Pantai persisiran dengan pasir putih yang halus.` · `Kompleks Kraf Noor Arfa` / `Pusat batik tradisional Terengganu yang terkemuka.`
 
-## 8. Sticky mobile CTA bar
-Add a fixed bottom bar on `<md` screens with two actions: **Check Availability** (scrolls to `#book`) and **WhatsApp**. Hidden on desktop. Ensures booking CTAs are always reachable on mobile.
+**footer**
+- tagline: `Di mana penginapan yang tenang bertemu keindahan Terengganu. Sebuah chalet butik yang hanya mempunyai 8 kabin persendirian, tersembunyi di sepanjang tebing sungai Kuala Ibai.`
+- visit: `Kunjungi kami` · reach: `Hubungi kami` · maps: `Buka di Google Maps →`
+- slogan: `Di mana penginagan yang tenang bertemu keindahan Terengganu.` → use `Di mana penginapan yang tenang bertemu keindahan Terengganu.`
 
-## 9. Consistent alignment & spacing tokens
-- Standardize section container to `mx-auto max-w-7xl px-6 lg:px-10`.
-- Standardize eyebrow → title → body gaps: `mb-3`, `mb-8`, `mt-5`.
-- Standardize card radius to `rounded-lg` across cabins/nearby for cohesion.
-
-## 10. Mobile polish
-- Hero CTA row stacks cleanly with `gap-3`.
-- Search form already responsive; ensure submit button spans full width on mobile (`md:w-auto w-full`).
-- Apply `min-w-0` / `truncate` patterns to nav and card headings to prevent overflow.
-
-## Out of scope
-- Copy/i18n strings (no edits to `src/lib/i18n.tsx`).
-- Color tokens / typography system (`src/styles.css` untouched).
-- New routes, data, or backend changes.
-
-## Files touched
-- `src/routes/index.tsx` (single file)
-
-After implementing, I'll verify visually via Playwright at desktop + mobile viewports and screenshot each section to confirm spacing/hierarchy improvements.
+### Out of scope
+- English copy
+- Booking page (`book.*`) strings
+- Layout, styling, or component code
