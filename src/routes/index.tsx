@@ -466,3 +466,28 @@ function Footer() {
     </footer>
   );
 }
+
+/* ---------------- Mobile sticky CTA bar ---------------- */
+function MobileCtaBar() {
+  const { t } = useLanguage();
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:hidden">
+      <div className="flex items-center gap-2">
+        <a
+          href="#book"
+          className="flex-1 rounded-full bg-forest px-4 py-3 text-center text-xs font-medium uppercase tracking-widest text-coconut"
+        >
+          {t.search.submit}
+        </a>
+        <a
+          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+          target="_blank"
+          rel="noreferrer"
+          className="flex-1 rounded-full border border-forest/30 bg-card px-4 py-3 text-center text-xs font-medium uppercase tracking-widest text-forest"
+        >
+          {t.nav.whatsapp}
+        </a>
+      </div>
+    </div>
+  );
+}
