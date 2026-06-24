@@ -468,6 +468,30 @@ function Footer() {
   );
 }
 
+/* ---------------- Good to know ---------------- */
+function GoodToKnow() {
+  const { t } = useLanguage();
+  return (
+    <section className="bg-secondary/40 py-16 lg:py-20">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10">
+        <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.goodToKnow.eyebrow}</p>
+        <h2 className="mb-10 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">
+          {t.goodToKnow.title}
+        </h2>
+        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2 md:grid-cols-3">
+          {t.goodToKnow.items.map((it, i) => (
+            <div key={it.title} className="border-t border-border pt-5">
+              <p className="text-xs text-stone">0{i + 1}</p>
+              <h3 className="mt-2 font-display text-lg text-forest">{it.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-foreground/70">{it.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------------- Mobile sticky CTA bar ---------------- */
 function MobileCtaBar() {
   const { t } = useLanguage();
