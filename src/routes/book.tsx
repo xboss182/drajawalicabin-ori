@@ -8,6 +8,10 @@ import {
   getTakenDates,
 } from "@/lib/booking.functions";
 import heroRiverside from "@/assets/hero-riverside.jpg";
+import cabinQueenImg from "@/assets/cabin-queen.jpg";
+import cabinTwinImg from "@/assets/cabin-twin.jpg";
+import cabinFamilyImg from "@/assets/cabin-family.jpg";
+import cabinTripleImg from "@/assets/cabin-triple.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
 
@@ -340,7 +344,23 @@ function DetailsStep(props: {
 
       <aside className="order-1 lg:order-2">
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <img src={heroRiverside} alt="Rajawali D'Cabin riverside" className="aspect-[4/3] w-full object-cover" />
+          <img
+            src={
+              selectedCabin
+                ? selectedCabin.cabin_type === "Queen"
+                  ? cabinQueenImg
+                  : selectedCabin.cabin_type === "Twin"
+                    ? cabinTwinImg
+                    : selectedCabin.cabin_type === "Family"
+                      ? cabinFamilyImg
+                      : selectedCabin.cabin_type === "Triple"
+                        ? cabinTripleImg
+                        : heroRiverside
+                : heroRiverside
+            }
+            alt={selectedCabin?.name ?? "Rajawali D'Cabin cabin interior"}
+            className="aspect-[4/3] w-full object-cover"
+          />
           <div className="p-6">
             <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.summary.eyebrow}</p>
             <h2 className="mt-2 font-display text-2xl text-forest">
