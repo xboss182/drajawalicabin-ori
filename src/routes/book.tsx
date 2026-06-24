@@ -268,6 +268,8 @@ function DetailsStep(props: {
   submit: (e: React.FormEvent) => void;
   submitting: boolean;
   error: string | null;
+  agreed: boolean;
+  setAgreed: (b: boolean) => void;
 }) {
   const { t } = useLanguage();
   const bt = t.book;
@@ -277,7 +279,7 @@ function DetailsStep(props: {
     name, setName, email, setEmail, phone, setPhone,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
-    price, selectedCabin, taken, submit, submitting, error,
+    price, selectedCabin, taken, submit, submitting, error, agreed, setAgreed,
   } = props;
 
   return (
@@ -335,9 +337,24 @@ function DetailsStep(props: {
           <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
         )}
 
+        <div className="mt-8 rounded-2xl border border-border bg-card p-5">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.terms.eyebrow}</p>
+          <h3 className="mt-2 font-display text-lg text-forest">{bt.terms.title}</h3>
+          <p className="mt-2 text-sm text-foreground/75">{bt.terms.summary}</p>
+          <label className="mt-4 flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-forest"
+            />
+            <span className="text-sm leading-relaxed text-foreground/85">{bt.terms.agree}</span>
+          </label>
+        </div>
+
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !agreed}
           className="mt-8 w-full rounded-full bg-forest px-7 py-4 text-sm font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90 disabled:opacity-60 sm:w-auto"
         >
           {submitting ? bt.submitting : bt.submit}
