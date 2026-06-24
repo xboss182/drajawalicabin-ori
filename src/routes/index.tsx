@@ -41,6 +41,7 @@ function Index() {
       <Accommodation />
       <WhyStay />
       <NearbySection />
+      <GoodToKnow />
       <Footer />
       <MobileCtaBar />
     </main>
