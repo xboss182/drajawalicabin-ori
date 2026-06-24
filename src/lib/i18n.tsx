@@ -292,6 +292,15 @@ export const translations = {
       copyright: "© {year} Rajawali D'Cabin Chalet. Hak cipta terpelihara.",
       slogan: "Di mana penginapan yang tenang bertemu keindahan Terengganu.",
     },
+    goodToKnow: {
+      eyebrow: "Perkara baik untuk diketahui",
+      title: "Sebelum anda menempah.",
+      items: [
+        { title: "Check-in & check-out", body: "Check-in dari jam 3:00 petang. Check-out sebelum jam 12:00 tengah hari." },
+        { title: "Deposit fleksibel", body: "Tempahan diamankan dengan deposit fleksibel RM50 setiap bilik, atau bayaran penuh terus." },
+        { title: "Self check-in", body: "Self check-in mudah melalui key locker berkunci — tiba mengikut masa anda sendiri." },
+      ],
+    },
     book: {
       locale: "ms-MY",
       metaTitle: "Tempahan Bilik — Rajawali D'Cabin Chalet",
@@ -360,6 +369,24 @@ export const translations = {
         phone: "Sila masukkan nombor telefon / WhatsApp",
         bookFailed: "Gagal membuat tempahan",
         uploadFailed: "Muat naik gagal",
+        terms: "Sila setuju dengan peraturan penginapan untuk meneruskan",
+      },
+      terms: {
+        eyebrow: "Peraturan penginapan",
+        title: "Ringkasan sebelum anda meneruskan.",
+        summary: "Deposit RM50 diperlukan untuk mengesahkan tarikh anda. Bayaran penuh perlu dijelaskan sebelum check-in. Pembatalan dalam tempoh 7 hari sebelum ketibaan tidak akan dikembalikan.",
+        agree: "Saya bersetuju dengan peraturan penginapan (deposit RM50 untuk mengesahkan tarikh, bayaran penuh sebelum check-in, dan polisi pembatalan 7 hari).",
+      },
+      houseRules: {
+        title: "Peraturan & syarat penginapan anda",
+        intro: "Sila baca sebelum tiba — supaya setiap penginapan berjalan lancar.",
+        items: [
+          "Bayaran penuh dan deposit perlu dijelaskan sebelum masuk.",
+          "Deposit akan dikembalikan selepas check-out jika tiada kerosakan atau kehilangan.",
+          "Polisi deposit tidak akan dikembalikan jika dibatalkan dalam tempoh 7 hari sebelum ketibaan.",
+          "Self check-in: kod locker dan arahan akan dikongsi melalui WhatsApp pada hari ketibaan. Sila kunci semula locker selepas mengambil kunci.",
+          "Tetamu bertanggungjawab terhadap kebersihan, keselamatan, penjimatan elektrik & air, serta menjaga kunci bilik sepanjang penginapan.",
+        ],
       },
       pay: {
         eyebrow: "Langkah 2 — Pembayaran",
