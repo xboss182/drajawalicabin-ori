@@ -81,6 +81,7 @@ function BookPage() {
   const [booking, setBooking] = useState<{ bookingId: string; reference: string; total: number; holdExpiresAt: string } | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   // Load cabins
   useEffect(() => {
@@ -151,6 +152,7 @@ function BookPage() {
     if (name.trim().length < 2) return setError(bt.errors.name);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError(bt.errors.email);
     if (phone.trim().length < 5) return setError(bt.errors.phone);
+    if (!agreed) return setError(bt.errors.terms);
 
     setSubmitting(true);
     try {
@@ -220,6 +222,7 @@ function BookPage() {
             notes, setNotes,
             price, selectedCabin, taken,
             submit, submitting, error,
+            agreed, setAgreed,
           }}
         />
       )}
@@ -265,6 +268,8 @@ function DetailsStep(props: {
   submit: (e: React.FormEvent) => void;
   submitting: boolean;
   error: string | null;
+  agreed: boolean;
+  setAgreed: (b: boolean) => void;
 }) {
   const { t } = useLanguage();
   const bt = t.book;
@@ -274,7 +279,7 @@ function DetailsStep(props: {
     name, setName, email, setEmail, phone, setPhone,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
-    price, selectedCabin, taken, submit, submitting, error,
+    price, selectedCabin, taken, submit, submitting, error, agreed, setAgreed,
   } = props;
 
   return (
@@ -332,9 +337,24 @@ function DetailsStep(props: {
           <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
         )}
 
+        <div className="mt-8 rounded-2xl border border-border bg-card p-5">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.terms.eyebrow}</p>
+          <h3 className="mt-2 font-display text-lg text-forest">{bt.terms.title}</h3>
+          <p className="mt-2 text-sm text-foreground/75">{bt.terms.summary}</p>
+          <label className="mt-4 flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-forest"
+            />
+            <span className="text-sm leading-relaxed text-foreground/85">{bt.terms.agree}</span>
+          </label>
+        </div>
+
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !agreed}
           className="mt-8 w-full rounded-full bg-forest px-7 py-4 text-sm font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90 disabled:opacity-60 sm:w-auto"
         >
           {submitting ? bt.submitting : bt.submit}
@@ -544,10 +564,26 @@ function DoneStep({ name, email, reference }: { name: string; email: string; ref
         <span className="font-mono text-forest">{reference}</span>{bt.done.body2}{" "}
         <span className="text-forest">{email}</span>{bt.done.bodyTail}
       </p>
+
+      <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-border bg-card p-6 text-left">
+        <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.houseRules.title}</p>
+        <p className="mt-2 text-sm text-foreground/75">{bt.houseRules.intro}</p>
+        <ul className="mt-4 space-y-2 text-sm text-foreground/85">
+          {bt.houseRules.items.map((it, i) => (
+            <li key={i} className="flex gap-2">
+              <span className="mt-[7px] size-1 shrink-0 rounded-full bg-forest/60" />
+              <span>{it}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div className="mt-10 flex flex-wrap justify-center gap-4">
         <a
           href={`https://wa.me/60115007204?text=${encodeURIComponent(
-            bt.done.whatsappText.replace("{ref}", reference).replace("{name}", name),
+            bt.done.whatsappText.replace("{ref}", reference).replace("{name}", name) +
+              "\n\n" + bt.houseRules.title + ":\n" +
+              bt.houseRules.items.map((it) => "• " + it).join("\n"),
           )}`}
           target="_blank"
           rel="noreferrer"
