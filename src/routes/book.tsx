@@ -81,6 +81,7 @@ function BookPage() {
   const [booking, setBooking] = useState<{ bookingId: string; reference: string; total: number; holdExpiresAt: string } | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   // Load cabins
   useEffect(() => {
@@ -151,6 +152,7 @@ function BookPage() {
     if (name.trim().length < 2) return setError(bt.errors.name);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError(bt.errors.email);
     if (phone.trim().length < 5) return setError(bt.errors.phone);
+    if (!agreed) return setError(bt.errors.terms);
 
     setSubmitting(true);
     try {
@@ -220,6 +222,7 @@ function BookPage() {
             notes, setNotes,
             price, selectedCabin, taken,
             submit, submitting, error,
+            agreed, setAgreed,
           }}
         />
       )}
