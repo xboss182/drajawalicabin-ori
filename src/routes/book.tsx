@@ -564,10 +564,26 @@ function DoneStep({ name, email, reference }: { name: string; email: string; ref
         <span className="font-mono text-forest">{reference}</span>{bt.done.body2}{" "}
         <span className="text-forest">{email}</span>{bt.done.bodyTail}
       </p>
+
+      <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-border bg-card p-6 text-left">
+        <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.houseRules.title}</p>
+        <p className="mt-2 text-sm text-foreground/75">{bt.houseRules.intro}</p>
+        <ul className="mt-4 space-y-2 text-sm text-foreground/85">
+          {bt.houseRules.items.map((it, i) => (
+            <li key={i} className="flex gap-2">
+              <span className="mt-[7px] size-1 shrink-0 rounded-full bg-forest/60" />
+              <span>{it}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div className="mt-10 flex flex-wrap justify-center gap-4">
         <a
           href={`https://wa.me/60115007204?text=${encodeURIComponent(
-            bt.done.whatsappText.replace("{ref}", reference).replace("{name}", name),
+            bt.done.whatsappText.replace("{ref}", reference).replace("{name}", name) +
+              "\n\n" + bt.houseRules.title + ":\n" +
+              bt.houseRules.items.map((it) => "• " + it).join("\n"),
           )}`}
           target="_blank"
           rel="noreferrer"
