@@ -217,6 +217,8 @@ export const translations = {
   },
   bm: {
     nav: { cabins: "Bilik", about: "Tentang", nearby: "Berdekatan", book: "Tempah", whatsapp: "WhatsApp Kami" },
+    whatsappMessage:
+      "Salam Team Rajawali D'Cabin Chalet, saya ada pertanyaan berkenaan penginapan/tempahan saya. (Peringatan: Salinan rasmi tempahan, ringkasan maklumat, dan pautan pembayaran baki keselamatan telah dihantar terus ke emel anda untuk pengesahan automatik. Semua pembayaran mestilah diselesaikan secara selamat melalui pautan laman web yang disediakan di dalam emel anda.)",
     hero: {
       badge: "Hanya 8 buah kabin · Kuala Ibai",
       title1: "Kembali ke alam,",
