@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicHooksSendBalanceRemindersRouteImport } from './routes/api/public/hooks/send-balance-reminders'
 
 const ManageBookingRoute = ManageBookingRouteImport.update({
   id: '/manage-booking',
@@ -45,6 +46,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicHooksSendBalanceRemindersRoute =
+  ApiPublicHooksSendBalanceRemindersRouteImport.update({
+    id: '/api/public/hooks/send-balance-reminders',
+    path: '/api/public/hooks/send-balance-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -52,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/book': typeof BookRoute
   '/manage-booking': typeof ManageBookingRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -59,6 +67,7 @@ export interface FileRoutesByTo {
   '/book': typeof BookRoute
   '/manage-booking': typeof ManageBookingRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,12 +77,25 @@ export interface FileRoutesById {
   '/book': typeof BookRoute
   '/manage-booking': typeof ManageBookingRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/book' | '/manage-booking' | '/admin'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/book'
+    | '/manage-booking'
+    | '/admin'
+    | '/api/public/hooks/send-balance-reminders'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/book' | '/manage-booking' | '/admin'
+  to:
+    | '/'
+    | '/auth'
+    | '/book'
+    | '/manage-booking'
+    | '/admin'
+    | '/api/public/hooks/send-balance-reminders'
   id:
     | '__root__'
     | '/'
@@ -82,6 +104,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/manage-booking'
     | '/_authenticated/admin'
+    | '/api/public/hooks/send-balance-reminders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -90,6 +113,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BookRoute: typeof BookRoute
   ManageBookingRoute: typeof ManageBookingRoute
+  ApiPublicHooksSendBalanceRemindersRoute: typeof ApiPublicHooksSendBalanceRemindersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -136,6 +160,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/hooks/send-balance-reminders': {
+      id: '/api/public/hooks/send-balance-reminders'
+      path: '/api/public/hooks/send-balance-reminders'
+      fullPath: '/api/public/hooks/send-balance-reminders'
+      preLoaderRoute: typeof ApiPublicHooksSendBalanceRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -156,6 +187,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BookRoute: BookRoute,
   ManageBookingRoute: ManageBookingRoute,
+  ApiPublicHooksSendBalanceRemindersRoute:
+    ApiPublicHooksSendBalanceRemindersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
