@@ -25,8 +25,10 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const WHATSAPP = "60115500204"; // 011-5500 7204 -> intl format approx; will be updated below
-const WHATSAPP_NUMBER = "60115007204"; // 011-5500 7204
+const WHATSAPP_NUMBER = "601155007204"; // +60 11-5500 7204
+function waHref(message: string) {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
 
 const cabinImages = [cabinQueen, cabinTwin, cabinFamily, cabinTriple];
 const nearbyImages = [nearbyMosque, nearbyBeach, nearbyCraft];
