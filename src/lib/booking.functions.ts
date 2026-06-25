@@ -298,3 +298,103 @@ export const isCurrentUserAdmin = createServerFn({ method: "GET" })
     });
     return { isAdmin: Boolean(data) };
   });
+
+// ============== GUEST MANAGE-BOOKING ==============
+
+const getByIdSchema = z.object({ bookingId: z.string().uuid() });
+
+export const getBookingForGuest = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => getByIdSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: b, error } = await supabaseAdmin
+      .from("booking_requests")
+      .select(
+        "id, guest_name, email, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, balance_paid_at, payment_reference, status, locker_code, comforter, comforter_total"
+      )
+      .eq("id", data.bookingId)
+      .maybeSingle();
+    if (error || !b) throw new Error("Booking not found");
+    const total = Number(b.total_amount ?? 0);
+    const deposit = Number(b.deposit_amount ?? 50);
+    const remaining = b.balance_amount != null ? Number(b.balance_amount) : Math.max(0, total - deposit);
+    return {
+      id: b.id,
+      reference: b.payment_reference,
+      guestName: b.guest_name,
+      email: b.email,
+      checkIn: b.check_in,
+      checkOut: b.check_out,
+      guests: b.guests,
+      nights: b.nights,
+      roomType: b.room_type,
+      total,
+      deposit,
+      remaining,
+      status: b.status,
+      lockerCode: b.locker_code,
+      balancePaidAt: b.balance_paid_at,
+      comforter: b.comforter,
+    };
+  });
+
+const balanceProofSchema = z.object({
+  bookingId: z.string().uuid(),
+  path: z.string().min(3).max(500),
+});
+export const attachBalanceProof = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => balanceProofSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: b } = await supabaseAdmin
+      .from("booking_requests")
+      .select("id, status")
+      .eq("id", data.bookingId)
+      .maybeSingle();
+    if (!b) throw new Error("Booking not found");
+    if (b.status === "fully_paid") throw new Error("This booking is already fully paid.");
+    if (b.status === "cancelled") throw new Error("This booking is no longer active.");
+    const { error } = await supabaseAdmin
+      .from("booking_requests")
+      .update({ balance_proof_path: data.path, balance_paid_at: new Date().toISOString() })
+      .eq("id", data.bookingId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+const fullyPaidSchema = z.object({
+  bookingId: z.string().uuid(),
+  lockerCode: z.string().trim().min(3).max(20),
+});
+export const markFullyPaid = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => fullyPaidSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("booking_requests")
+      .update({
+        status: "fully_paid",
+        locker_code: data.lockerCode,
+        balance_paid_at: new Date().toISOString(),
+      })
+      .eq("id", data.bookingId);
+    if (error) throw new Error(error.message);
+
+    const { data: full } = await supabaseAdmin
+      .from("booking_requests")
+      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, payment_reference, locker_code")
+      .eq("id", data.bookingId)
+      .maybeSingle();
+    if (full) {
+      const { renderFullyPaidEmail, enqueueEmail } = await import("./email.server");
+      const { subject, body } = renderFullyPaidEmail(full as never);
+      await enqueueEmail(supabaseAdmin, { kind: "fully_paid", toEmail: full.email, subject, body, bookingId: full.id });
+    }
+    return { ok: true };
+  });
