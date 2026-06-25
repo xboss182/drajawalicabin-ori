@@ -16,19 +16,26 @@ export type Database = {
     Tables: {
       booking_requests: {
         Row: {
+          balance_amount: number | null
+          balance_paid_at: string | null
+          balance_proof_path: string | null
+          balance_reminder_sent_at: string | null
           cabin_id: string | null
           check_in: string
           check_out: string
           comforter: boolean
           comforter_total: number
+          confirmation_email_sent_at: string | null
           confirmed_at: string | null
           confirmed_by: string | null
           created_at: string
+          deposit_amount: number
           email: string
           guest_name: string
           guests: number
           hold_expires_at: string | null
           id: string
+          locker_code: string | null
           nights: number | null
           notes: string | null
           num_rooms: number | null
@@ -44,19 +51,26 @@ export type Database = {
           vehicle_type: string | null
         }
         Insert: {
+          balance_amount?: number | null
+          balance_paid_at?: string | null
+          balance_proof_path?: string | null
+          balance_reminder_sent_at?: string | null
           cabin_id?: string | null
           check_in: string
           check_out: string
           comforter?: boolean
           comforter_total?: number
+          confirmation_email_sent_at?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string
+          deposit_amount?: number
           email: string
           guest_name: string
           guests: number
           hold_expires_at?: string | null
           id?: string
+          locker_code?: string | null
           nights?: number | null
           notes?: string | null
           num_rooms?: number | null
@@ -72,19 +86,26 @@ export type Database = {
           vehicle_type?: string | null
         }
         Update: {
+          balance_amount?: number | null
+          balance_paid_at?: string | null
+          balance_proof_path?: string | null
+          balance_reminder_sent_at?: string | null
           cabin_id?: string | null
           check_in?: string
           check_out?: string
           comforter?: boolean
           comforter_total?: number
+          confirmation_email_sent_at?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
           created_at?: string
+          deposit_amount?: number
           email?: string
           guest_name?: string
           guests?: number
           hold_expires_at?: string | null
           id?: string
+          locker_code?: string | null
           nights?: number | null
           notes?: string | null
           num_rooms?: number | null
@@ -153,6 +174,56 @@ export type Database = {
           weekend_rate?: number
         }
         Relationships: []
+      }
+      email_outbox: {
+        Row: {
+          body: string
+          booking_id: string | null
+          cc_emails: string[]
+          created_at: string
+          error: string | null
+          id: string
+          kind: string
+          sent_at: string | null
+          status: string
+          subject: string
+          to_email: string
+        }
+        Insert: {
+          body: string
+          booking_id?: string | null
+          cc_emails?: string[]
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          to_email: string
+        }
+        Update: {
+          body?: string
+          booking_id?: string | null
+          cc_emails?: string[]
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_outbox_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       school_holidays: {
         Row: {
@@ -240,6 +311,7 @@ export type Database = {
         | "confirmed"
         | "cancelled"
         | "expired"
+        | "fully_paid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -374,6 +446,7 @@ export const Constants = {
         "confirmed",
         "cancelled",
         "expired",
+        "fully_paid",
       ],
     },
   },

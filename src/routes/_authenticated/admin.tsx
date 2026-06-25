@@ -6,6 +6,7 @@ import {
   confirmBooking,
   rejectBooking,
   isCurrentUserAdmin,
+  markFullyPaid,
 } from "@/lib/booking.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -36,6 +37,9 @@ type Booking = {
   proofUrl: string | null;
   created_at: string;
   hold_expires_at: string | null;
+  balance_paid_at?: string | null;
+  locker_code?: string | null;
+  deposit_amount?: number | null;
 };
 
 function AdminPage() {
@@ -78,6 +82,19 @@ function AdminPage() {
     if (!confirm("Reject this booking and free the dates?")) return;
     await rejectBooking({ data: { bookingId: id } });
     refresh();
+  }
+  async function onMarkPaid(b: Booking) {
+    const code = prompt(
+      `Enter key-locker code for ${b.guest_name} (${b.payment_reference}).\nThis will mark the booking Fully Paid and email the guest.`,
+      "",
+    );
+    if (!code || code.trim().length < 3) return;
+    try {
+      await markFullyPaid({ data: { bookingId: b.id, lockerCode: code.trim() } });
+      refresh();
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Failed");
+    }
   }
   async function signOut() {
     await supabase.auth.signOut();
@@ -122,9 +139,15 @@ function AdminPage() {
             </Section>
             <Section title={`Confirmed (${filtered("confirmed").length})`}>
               {filtered("confirmed").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} />
+                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onMarkPaid={onMarkPaid} />
               ))}
               {filtered("confirmed").length === 0 && <Empty />}
+            </Section>
+            <Section title={`Fully paid (${filtered("fully_paid").length})`}>
+              {filtered("fully_paid").map((b) => (
+                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} />
+              ))}
+              {filtered("fully_paid").length === 0 && <Empty />}
             </Section>
             <Section title={`Cancelled / expired`}>
               {bookings
@@ -156,11 +179,12 @@ function Empty() {
 }
 
 function Card({
-  b, onConfirm, onReject,
+  b, onConfirm, onReject, onMarkPaid,
 }: {
   b: Booking;
   onConfirm: (id: string) => void;
   onReject: (id: string) => void;
+  onMarkPaid?: (b: Booking) => void;
 }) {
   return (
     <article className="rounded-xl border border-border bg-card p-5">
@@ -227,6 +251,24 @@ function Card({
             WhatsApp guest
           </a>
         </div>
+      )}
+      {b.status === "confirmed" && onMarkPaid && (
+        <div className="mt-5 flex flex-wrap gap-2">
+          {b.balance_paid_at && (
+            <span className="rounded-full bg-coconut px-4 py-2 text-[11px] uppercase tracking-widest text-forest">
+              Balance proof uploaded {new Date(b.balance_paid_at).toLocaleDateString()}
+            </span>
+          )}
+          <button
+            onClick={() => onMarkPaid(b)}
+            className="rounded-full bg-forest px-5 py-2 text-xs font-medium uppercase tracking-widest text-coconut hover:bg-forest/90"
+          >
+            Mark fully paid + set locker code
+          </button>
+        </div>
+      )}
+      {b.status === "fully_paid" && b.locker_code && (
+        <p className="mt-4 text-xs text-forest">Locker code: <span className="font-mono">{b.locker_code}</span></p>
       )}
     </article>
   );
