@@ -116,7 +116,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: booking } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, payment_reference, status")
+      .select("id, payment_reference, status, email")
       .eq("id", data.bookingId)
       .maybeSingle();
     if (!booking || booking.payment_reference !== data.reference) {
@@ -130,6 +130,22 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
       .update({ payment_proof_path: data.path, status: "awaiting_review" })
       .eq("id", data.bookingId);
     if (error) throw new Error(error.message);
+
+    // Send booking summary email (placeholder → email_outbox)
+    const { data: full } = await supabaseAdmin
+      .from("booking_requests")
+      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, payment_reference, locker_code, confirmation_email_sent_at")
+      .eq("id", data.bookingId)
+      .maybeSingle();
+    if (full && !full.confirmation_email_sent_at) {
+      const { renderBookingSummaryEmail, enqueueEmail } = await import("./email.server");
+      const { subject, body } = renderBookingSummaryEmail(full as never);
+      await enqueueEmail(supabaseAdmin, { kind: "booking_summary", toEmail: full.email, subject, body, bookingId: full.id });
+      await supabaseAdmin
+        .from("booking_requests")
+        .update({ confirmation_email_sent_at: new Date().toISOString() })
+        .eq("id", data.bookingId);
+    }
     return { ok: true };
   });
 
