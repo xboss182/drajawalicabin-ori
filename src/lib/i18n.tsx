@@ -5,6 +5,8 @@ export type Lang = "en" | "bm";
 export const translations = {
   en: {
     nav: { cabins: "Cabins", about: "About", nearby: "Nearby", book: "Book", whatsapp: "WhatsApp Us" },
+    whatsappMessage:
+      "Salam Team Rajawali D'Cabin Chalet, I have a question regarding my staycation/booking. (Reminder: Your formal booking copy, summary, and secure balance payment link are sent directly to your email for automated verification. All payments must be completed securely through the website link provided in your email.)",
     hero: {
       badge: "Only 8 cabins · Kuala Ibai",
       title1: "Escape to nature,",
