@@ -25,8 +25,10 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const WHATSAPP = "60115500204"; // 011-5500 7204 -> intl format approx; will be updated below
-const WHATSAPP_NUMBER = "60115007204"; // 011-5500 7204
+const WHATSAPP_NUMBER = "601155007204"; // +60 11-5500 7204
+function waHref(message: string) {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
 
 const cabinImages = [cabinQueen, cabinTwin, cabinFamily, cabinTriple];
 const nearbyImages = [nearbyMosque, nearbyBeach, nearbyCraft];
@@ -72,7 +74,7 @@ function Nav() {
         <div className="flex items-center gap-3">
           <LanguageToggle />
           <a
-            href={`https://wa.me/${WHATSAPP_NUMBER}`}
+            href={waHref(t.whatsappMessage)}
             target="_blank"
             rel="noreferrer"
             className="hidden sm:inline-flex rounded-full border border-coconut/40 bg-coconut/10 px-4 py-2 text-xs uppercase tracking-widest text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest"
@@ -133,7 +135,7 @@ function Hero() {
           <span className="hidden sm:inline opacity-50">·</span>
           <span>Riverside · Kuala Ibai</span>
           <span className="hidden sm:inline opacity-50">·</span>
-          <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="hover:text-coconut">WhatsApp booking</a>
+          <a href={waHref(t.whatsappMessage)} target="_blank" rel="noreferrer" className="hover:text-coconut">WhatsApp booking</a>
         </div>
       </div>
     </section>
@@ -441,7 +443,7 @@ function Footer() {
           <p className="mb-3 text-[11px] uppercase tracking-[0.25em] text-stone">{t.footer.reach}</p>
           <ul className="space-y-2 text-foreground/80">
             <li>
-              <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="hover:text-forest">
+              <a href={waHref(t.whatsappMessage)} target="_blank" rel="noreferrer" className="hover:text-forest">
                 {t.footer.whatsapp}
               </a>
             </li>
@@ -505,7 +507,7 @@ function MobileCtaBar() {
           {t.search.submit}
         </a>
         <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}`}
+          href={waHref(t.whatsappMessage)}
           target="_blank"
           rel="noreferrer"
           className="flex-1 rounded-full border border-forest/30 bg-card px-4 py-3 text-center text-xs font-medium uppercase tracking-widest text-forest"
