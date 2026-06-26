@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -297,6 +298,89 @@ export const isCurrentUserAdmin = createServerFn({ method: "GET" })
       _role: "admin",
     });
     return { isAdmin: Boolean(data) };
+  });
+
+// ============== FIND BOOKING (lost-link recovery) ==============
+
+const findSchema = z.object({
+  email: z.string().trim().email().max(255),
+  reference: z.string().trim().min(3).max(40),
+});
+
+function callerIp(): string {
+  try {
+    const req = getRequest();
+    const h = req.headers;
+    const fwd = h.get("cf-connecting-ip") ?? h.get("x-real-ip") ?? h.get("x-forwarded-for") ?? "";
+    return (fwd.split(",")[0] ?? "").trim() || "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
+export const requestManageLink = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => findSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const ip = callerIp();
+
+    // Rate limit: 5 attempts per 15 min per IP
+    const since = new Date(Date.now() - 15 * 60_000).toISOString();
+    const { count } = await supabaseAdmin
+      .from("manage_link_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("ip", ip)
+      .gte("requested_at", since);
+    if ((count ?? 0) >= 5) {
+      throw new Error("Too many attempts. Please try again in 15 minutes.");
+    }
+    await supabaseAdmin.from("manage_link_requests").insert({ ip } as never);
+
+    // Look up the booking — case-insensitive match on both fields.
+    const ref = data.reference.trim().toUpperCase();
+    const email = data.email.trim().toLowerCase();
+    const { data: rows } = await supabaseAdmin
+      .from("booking_requests")
+      .select("id, guest_name, email, payment_reference, check_in, room_type, status")
+      .ilike("payment_reference", ref)
+      .limit(5);
+    const match = (rows ?? []).find((r) => (r.email ?? "").trim().toLowerCase() === email);
+
+    if (match && match.status !== "cancelled") {
+      // Build the manage link from the request's own origin.
+      let origin = "";
+      try {
+        const req = getRequest();
+        origin = new URL(req.url).origin;
+      } catch {
+        origin = "";
+      }
+      const manageUrl = `${origin}/manage-booking?id=${match.id}`;
+      const subject = `Your booking link — ${match.payment_reference ?? match.id.slice(0, 8)} · Rajawali D'Cabin`;
+      const body = [
+        `Hi ${match.guest_name},`,
+        ``,
+        `Here is the link to manage your booking:`,
+        manageUrl,
+        ``,
+        `Booking number: ${match.payment_reference ?? match.id.slice(0, 8)}`,
+        `Cabin: ${match.room_type}`,
+        ``,
+        `If you didn't request this, you can safely ignore this email.`,
+        `— Rajawali D'Cabin Chalet`,
+      ].join("\n");
+      const { enqueueEmail } = await import("./email.server");
+      await enqueueEmail(supabaseAdmin, {
+        kind: "manage_link",
+        toEmail: match.email,
+        subject,
+        body,
+        bookingId: match.id,
+      });
+    }
+
+    // Always return the same response (no enumeration).
+    return { ok: true };
   });
 
 // ============== GUEST MANAGE-BOOKING ==============
