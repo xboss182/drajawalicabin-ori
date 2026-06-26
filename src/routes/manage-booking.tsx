@@ -67,7 +67,10 @@ function ManagePage() {
       <header className="border-b border-border bg-coconut">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
           <Link to="/" className="font-display text-lg text-forest">Rajawali D'Cabin</Link>
-          <Link to="/" className="text-xs uppercase tracking-widest text-stone hover:text-forest">Home</Link>
+          <div className="flex items-center gap-5">
+            <Link to="/find-booking" className="text-xs uppercase tracking-widest text-stone hover:text-forest">Lost link?</Link>
+            <Link to="/" className="text-xs uppercase tracking-widest text-stone hover:text-forest">Home</Link>
+          </div>
         </div>
       </header>
 
