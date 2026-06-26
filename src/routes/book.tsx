@@ -591,6 +591,11 @@ function DoneStep({ name, email, reference }: { name: string; email: string; ref
         </a>
         <Link to="/" className="rounded-full border border-border px-7 py-3.5 text-sm">{bt.done.backHome}</Link>
       </div>
+      <p className="mt-6 text-xs text-stone">
+        Bookmark your confirmation email — or use{" "}
+        <Link to="/find-booking" className="underline hover:text-forest">Find Booking</Link>{" "}
+        if you lose the link.
+      </p>
     </section>
   );
 }
