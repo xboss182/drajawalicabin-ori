@@ -225,6 +225,24 @@ export type Database = {
           },
         ]
       }
+      manage_link_requests: {
+        Row: {
+          id: string
+          ip: string
+          requested_at: string
+        }
+        Insert: {
+          id?: string
+          ip: string
+          requested_at?: string
+        }
+        Update: {
+          id?: string
+          ip?: string
+          requested_at?: string
+        }
+        Relationships: []
+      }
       school_holidays: {
         Row: {
           created_at: string
