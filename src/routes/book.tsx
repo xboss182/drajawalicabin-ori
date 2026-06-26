@@ -581,9 +581,7 @@ function DoneStep({ name, email, reference }: { name: string; email: string; ref
       <div className="mt-10 flex flex-wrap justify-center gap-4">
         <a
           href={`https://wa.me/601155007204?text=${encodeURIComponent(
-            bt.done.whatsappText.replace("{ref}", reference).replace("{name}", name) +
-              "\n\n" + bt.houseRules.title + ":\n" +
-              bt.houseRules.items.map((it) => "• " + it).join("\n"),
+            bt.done.whatsappText.replace("{ref}", reference).replace("{name}", name),
           )}`}
           target="_blank"
           rel="noreferrer"
