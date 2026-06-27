@@ -296,6 +296,21 @@ function About() {
 /* ---------------- Accommodation ---------------- */
 function Accommodation() {
   const { t } = useLanguage();
+  // Cabin i18n order: 0=Queen, 1=Twin, 2=Family, 3=Triple
+  // Desired display order: Queen → Toilet(2pax) → Twin → Toilet(2pax) → Triple → Toilet(3pax) → Family → Toilet(4pax)
+  const slides: Array<
+    | { kind: "cabin"; cabinIdx: number }
+    | { kind: "toilet"; img: string; label: string; sleeps: string }
+  > = [
+    { kind: "cabin", cabinIdx: 0 },
+    { kind: "toilet", img: toilet2paxAsset.url, label: "Private Bathroom · Deluxe Queen", sleeps: "Sleeps 2" },
+    { kind: "cabin", cabinIdx: 1 },
+    { kind: "toilet", img: toilet2paxAsset.url, label: "Private Bathroom · Deluxe Twin", sleeps: "Sleeps 2" },
+    { kind: "cabin", cabinIdx: 3 },
+    { kind: "toilet", img: toilet3paxAsset.url, label: "Private Bathroom · Triple Suite", sleeps: "Sleeps 3" },
+    { kind: "cabin", cabinIdx: 2 },
+    { kind: "toilet", img: toilet4paxAsset.url, label: "Private Bathroom · Family Suite", sleeps: "Sleeps 4" },
+  ];
   return (
     <section id="stay" className="bg-secondary/40 py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
@@ -311,40 +326,66 @@ function Accommodation() {
           </p>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {t.stay.cabins.map((c, idx) => (
-            <article key={c.name} className="group flex flex-col overflow-hidden rounded-lg bg-card shadow-sm">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img
-                  src={cabinImages[idx]}
-                  alt={`${c.name} interior`}
-                  width={1280}
-                  height={960}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                />
-                <span className="absolute left-3 top-3 rounded-full bg-coconut/95 px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest text-forest backdrop-blur">
-                  {c.sleeps}
-                </span>
-              </div>
-              <div className="flex flex-1 flex-col gap-3 p-5">
-                <h3 className="font-display text-xl leading-tight">{c.name}</h3>
-                <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px] text-foreground/75">
-                  {c.features.map((f) => (
-                    <li key={f} className="flex gap-1.5">
-                      <span className="mt-[7px] size-1 shrink-0 rounded-full bg-forest/60" />
-                      <span className="min-w-0">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href="#book"
-                  className="mt-auto inline-flex items-center justify-center gap-2 rounded-full bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90"
-                >
-                  {t.stay.cta}
-                </a>
-              </div>
-            </article>
-          ))}
+          {slides.map((s, i) => {
+            if (s.kind === "cabin") {
+              const c = t.stay.cabins[s.cabinIdx];
+              return (
+                <article key={`cabin-${i}`} className="group flex flex-col overflow-hidden rounded-lg bg-card shadow-sm">
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img
+                      src={cabinImages[s.cabinIdx]}
+                      alt={`${c.name} interior`}
+                      width={1280}
+                      height={960}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                    />
+                    <span className="absolute left-3 top-3 rounded-full bg-coconut/95 px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest text-forest backdrop-blur">
+                      {c.sleeps}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-3 p-5">
+                    <h3 className="font-display text-xl leading-tight">{c.name}</h3>
+                    <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px] text-foreground/75">
+                      {c.features.map((f) => (
+                        <li key={f} className="flex gap-1.5">
+                          <span className="mt-[7px] size-1 shrink-0 rounded-full bg-forest/60" />
+                          <span className="min-w-0">{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <a
+                      href="#book"
+                      className="mt-auto inline-flex items-center justify-center gap-2 rounded-full bg-forest px-4 py-2.5 text-xs font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90"
+                    >
+                      {t.stay.cta}
+                    </a>
+                  </div>
+                </article>
+              );
+            }
+            return (
+              <article key={`toilet-${i}`} className="group flex flex-col overflow-hidden rounded-lg bg-card shadow-sm">
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img
+                    src={s.img}
+                    alt={s.label}
+                    width={1280}
+                    height={960}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                  />
+                  <span className="absolute left-3 top-3 rounded-full bg-coconut/95 px-2.5 py-1 text-[10px] font-medium uppercase tracking-widest text-forest backdrop-blur">
+                    {s.sleeps}
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col gap-2 p-5">
+                  <h3 className="font-display text-lg leading-tight">{s.label}</h3>
+                  <p className="text-[13px] text-foreground/70">Hot shower · Private en-suite · Toiletries shelf</p>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>
