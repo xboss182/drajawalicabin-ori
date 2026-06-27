@@ -78,7 +78,7 @@ function BookPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [booking, setBooking] = useState<{ bookingId: string; reference: string; total: number; holdExpiresAt: string } | null>(null);
+  const [booking, setBooking] = useState<{ bookingId: string; reference: string; total: number; holdExpiresAt: string; guestToken: string } | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -189,7 +189,7 @@ function BookPage() {
     setError(null);
     try {
       const ext = proofFile.name.split(".").pop() ?? "jpg";
-      const path = `proofs/${booking.bookingId}-${Date.now()}.${ext}`;
+      const path = `bookings/${booking.bookingId}/proof-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("payment-proofs")
         .upload(path, proofFile, { upsert: false });
