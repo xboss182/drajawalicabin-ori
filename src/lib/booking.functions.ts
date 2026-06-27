@@ -93,7 +93,7 @@ export const createBooking = createServerFn({ method: "POST" })
     const { data: inserted, error: insErr } = await supabaseAdmin
       .from("booking_requests")
       .insert(insertPayload as any)
-      .select("id, payment_reference, total_amount, hold_expires_at")
+      .select("id, payment_reference, total_amount, hold_expires_at, guest_token")
       .single();
     if (insErr) throw new Error(insErr.message);
 
@@ -102,6 +102,7 @@ export const createBooking = createServerFn({ method: "POST" })
       reference: inserted.payment_reference as string,
       total: Number(inserted.total_amount),
       holdExpiresAt: inserted.hold_expires_at as string,
+      guestToken: inserted.guest_token as string,
     };
   });
 
@@ -115,6 +116,9 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => attachSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!data.path.startsWith(`bookings/${data.bookingId}/`)) {
+      throw new Error("Invalid upload path");
+    }
     const { data: booking } = await supabaseAdmin
       .from("booking_requests")
       .select("id, payment_reference, status, email")
@@ -341,7 +345,7 @@ export const requestManageLink = createServerFn({ method: "POST" })
     const email = data.email.trim().toLowerCase();
     const { data: rows } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, guest_name, email, payment_reference, check_in, room_type, status")
+      .select("id, guest_name, email, payment_reference, check_in, room_type, status, guest_token")
       .ilike("payment_reference", ref)
       .limit(5);
     const match = (rows ?? []).find((r) => (r.email ?? "").trim().toLowerCase() === email);
@@ -355,7 +359,7 @@ export const requestManageLink = createServerFn({ method: "POST" })
       } catch {
         origin = "";
       }
-      const manageUrl = `${origin}/manage-booking?id=${match.id}`;
+      const manageUrl = `${origin}/manage-booking?id=${match.id}&token=${match.guest_token}`;
       const subject = `Your booking link — ${match.payment_reference ?? match.id.slice(0, 8)} · Rajawali D'Cabin`;
       const body = [
         `Hi ${match.guest_name},`,
@@ -385,7 +389,10 @@ export const requestManageLink = createServerFn({ method: "POST" })
 
 // ============== GUEST MANAGE-BOOKING ==============
 
-const getByIdSchema = z.object({ bookingId: z.string().uuid() });
+const getByIdSchema = z.object({
+  bookingId: z.string().uuid(),
+  guestToken: z.string().uuid(),
+});
 
 export const getBookingForGuest = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => getByIdSchema.parse(d))
@@ -394,11 +401,12 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
     const { data: b, error } = await supabaseAdmin
       .from("booking_requests")
       .select(
-        "id, guest_name, email, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, balance_paid_at, payment_reference, status, locker_code, comforter, comforter_total"
+        "id, guest_name, email, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, balance_paid_at, payment_reference, status, locker_code, comforter, comforter_total, guest_token"
       )
       .eq("id", data.bookingId)
       .maybeSingle();
     if (error || !b) throw new Error("Booking not found");
+    if (b.guest_token !== data.guestToken) throw new Error("Booking not found");
     const total = Number(b.total_amount ?? 0);
     const deposit = Number(b.deposit_amount ?? 50);
     const remaining = b.balance_amount != null ? Number(b.balance_amount) : Math.max(0, total - deposit);
@@ -424,18 +432,23 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
 
 const balanceProofSchema = z.object({
   bookingId: z.string().uuid(),
+  guestToken: z.string().uuid(),
   path: z.string().min(3).max(500),
 });
 export const attachBalanceProof = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => balanceProofSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!data.path.startsWith(`bookings/${data.bookingId}/`)) {
+      throw new Error("Invalid upload path");
+    }
     const { data: b } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, status")
+      .select("id, status, guest_token")
       .eq("id", data.bookingId)
       .maybeSingle();
     if (!b) throw new Error("Booking not found");
+    if (b.guest_token !== data.guestToken) throw new Error("Booking not found");
     if (b.status === "fully_paid") throw new Error("This booking is already fully paid.");
     if (b.status === "cancelled") throw new Error("This booking is no longer active.");
     const { error } = await supabaseAdmin

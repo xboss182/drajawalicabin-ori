@@ -32,6 +32,7 @@ export type Database = {
           deposit_amount: number
           email: string
           guest_name: string
+          guest_token: string
           guests: number
           hold_expires_at: string | null
           id: string
@@ -67,6 +68,7 @@ export type Database = {
           deposit_amount?: number
           email: string
           guest_name: string
+          guest_token?: string
           guests: number
           hold_expires_at?: string | null
           id?: string
@@ -102,6 +104,7 @@ export type Database = {
           deposit_amount?: number
           email?: string
           guest_name?: string
+          guest_token?: string
           guests?: number
           hold_expires_at?: string | null
           id?: string

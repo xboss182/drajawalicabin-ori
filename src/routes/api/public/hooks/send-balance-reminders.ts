@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/public/hooks/send-balance-reminders")
 
         const { data: rows, error } = await supabaseAdmin
           .from("booking_requests")
-          .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, payment_reference, locker_code, status, balance_reminder_sent_at, balance_paid_at")
+          .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, payment_reference, locker_code, status, balance_reminder_sent_at, balance_paid_at, guest_token")
           .eq("check_in", targetDate)
           .in("status", ["awaiting_review", "confirmed"])
           .is("balance_reminder_sent_at", null)
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/api/public/hooks/send-balance-reminders")
         const origin = new URL(request.url).origin;
         let sent = 0;
         for (const r of rows ?? []) {
-          const manageUrl = `${origin}/manage-booking?id=${r.id}`;
+          const manageUrl = `${origin}/manage-booking?id=${r.id}&token=${r.guest_token}`;
           const { subject, body } = renderBalanceReminderEmail(r as never, manageUrl);
           await enqueueEmail(supabaseAdmin, { kind: "balance_reminder", toEmail: r.email, subject, body, bookingId: r.id });
           await supabaseAdmin

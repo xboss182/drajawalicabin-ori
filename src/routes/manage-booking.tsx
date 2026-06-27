@@ -9,6 +9,7 @@ type Booking = Awaited<ReturnType<typeof getBookingForGuest>>;
 export const Route = createFileRoute("/manage-booking")({
   validateSearch: (raw: Record<string, unknown>) => ({
     id: typeof raw.id === "string" ? raw.id : "",
+    token: typeof raw.token === "string" ? raw.token : "",
   }),
   head: () => ({
     meta: [
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/manage-booking")({
 });
 
 function ManagePage() {
-  const { id } = Route.useSearch();
+  const { id, token } = Route.useSearch();
   const [b, setB] = useState<Booking | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,8 +33,8 @@ function ManagePage() {
     setLoading(true);
     setErr(null);
     try {
-      if (!id) throw new Error("Missing booking id in URL.");
-      const data = await getBookingForGuest({ data: { bookingId: id } });
+      if (!id || !token) throw new Error("Missing booking link. Please use the secure link from your email.");
+      const data = await getBookingForGuest({ data: { bookingId: id, guestToken: token } });
       setB(data);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Could not load booking");
@@ -41,7 +42,7 @@ function ManagePage() {
       setLoading(false);
     }
   }
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); }, [id, token]);
 
   async function upload() {
     if (!file || !b) return;
@@ -49,10 +50,10 @@ function ManagePage() {
     setErr(null);
     try {
       const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `balance/${b.id}-${Date.now()}.${ext}`;
+      const path = `bookings/${b.id}/balance-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("payment-proofs").upload(path, file, { upsert: false });
       if (upErr) throw upErr;
-      await attachBalanceProof({ data: { bookingId: b.id, path } });
+      await attachBalanceProof({ data: { bookingId: b.id, guestToken: token, path } });
       setDone(true);
       await load();
     } catch (e: unknown) {
