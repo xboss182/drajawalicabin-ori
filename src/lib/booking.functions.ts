@@ -93,7 +93,7 @@ export const createBooking = createServerFn({ method: "POST" })
     const { data: inserted, error: insErr } = await supabaseAdmin
       .from("booking_requests")
       .insert(insertPayload as any)
-      .select("id, payment_reference, total_amount, hold_expires_at")
+      .select("id, payment_reference, total_amount, hold_expires_at, guest_token")
       .single();
     if (insErr) throw new Error(insErr.message);
 
@@ -102,6 +102,7 @@ export const createBooking = createServerFn({ method: "POST" })
       reference: inserted.payment_reference as string,
       total: Number(inserted.total_amount),
       holdExpiresAt: inserted.hold_expires_at as string,
+      guestToken: inserted.guest_token as string,
     };
   });
 
@@ -115,6 +116,9 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => attachSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!data.path.startsWith(`bookings/${data.bookingId}/`)) {
+      throw new Error("Invalid upload path");
+    }
     const { data: booking } = await supabaseAdmin
       .from("booking_requests")
       .select("id, payment_reference, status, email")
