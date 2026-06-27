@@ -9,6 +9,9 @@ import cabinTriple from "@/assets/cabin-triple.jpg";
 import nearbyMosqueAsset from "@/assets/nearby-mosque.jpg.asset.json";
 import nearbyBeachAsset from "@/assets/nearby-beach.jpg.asset.json";
 import nearbyCraftAsset from "@/assets/nearby-craft.jpg.asset.json";
+import toilet2paxAsset from "@/assets/toilet-2pax.png.asset.json";
+import toilet3paxAsset from "@/assets/toilet-3pax.png.asset.json";
+import toilet4paxAsset from "@/assets/toilet-4pax.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
