@@ -6,7 +6,7 @@ export const translations = {
   en: {
     nav: { cabins: "Cabins", about: "About", nearby: "Nearby", book: "Book", whatsapp: "WhatsApp Us" },
     whatsappMessage:
-      "Salam Team Rajawali D'Cabin Chalet, I have a question regarding my staycation/booking. (Reminder: Your formal booking copy, summary, and secure balance payment link are sent directly to your email for automated verification. All payments must be completed securely through the website link provided in your email.)",
+      "Salam Team Rajawali D'Cabin Chalet, I have a question regarding my staycation. (Note: All bookings and payments are made only through our official website.)",
     hero: {
       badge: "Only 8 cabins · Kuala Ibai",
       title1: "Escape to nature,",
@@ -218,7 +218,7 @@ export const translations = {
   bm: {
     nav: { cabins: "Bilik", about: "Tentang", nearby: "Berdekatan", book: "Tempah", whatsapp: "WhatsApp Kami" },
     whatsappMessage:
-      "Salam Team Rajawali D'Cabin Chalet, saya ada pertanyaan berkenaan penginapan/tempahan saya. (Peringatan: Salinan rasmi tempahan, ringkasan maklumat, dan pautan pembayaran baki keselamatan telah dihantar terus ke emel anda untuk pengesahan automatik. Semua pembayaran mestilah diselesaikan secara selamat melalui pautan laman web yang disediakan di dalam emel anda.)",
+      "Salam Team Rajawali D'Cabin Chalet, saya ada pertanyaan berkenaan penginapan saya. (Nota: Semua tempahan dan pembayaran dibuat hanya melalui laman web rasmi kami.)",
     hero: {
       badge: "Hanya 8 buah kabin · Kuala Ibai",
       title1: "Kembali ke alam,",
