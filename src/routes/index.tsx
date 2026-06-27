@@ -6,7 +6,7 @@ import cabinQueen from "@/assets/cabin-queen.jpg";
 import cabinTwin from "@/assets/cabin-twin.jpg";
 import cabinFamily from "@/assets/cabin-family.jpg";
 import cabinTriple from "@/assets/cabin-triple.jpg";
-import nearbyMosque from "@/assets/nearby-mosque.jpg";
+import nearbyMosqueAsset from "@/assets/nearby-mosque.jpg.asset.json";
 import nearbyBeach from "@/assets/nearby-beach.jpg";
 import nearbyCraft from "@/assets/nearby-craft.jpg";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
@@ -31,7 +31,7 @@ function waHref(message: string) {
 }
 
 const cabinImages = [cabinQueen, cabinTwin, cabinFamily, cabinTriple];
-const nearbyImages = [nearbyMosque, nearbyBeach, nearbyCraft];
+const nearbyImages = [nearbyMosqueAsset.url, nearbyBeach, nearbyCraft];
 
 function Index() {
   return (
