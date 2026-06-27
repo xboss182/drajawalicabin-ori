@@ -8,7 +8,7 @@ import cabinFamily from "@/assets/cabin-family.jpg";
 import cabinTriple from "@/assets/cabin-triple.jpg";
 import nearbyMosqueAsset from "@/assets/nearby-mosque.jpg.asset.json";
 import nearbyBeachAsset from "@/assets/nearby-beach.jpg.asset.json";
-import nearbyCraft from "@/assets/nearby-craft.jpg";
+import nearbyCraftAsset from "@/assets/nearby-craft.jpg.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
@@ -31,7 +31,7 @@ function waHref(message: string) {
 }
 
 const cabinImages = [cabinQueen, cabinTwin, cabinFamily, cabinTriple];
-const nearbyImages = [nearbyMosqueAsset.url, nearbyBeachAsset.url, nearbyCraft];
+const nearbyImages = [nearbyMosqueAsset.url, nearbyBeachAsset.url, nearbyCraftAsset.url];
 
 function Index() {
   return (
