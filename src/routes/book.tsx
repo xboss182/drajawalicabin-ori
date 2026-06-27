@@ -524,21 +524,29 @@ function PaymentStep({
         <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.uploadEyebrow}</p>
         <h2 className="mt-2 font-display text-xl text-forest">{bt.pay.uploadTitle}</h2>
         <p className="mt-1 text-sm text-foreground/70">{bt.pay.uploadHint}</p>
-        <input
-          type="file"
-          accept="image/*,application/pdf"
-          onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
-          className="mt-4 block w-full text-sm"
-        />
+        <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-full border border-border bg-background px-5 py-3 text-sm text-forest hover:bg-coconut">
+          <span className="rounded-full bg-forest px-4 py-1.5 text-xs uppercase tracking-widest text-coconut">
+            Choose file
+          </span>
+          <span className="truncate text-foreground/75">
+            {proofFile ? proofFile.name : "No file chosen"}
+          </span>
+          <input
+            type="file"
+            accept="image/*,application/pdf"
+            onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
+            className="hidden"
+          />
+        </label>
         {error && (
           <p className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
         )}
         <button
           onClick={uploadProof}
           disabled={!proofFile || uploading}
-          className="mt-5 rounded-full bg-forest px-7 py-3.5 text-sm font-medium uppercase tracking-widest text-coconut hover:bg-forest/90 disabled:opacity-60"
+          className="mt-5 rounded-full bg-forest px-7 py-3.5 text-sm font-medium uppercase tracking-widest text-coconut hover:bg-forest/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {uploading ? bt.pay.uploading : bt.pay.uploadCta}
+          {uploading ? bt.pay.uploading : proofFile ? bt.pay.uploadCta : "Choose a file first"}
         </button>
       </div>
 
