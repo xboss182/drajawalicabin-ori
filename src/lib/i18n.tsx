@@ -22,7 +22,7 @@ export const translations = {
       room: "Room type",
       anyCabin: "Any cabin",
       submit: "Search",
-      note: "We'll take your details on the next step. Your dates are personally confirmed — usually within a few hours.",
+      note: "We'll take your details on the next step. Your dates will be confirmed shortly.",
     },
     about: {
       eyebrow: "About the chalet",
