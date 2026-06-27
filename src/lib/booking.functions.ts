@@ -345,7 +345,7 @@ export const requestManageLink = createServerFn({ method: "POST" })
     const email = data.email.trim().toLowerCase();
     const { data: rows } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, guest_name, email, payment_reference, check_in, room_type, status")
+      .select("id, guest_name, email, payment_reference, check_in, room_type, status, guest_token")
       .ilike("payment_reference", ref)
       .limit(5);
     const match = (rows ?? []).find((r) => (r.email ?? "").trim().toLowerCase() === email);
@@ -359,7 +359,7 @@ export const requestManageLink = createServerFn({ method: "POST" })
       } catch {
         origin = "";
       }
-      const manageUrl = `${origin}/manage-booking?id=${match.id}`;
+      const manageUrl = `${origin}/manage-booking?id=${match.id}&token=${match.guest_token}`;
       const subject = `Your booking link — ${match.payment_reference ?? match.id.slice(0, 8)} · Rajawali D'Cabin`;
       const body = [
         `Hi ${match.guest_name},`,
