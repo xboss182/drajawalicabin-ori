@@ -89,7 +89,7 @@ export const translations = {
       title: "Before you book.",
       items: [
         { title: "Check-in & check-out", body: "Check-in from 3:00 PM. Check-out by 12:00 PM." },
-        { title: "Flexible deposit", body: "Bookings are secured with a flexible RM50 deposit per room, or full payment up front." },
+        { title: "Flexible deposit", body: "Bookings are secured with a flexible RM50 deposit per room, and full payment must be completed at least 7 days before check-in." },
         { title: "Self check-in", body: "Convenient self check-in via secure key lockers — arrive on your own schedule." },
       ],
     },
@@ -301,7 +301,7 @@ export const translations = {
       title: "Sebelum anda menempah.",
       items: [
         { title: "Check-in & check-out", body: "Check-in dari jam 3:00 petang. Check-out sebelum jam 12:00 tengah hari." },
-        { title: "Deposit fleksibel", body: "Tempahan diamankan dengan deposit fleksibel RM50 setiap bilik, atau bayaran penuh terus." },
+        { title: "Deposit fleksibel", body: "Tempahan diamankan dengan deposit fleksibel RM50 setiap bilik, dan bayaran penuh mesti diselesaikan sekurang-kurangnya 7 hari sebelum check-in." },
         { title: "Self check-in", body: "Self check-in mudah melalui key locker berkunci — tiba mengikut masa anda sendiri." },
       ],
     },
