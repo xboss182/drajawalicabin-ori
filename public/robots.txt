@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /auth
+Disallow: /manage-booking
+Disallow: /find-booking
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://nature-stay-finder.lovable.app/sitemap.xml
