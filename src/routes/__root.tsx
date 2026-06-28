@@ -78,14 +78,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Rajawali D'Cabin Chalet — Hidden Riverside Cabins in Chendering" },
-      { name: "description", content: "A boutique chalet retreat of 8 private cabins in Chendering, Kuala Terengganu. Wake to birdsong, coastal air, and a slower pace of life." },
-      { name: "author", content: "Rajawali D'Cabin Chalet" },
-      { property: "og:title", content: "Rajawali D'Cabin Chalet — Hidden Riverside Cabins" },
-      { property: "og:description", content: "Only 8 private cabins in Chendering, Terengganu. A peaceful retreat for families, couples, and weekend escapes." },
+      { name: "theme-color", content: "#1f3a2b" },
+      { name: "format-detection", content: "telephone=no" },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { property: "og:site_name", content: "Rajawali D'Cabin Chalet" },
+      { property: "og:locale", content: "en_MY" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       {
@@ -106,6 +104,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@300;400;500;600&display=swap",
       },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Rajawali D'Cabin Chalet",
+          url: "https://nature-stay-finder.lovable.app/",
+          inLanguage: ["en-MY", "ms-MY"],
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -120,6 +130,12 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
+        <a
+          href="#top"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-forest focus:px-4 focus:py-2 focus:text-coconut"
+        >
+          Skip to content
+        </a>
         {children}
         <Scripts />
       </body>
