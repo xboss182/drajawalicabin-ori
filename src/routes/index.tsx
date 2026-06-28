@@ -538,7 +538,7 @@ function NearbySection() {
               <div className="aspect-[3/4] overflow-hidden">
                 <img
                   src={nearbyImages[idx]}
-                  alt={n.name}
+                  alt={`${n.name} — nearby attraction from Rajawali D'Cabin Chalet, Kuala Terengganu`}
                   width={1024}
                   height={768}
                   loading="lazy"
