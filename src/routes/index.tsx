@@ -17,10 +17,10 @@ import { LanguageToggle, useLanguage } from "@/lib/i18n";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Rajawali D'Cabin Chalet — Hidden Riverside Cabins in Kuala Ibai" },
-      { name: "description", content: "A peaceful chalet stay surrounded by nature in Kuala Ibai, Terengganu. Only 8 private cabins — every stay feels personal." },
+      { title: "Rajawali D'Cabin Chalet — Hidden Riverside Cabins in Chendering" },
+      { name: "description", content: "A peaceful chalet stay surrounded by nature in Chendering, Terengganu. Only 8 private cabins — every stay feels personal." },
       { property: "og:title", content: "Rajawali D'Cabin Chalet — Hidden Riverside Cabins" },
-      { property: "og:description", content: "Only 8 private cabins in Kuala Ibai, Terengganu. Boutique chalet retreat for families, couples, and weekend escapes." },
+      { property: "og:description", content: "Only 8 private cabins in Chendering, Terengganu. Boutique chalet retreat for families, couples, and weekend escapes." },
       { property: "og:image", content: heroRiverside },
       { name: "twitter:image", content: heroRiverside },
     ],
@@ -64,7 +64,7 @@ function Nav() {
           <span className="font-display text-lg leading-none">
             Rajawali D'Cabin
             <span className="block text-[10px] uppercase tracking-[0.25em] opacity-80">
-              Chalet · Kuala Ibai
+              Chalet · Chendering
             </span>
           </span>
         </a>
@@ -106,7 +106,7 @@ function Hero() {
     <section id="top" className="relative min-h-[78svh] w-full overflow-hidden lg:min-h-[82svh]">
       <img
         src={heroRiverside}
-        alt="Twilight over the river at Kuala Ibai"
+        alt="Twilight over the river at Chendering"
         width={1920}
         height={1080}
         className="absolute inset-0 h-full w-full object-cover"
@@ -136,7 +136,7 @@ function Hero() {
         <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70">
           <span>8 private cabins</span>
           <span className="hidden sm:inline opacity-50">·</span>
-          <span>Riverside · Kuala Ibai</span>
+          <span>Riverside · Chendering</span>
           <span className="hidden sm:inline opacity-50">·</span>
           <a href={waHref(t.whatsappMessage)} target="_blank" rel="noreferrer" className="hover:text-coconut">WhatsApp booking</a>
         </div>

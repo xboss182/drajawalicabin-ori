@@ -108,7 +108,7 @@ export function renderFullyPaidEmail(b: BookingRow) {
     `the code confidential. The RM50 deposit is refunded after check-out`,
     `if no damage/loss is recorded.`,
     ``,
-    `Drive safe — see you at Kuala Ibai!`,
+    `Drive safe — see you at Chendering!`,
     `— Rajawali D'Cabin Chalet`,
   ].join("\n");
   return { subject, body };
