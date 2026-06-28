@@ -17,12 +17,102 @@ import { LanguageToggle, useLanguage } from "@/lib/i18n";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Rajawali D'Cabin Chalet — Hidden Riverside Cabins in Chendering" },
-      { name: "description", content: "A peaceful chalet stay surrounded by nature in Chendering, Terengganu. Only 8 private cabins — every stay feels personal." },
-      { property: "og:title", content: "Rajawali D'Cabin Chalet — Hidden Riverside Cabins" },
-      { property: "og:description", content: "Only 8 private cabins in Chendering, Terengganu. Boutique chalet retreat for families, couples, and weekend escapes." },
+      { title: "Rajawali D'Cabin Chalet | Homestay & Chalet Chendering, KT" },
+      { name: "description", content: "Rajawali D'Cabin Chalet — Muslim-friendly riverside chalet & homestay in Chendering, Kuala Terengganu. 8 private cabins for family staycations near the city." },
+      { name: "keywords", content: "Rajawali D'Cabin Chalet, Chalet Chendering, Homestay Chendering, Chalet Kuala Terengganu, Homestay Kuala Terengganu, Accommodation Kuala Terengganu, Staycation Kuala Terengganu, Family Chalet Terengganu, Muslim-friendly Chalet Kuala Terengganu" },
+      { name: "robots", content: "index, follow" },
+      { property: "og:title", content: "Rajawali D'Cabin Chalet — Chalet & Homestay in Chendering, KT" },
+      { property: "og:description", content: "Muslim-friendly riverside chalet in Chendering, Kuala Terengganu. 8 private family-friendly cabins for a peaceful Terengganu staycation." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://nature-stay-finder.lovable.app/" },
+      { property: "og:site_name", content: "Rajawali D'Cabin Chalet" },
+      { property: "og:locale", content: "en_MY" },
       { property: "og:image", content: heroRiverside },
+      { property: "og:image:alt", content: "Riverside wooden cabins at Rajawali D'Cabin Chalet, Chendering" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Rajawali D'Cabin Chalet — Chalet Chendering, Kuala Terengganu" },
+      { name: "twitter:description", content: "Muslim-friendly riverside chalet & homestay in Chendering, KT. 8 private cabins for a quiet family staycation." },
       { name: "twitter:image", content: heroRiverside },
+      { name: "geo.region", content: "MY-11" },
+      { name: "geo.placename", content: "Chendering, Kuala Terengganu" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://nature-stay-finder.lovable.app/" },
+      { rel: "preload", as: "image", href: heroRiverside, fetchpriority: "high" } as unknown as Record<string, string>,
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "LodgingBusiness",
+          name: "Rajawali D'Cabin Chalet",
+          description: "Muslim-friendly riverside chalet and homestay in Chendering, Kuala Terengganu, Terengganu, Malaysia. 8 private cabins for family staycations.",
+          url: "https://nature-stay-finder.lovable.app/",
+          image: `https://nature-stay-finder.lovable.app${heroRiverside}`,
+          telephone: "+60 11-5500 7204",
+          priceRange: "RM",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Chendering",
+            addressRegion: "Terengganu",
+            addressCountry: "MY",
+            postalCode: "21080",
+            streetAddress: "Chendering, Kuala Terengganu",
+          },
+          checkinTime: "15:00",
+          checkoutTime: "12:00",
+          numberOfRooms: 8,
+          amenityFeature: [
+            { "@type": "LocationFeatureSpecification", name: "Free WiFi", value: true },
+            { "@type": "LocationFeatureSpecification", name: "Air conditioning", value: true },
+            { "@type": "LocationFeatureSpecification", name: "Private bathroom", value: true },
+            { "@type": "LocationFeatureSpecification", name: "TV", value: true },
+            { "@type": "LocationFeatureSpecification", name: "Free parking", value: true },
+            { "@type": "LocationFeatureSpecification", name: "Family friendly", value: true },
+            { "@type": "LocationFeatureSpecification", name: "Muslim friendly", value: true },
+          ],
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://nature-stay-finder.lovable.app/" },
+          ],
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "Where is Rajawali D'Cabin Chalet located?",
+              acceptedAnswer: { "@type": "Answer", text: "Rajawali D'Cabin Chalet is a riverside chalet in Chendering, Kuala Terengganu, Terengganu — a short drive from the Kuala Terengganu city centre." },
+            },
+            {
+              "@type": "Question",
+              name: "How do I book a cabin?",
+              acceptedAnswer: { "@type": "Answer", text: "Check available dates on our website and complete the booking online. Bookings are secured with a flexible RM50 deposit per room; full payment must be completed at least 7 days before check-in." },
+            },
+            {
+              "@type": "Question",
+              name: "Is Rajawali D'Cabin Chalet family and Muslim friendly?",
+              acceptedAnswer: { "@type": "Answer", text: "Yes. The chalet is family-friendly and Muslim-friendly, with private cabins suitable for families and groups visiting Kuala Terengganu." },
+            },
+            {
+              "@type": "Question",
+              name: "What are the check-in and check-out times?",
+              acceptedAnswer: { "@type": "Answer", text: "Check-in is from 3:00 PM and check-out is by 12:00 PM." },
+            },
+          ],
+        }),
+      },
     ],
   }),
   component: Index,
@@ -106,9 +196,10 @@ function Hero() {
     <section id="top" className="relative min-h-[78svh] w-full overflow-hidden lg:min-h-[82svh]">
       <img
         src={heroRiverside}
-        alt="Twilight over the river at Chendering"
+        alt="Riverside cabins at Rajawali D'Cabin Chalet at twilight, Chendering, Kuala Terengganu"
         width={1920}
         height={1080}
+        fetchPriority="high"
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/30 to-forest/85" />
