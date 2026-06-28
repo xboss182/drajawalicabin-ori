@@ -8,10 +8,10 @@ export const translations = {
     whatsappMessage:
       "Salam Team Rajawali D'Cabin Chalet, I have a question regarding my staycation. (Note: All bookings and payments are made only through our official website.)",
     hero: {
-      badge: "Only 8 cabins · Kuala Ibai",
+      badge: "Only 8 cabins · Chendering",
       title1: "Escape to nature,",
       title2: "stay in comfort.",
-      body: "Private cabin-style accommodations in Kuala Ibai, Kuala Terengganu. A peaceful retreat for families, couples, and travellers chasing birdsong over notifications.",
+      body: "Private cabin-style accommodations in Chendering, Kuala Terengganu. A peaceful retreat for families, couples, and travellers chasing birdsong over notifications.",
       cta: "Check availability",
       view: "View our cabins →",
     },
@@ -28,7 +28,7 @@ export const translations = {
       eyebrow: "About the chalet",
       title1: "A quiet escape near",
       title2: "Kuala Terengganu.",
-      p1: "Tucked into the greenery of Kuala Ibai, Rajawali D'Cabin Chalet is a small collection of private wooden cabins — close enough to the city for an easy errand, far enough to forget your inbox.",
+      p1: "Tucked into the greenery of Chendering, Rajawali D'Cabin Chalet is a small collection of private wooden cabins — close enough to the city for an easy errand, far enough to forget your inbox.",
       p2: "Whether you're planning a family holiday, a fishing weekend, a quiet work trip, or a slow Sunday with someone you love, the cabins offer the kind of privacy and stillness that hotels rarely manage.",
       p3: "Only 8 cabins. No lobby. No crowds. Just a place to land.",
       badgeNum: "8",
@@ -65,7 +65,7 @@ export const translations = {
       title: "Terengganu, on your doorstep.",
       body: "Famous local food is right next door, the lagoon park is a 5-minute walk, and Marang Jetty and Kuala Terengganu city are a short drive away.",
       alsoLabel: "Also nearby:",
-      also: "1 km to Kuala Ibai Lagoon Recreation Park (TER) & NABC · Masjid Terapung · Pantai Batu Buruk · Noor Arfa Craft Complex",
+      also: "1 km to Chendering Lagoon Recreation Park (TER) & NABC · Masjid Terapung · Pantai Batu Buruk · Noor Arfa Craft Complex",
       items: [
         { name: "Local food, next door", note: "Keropok lekor, ikan bakar, nasi dagang & ICT" },
         { name: "Marang Jetty · 5 km (7 mins)", note: "Gateway to Pulau Kapas & Pulau Redang" },
@@ -73,7 +73,7 @@ export const translations = {
       ],
     },
     footer: {
-      tagline: "Where peaceful stays meet the beauty of Terengganu. A boutique chalet of just 8 private cabins, hidden along the Kuala Ibai riverside.",
+      tagline: "Where peaceful stays meet the beauty of Terengganu. A boutique chalet of just 8 private cabins, hidden along the Chendering riverside.",
       visit: "Visit",
       address1: "307, Pengkalan Rajawali",
       address2: "Chendering, Kuala Terengganu",
@@ -220,10 +220,10 @@ export const translations = {
     whatsappMessage:
       "Salam Team Rajawali D'Cabin Chalet, saya ada pertanyaan berkenaan penginapan saya. (Nota: Semua tempahan dan pembayaran dibuat hanya melalui laman web rasmi kami.)",
     hero: {
-      badge: "Hanya 8 buah kabin · Kuala Ibai",
+      badge: "Hanya 8 buah kabin · Chendering",
       title1: "Kembali ke alam,",
       title2: "nikmati keselesaan.",
-      body: "Kabin persendirian di Kuala Ibai, Kuala Terengganu. Destinasi tenang buat keluarga, pasangan, dan pengembara yang inginkan kicauan burung berbanding bunyi notifikasi telefon.",
+      body: "Kabin persendirian di Chendering, Kuala Terengganu. Destinasi tenang buat keluarga, pasangan, dan pengembara yang inginkan kicauan burung berbanding bunyi notifikasi telefon.",
       cta: "Semak kekosongan",
       view: "Lihat kabin kami →",
     },
@@ -240,7 +240,7 @@ export const translations = {
       eyebrow: "Tentang chalet",
       title1: "Percutian tenang berhampiran",
       title2: "Kuala Terengganu.",
-      p1: "Tersembunyi di dalam kehijauan alam Kuala Ibai, Rajawali D'Cabin Chalet menawarkan pilihan kabin kayu persendirian yang eksklusif — cukup dekat dengan bandar untuk urusan harian, cukup jauh untuk anda melupakan peti masuk e-mel anda.",
+      p1: "Tersembunyi di dalam kehijauan alam Chendering, Rajawali D'Cabin Chalet menawarkan pilihan kabin kayu persendirian yang eksklusif — cukup dekat dengan bandar untuk urusan harian, cukup jauh untuk anda melupakan peti masuk e-mel anda.",
       p2: "Sama ada anda merancang percutian keluarga, hujung minggu memancing, perjalanan kerja yang santai, atau hari Ahad yang tenang bersama yang tersayang, kabin kami menawarkan privasi dan ketenangan yang jarang ditemui di hotel biasa.",
       p3: "Hanya 8 buah kabin. Tiada lobi. Tiada kesesakan. Cuma sebuah tempat untuk anda berehat dan beristirahat.",
       badgeNum: "8",
@@ -277,7 +277,7 @@ export const translations = {
       title: "Terengganu, betul-betul di hadapan mata anda.",
       body: "Makanan tempatan yang terkenal berada betul-betul di sebelah, taman lagun hanya 1 km, manakala Jeti Marang dan pusat bandar Kuala Terengganu pula hanya beberapa minit memandu.",
       alsoLabel: "Turut berdekatan:",
-      also: "1 km ke Taman Rekreasi Lagun Kuala Ibai (TER) & NABC · Masjid Terapung · Pantai Batu Buruk · Kompleks Kraf Noor Arfa",
+      also: "1 km ke Taman Rekreasi Lagun Chendering (TER) & NABC · Masjid Terapung · Pantai Batu Buruk · Kompleks Kraf Noor Arfa",
       items: [
         { name: "Makanan tempatan, sebelah sahaja", note: "Keropok lekor, ikan bakar, nasi dagang & ICT" },
         { name: "Jeti Marang · 5 km (7 minit)", note: "Pintu masuk ke Pulau Kapas & Pulau Redang" },
@@ -285,7 +285,7 @@ export const translations = {
       ],
     },
     footer: {
-      tagline: "Di mana penginapan yang tenang bertemu keindahan Terengganu. Sebuah chalet butik yang hanya mempunyai 8 kabin persendirian, tersembunyi di sepanjang tebing sungai Kuala Ibai.",
+      tagline: "Di mana penginapan yang tenang bertemu keindahan Terengganu. Sebuah chalet butik yang hanya mempunyai 8 kabin persendirian, tersembunyi di sepanjang tebing sungai Chendering.",
       visit: "Kunjungi kami",
       address1: "307, Pengkalan Rajawali",
       address2: "Chendering, Kuala Terengganu",
