@@ -43,7 +43,7 @@ export const translations = {
       cabins: [
         { name: "Deluxe Queen", sleeps: "Sleeps 2", features: ["1 Queen bed", "Air conditioning", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
         { name: "Deluxe Twin", sleeps: "Sleeps 2", features: ["2 Single beds", "Air conditioning", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
-        { name: "Family Suite", sleeps: "Sleeps 4", features: ["1 Queen + 2 Single beds", "Spacious layout", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
+        { name: "Family Suite", sleeps: "Sleeps 4", features: ["1 Queen + 2 Single beds", "Air conditioning", "Spacious layout", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
         { name: "Triple Suite", sleeps: "Sleeps 3", features: ["1 Queen + 1 Single bed", "Air conditioning", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
       ],
     },
@@ -255,7 +255,7 @@ export const translations = {
       cabins: [
         { name: "Deluxe Queen", sleeps: "Muat 2 orang", features: ["1 katil Queen", "Penghawa dingin", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
         { name: "Deluxe Twin", sleeps: "Muat 2 orang", features: ["2 katil Single", "Penghawa dingin", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
-        { name: "Family Suite", sleeps: "Muat 4 orang", features: ["1 katil Queen + 2 katil Single", "Ruang yang luas", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
+        { name: "Family Suite", sleeps: "Muat 4 orang", features: ["1 katil Queen + 2 katil Single", "Penghawa dingin", "Ruang yang luas", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
         { name: "Triple Suite", sleeps: "Muat 3 orang", features: ["1 katil Queen + 1 katil Single", "Penghawa dingin", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
       ],
     },
