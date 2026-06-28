@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ManageBookingRouteImport } from './routes/manage-booking'
 import { Route as FindBookingRouteImport } from './routes/find-booking'
 import { Route as BookRouteImport } from './routes/book'
@@ -18,6 +19,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicHooksSendBalanceRemindersRouteImport } from './routes/api/public/hooks/send-balance-reminders'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManageBookingRoute = ManageBookingRouteImport.update({
   id: '/manage-booking',
   path: '/manage-booking',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/book': typeof BookRoute
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/book': typeof BookRoute
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/book': typeof BookRoute
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/find-booking'
     | '/manage-booking'
+    | '/sitemap.xml'
     | '/admin'
     | '/api/public/hooks/send-balance-reminders'
   fileRoutesByTo: FileRoutesByTo
@@ -105,6 +115,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/find-booking'
     | '/manage-booking'
+    | '/sitemap.xml'
     | '/admin'
     | '/api/public/hooks/send-balance-reminders'
   id:
@@ -115,6 +126,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/find-booking'
     | '/manage-booking'
+    | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/api/public/hooks/send-balance-reminders'
   fileRoutesById: FileRoutesById
@@ -126,11 +138,19 @@ export interface RootRouteChildren {
   BookRoute: typeof BookRoute
   FindBookingRoute: typeof FindBookingRoute
   ManageBookingRoute: typeof ManageBookingRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicHooksSendBalanceRemindersRoute: typeof ApiPublicHooksSendBalanceRemindersRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/manage-booking': {
       id: '/manage-booking'
       path: '/manage-booking'
@@ -208,6 +228,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookRoute: BookRoute,
   FindBookingRoute: FindBookingRoute,
   ManageBookingRoute: ManageBookingRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicHooksSendBalanceRemindersRoute:
     ApiPublicHooksSendBalanceRemindersRoute,
 }
