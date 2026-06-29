@@ -205,37 +205,50 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
     if (!data.path.startsWith(`bookings/${data.bookingId}/`)) {
       throw new Error("Invalid upload path");
     }
-    const { data: booking } = await supabaseAdmin
+    const { data: lead } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, payment_reference, status, email")
+      .select("id, booking_group_id, payment_reference, status, email")
       .eq("id", data.bookingId)
       .maybeSingle();
-    if (!booking || booking.payment_reference !== data.reference) {
+    if (!lead || lead.payment_reference !== data.reference) {
       throw new Error("Booking not found");
     }
-    if (booking.status !== "pending_payment" && booking.status !== "awaiting_review") {
+    if (lead.status !== "pending_payment" && lead.status !== "awaiting_review") {
       throw new Error("This booking can no longer be updated");
     }
+    const groupId = (lead as { booking_group_id?: string }).booking_group_id ?? lead.id;
     const { error } = await supabaseAdmin
       .from("booking_requests")
       .update({ payment_proof_path: data.path, status: "awaiting_review" })
-      .eq("id", data.bookingId);
+      .eq("booking_group_id", groupId);
     if (error) throw new Error(error.message);
 
-    // Send booking summary email (placeholder → email_outbox)
-    const { data: full } = await supabaseAdmin
+    // Group rows for the summary email
+    const { data: groupRows } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, payment_reference, locker_code, confirmation_email_sent_at")
-      .eq("id", data.bookingId)
-      .maybeSingle();
-    if (full && !full.confirmation_email_sent_at) {
+      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, cabin_id, subtotal, comforter, comforter_total, total_amount, deposit_amount, balance_amount, payment_reference, locker_code, confirmation_email_sent_at, created_at")
+      .eq("booking_group_id", groupId)
+      .order("created_at", { ascending: true });
+    const leadRow = groupRows?.[0];
+    const alreadySent = (groupRows ?? []).some((r) => r.confirmation_email_sent_at);
+    if (leadRow && !alreadySent) {
       const { renderBookingSummaryEmail, enqueueEmail } = await import("./email.server");
-      const { subject, body } = renderBookingSummaryEmail(full as never);
-      await enqueueEmail(supabaseAdmin, { kind: "booking_summary", toEmail: full.email, subject, body, bookingId: full.id });
+      const totalAmount = (groupRows ?? []).reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
+      const aggregate = {
+        ...leadRow,
+        total_amount: totalAmount,
+        rooms: (groupRows ?? []).map((r) => ({
+          name: r.room_type,
+          nights: r.nights,
+          total: Number(r.total_amount ?? 0),
+        })),
+      };
+      const { subject, body } = renderBookingSummaryEmail(aggregate as never);
+      await enqueueEmail(supabaseAdmin, { kind: "booking_summary", toEmail: leadRow.email, subject, body, bookingId: leadRow.id });
       await supabaseAdmin
         .from("booking_requests")
         .update({ confirmation_email_sent_at: new Date().toISOString() })
-        .eq("id", data.bookingId);
+        .eq("booking_group_id", groupId);
     }
     return { ok: true };
   });
