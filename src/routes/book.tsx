@@ -33,6 +33,17 @@ type Cabin = {
   school_holiday_rate: number;
 };
 
+type CabinGroup = {
+  type: string;
+  label: string;
+  rooms: Cabin[];
+};
+
+function typeLabel(c: Cabin) {
+  // "Deluxe Queen 1" -> "Deluxe Queen", "Family Suite 2" -> "Family Suite"
+  return c.name.replace(/\s*\d+\s*$/, "").trim();
+}
+
 export const Route = createFileRoute("/book")({
   validateSearch: (raw: Record<string, unknown>) => ({
     checkin: typeof raw.checkin === "string" ? raw.checkin : todayStr,
@@ -58,7 +69,7 @@ function BookPage() {
   const bt = t.book;
 
   const [cabins, setCabins] = useState<Cabin[]>([]);
-  const [cabinId, setCabinId] = useState<string>("");
+  const [cabinType, setCabinType] = useState<string>("");
   const [checkin, setCheckin] = useState(search.checkin);
   const [checkout, setCheckout] = useState(search.checkout);
   const [guests, setGuests] = useState(search.guests);
@@ -74,7 +85,7 @@ function BookPage() {
   const [notes, setNotes] = useState("");
 
   const [price, setPrice] = useState<{ nights: number; subtotal: number; comforter_total: number; total: number } | null>(null);
-  const [taken, setTaken] = useState<string[]>([]);
+  const [takenByCabin, setTakenByCabin] = useState<Record<string, string[]>>({});
 
   const [step, setStep] = useState<Step>("details");
   const [submitting, setSubmitting] = useState(false);
@@ -96,59 +107,118 @@ function BookPage() {
       const list = (data ?? []) as Cabin[];
       setCabins(list);
       const match = list.find((c) => c.name === search.room || c.cabin_type === search.room);
-      setCabinId(match?.id ?? list[0]?.id ?? "");
+      setCabinType(match?.cabin_type ?? list[0]?.cabin_type ?? "");
     })();
   }, []);
 
-  const selectedCabin = useMemo(() => cabins.find((c) => c.id === cabinId), [cabins, cabinId]);
+  // Group cabins by type (each type has 2 rooms)
+  const cabinGroups = useMemo<CabinGroup[]>(() => {
+    const map = new Map<string, CabinGroup>();
+    for (const c of cabins) {
+      const existing = map.get(c.cabin_type);
+      if (existing) {
+        existing.rooms.push(c);
+      } else {
+        map.set(c.cabin_type, { type: c.cabin_type, label: typeLabel(c), rooms: [c] });
+      }
+    }
+    return Array.from(map.values());
+  }, [cabins]);
+
+  const selectedGroup = useMemo(
+    () => cabinGroups.find((g) => g.type === cabinType),
+    [cabinGroups, cabinType],
+  );
+  const selectedCabin = selectedGroup?.rooms[0];
+  const numRoomsN = Math.max(1, Math.min(2, Number(numRooms) || 1));
+  const maxRoomsForType = selectedGroup?.rooms.length ?? 2;
 
   // Price preview
   useEffect(() => {
-    if (!cabinId || !checkin || !checkout) return;
+    if (!selectedCabin || !checkin || !checkout) return;
     if (new Date(checkout) <= new Date(checkin)) {
       setPrice(null);
       return;
     }
     (async () => {
       try {
-        const p = await previewPrice({ data: { cabinId, checkIn: checkin, checkOut: checkout, comforter } });
-        setPrice(p);
+        const p = await previewPrice({ data: { cabinId: selectedCabin.id, checkIn: checkin, checkOut: checkout, comforter } });
+        // Multiply by number of rooms (each room of the type is priced identically)
+        setPrice({
+          nights: p.nights,
+          subtotal: p.subtotal * numRoomsN,
+          comforter_total: p.comforter_total * numRoomsN,
+          total: p.total * numRoomsN,
+        });
       } catch {
         setPrice(null);
       }
     })();
-  }, [cabinId, checkin, checkout, comforter]);
+  }, [selectedCabin?.id, checkin, checkout, comforter, numRoomsN]);
 
-  // Availability for selected cabin (next 90 days)
+  // Availability for every room in the selected type (next 90 days)
   useEffect(() => {
-    if (!cabinId) return;
+    if (!selectedGroup) return;
     (async () => {
       try {
         const from = todayStr;
         const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
-        const r = await getTakenDates({ data: { cabinId, from, to } });
-        setTaken(r.dates);
+        const entries = await Promise.all(
+          selectedGroup.rooms.map(async (c) => {
+            try {
+              const r = await getTakenDates({ data: { cabinId: c.id, from, to } });
+              return [c.id, r.dates] as const;
+            } catch {
+              return [c.id, [] as string[]] as const;
+            }
+          }),
+        );
+        setTakenByCabin(Object.fromEntries(entries));
       } catch {
-        setTaken([]);
+        setTakenByCabin({});
       }
     })();
-  }, [cabinId]);
+  }, [selectedGroup?.type]);
+
+  // Date is blocked for the type when free rooms in that type < requested rooms
+  const blockedDates = useMemo<string[]>(() => {
+    if (!selectedGroup) return [];
+    const counts = new Map<string, number>();
+    for (const c of selectedGroup.rooms) {
+      for (const d of takenByCabin[c.id] ?? []) {
+        counts.set(d, (counts.get(d) ?? 0) + 1);
+      }
+    }
+    const total = selectedGroup.rooms.length;
+    const out: string[] = [];
+    for (const [d, n] of counts) {
+      if (total - n < numRoomsN) out.push(d);
+    }
+    return out;
+  }, [selectedGroup, takenByCabin, numRoomsN]);
+
+  function freeCabinsInRange(): Cabin[] {
+    if (!selectedGroup || !checkin || !checkout) return [];
+    const start = new Date(checkin);
+    const end = new Date(checkout);
+    return selectedGroup.rooms.filter((c) => {
+      const tk = takenByCabin[c.id] ?? [];
+      return !tk.some((d) => {
+        const dd = new Date(d);
+        return dd >= start && dd < end;
+      });
+    });
+  }
 
   function datesOverlapTaken() {
     if (!checkin || !checkout) return false;
-    const start = new Date(checkin);
-    const end = new Date(checkout);
-    for (const d of taken) {
-      const dd = new Date(d);
-      if (dd >= start && dd < end) return true;
-    }
-    return false;
+    return freeCabinsInRange().length < numRoomsN;
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!cabinId) return setError(bt.errors.pickCabin);
+    if (!selectedGroup) return setError(bt.errors.pickCabin);
     if (new Date(checkout) <= new Date(checkin)) return setError(bt.errors.dates);
     if (datesOverlapTaken()) return setError(bt.errors.overlap);
     if (name.trim().length < 2) return setError(bt.errors.name);
@@ -158,13 +228,18 @@ function BookPage() {
 
     setSubmitting(true);
     try {
+      const free = freeCabinsInRange();
+      if (free.length < numRoomsN) {
+        throw new Error(bt.errors.overlap);
+      }
+      const assignedCabin = free[0];
       const res = await createBooking({
         data: {
-          cabinId,
+          cabinId: assignedCabin.id,
           checkIn: checkin,
           checkOut: checkout,
           guests: Number(guests.replace("+", "")) || 1,
-          numRooms: Number(numRooms) || 1,
+          numRooms: numRoomsN,
           comforter,
           guestName: name.trim(),
           email: email.trim(),
@@ -216,13 +291,13 @@ function BookPage() {
       {step === "details" && (
         <DetailsStep
           {...{
-            cabins, cabinId, setCabinId,
+            cabinGroups, cabinType, setCabinType, maxRoomsForType,
             checkin, setCheckin, checkout, setCheckout,
             guests, setGuests, numRooms, setNumRooms, comforter, setComforter,
             name, setName, email, setEmail, phone, setPhone,
             relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
             notes, setNotes,
-            price, selectedCabin, taken,
+            price, selectedCabin, selectedGroup, blockedDates,
             submit, submitting, error,
             agreed, setAgreed,
           }}
