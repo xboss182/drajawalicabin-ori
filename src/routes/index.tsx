@@ -344,7 +344,7 @@ function AvailabilitySearch() {
         className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-2xl shadow-forest/25 lg:flex-row lg:items-stretch"
       >
         {/* Dates - wider */}
-        <Popover open={openCal} onOpenChange={(open) => { console.log("Popover onOpenChange", open, "range", range); if (!open && range?.from && !range?.to) { console.log("preventing close"); return; } setOpenCal(open); }}>
+        <Popover open={openCal} onOpenChange={setOpenCal}>
           <PopoverTrigger asChild>
             <button
               type="button"
