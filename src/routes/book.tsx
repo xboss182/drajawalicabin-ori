@@ -704,10 +704,26 @@ function Select({ label, value, onChange, options }: { label: string; value: str
   );
 }
 
-function SelectCabin({ label, value, onChange, cabins, loadingLabel, optionTpl }: { label: string; value: string; onChange: (v: string) => void; cabins: Cabin[]; loadingLabel: string; optionTpl: string }) {
+function SelectCabin({
+  label,
+  value,
+  onChange,
+  cabins,
+  loadingLabel,
+  optionTpl,
+  className,
+}: {
+  label?: string;
+  value: string;
+  onChange: (v: string) => void;
+  cabins: Cabin[];
+  loadingLabel: string;
+  optionTpl: string;
+  className?: string;
+}) {
   return (
-    <label className="flex flex-col gap-1 bg-card px-5 py-4 text-left">
-      <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>
+    <label className={cn("flex flex-col gap-1 bg-card px-5 py-4 text-left", className)}>
+      {label && <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>}
       <select value={value} onChange={(e) => onChange(e.target.value)}
         className="appearance-none bg-transparent text-base text-foreground outline-none">
         {cabins.length === 0 && <option>{loadingLabel}</option>}
