@@ -326,10 +326,12 @@ function AvailabilitySearch() {
 
     // Partial range (from set, to unset)
     if (isSameDate(clickedDate, range.from) || clickedDate < range.from) {
+      console.log("partial: starting new range from", clickedDate);
       setRange({ from: clickedDate, to: undefined });
       return;
     }
 
+    console.log("partial: completing range", range.from, "to", clickedDate);
     setRange({ from: range.from, to: clickedDate });
     setOpenCal(false);
   };
