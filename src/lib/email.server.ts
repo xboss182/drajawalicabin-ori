@@ -29,6 +29,7 @@ type BookingRow = {
   balance_amount: number | null;
   payment_reference: string | null;
   locker_code: string | null;
+  rooms?: Array<{ name: string; nights: number | null; total: number }>;
 };
 
 function balanceOf(b: BookingRow) {
@@ -41,6 +42,14 @@ function balanceOf(b: BookingRow) {
 export function renderBookingSummaryEmail(b: BookingRow) {
   const { total, deposit, remaining } = balanceOf(b);
   const subject = `Booking ${b.payment_reference ?? b.id.slice(0, 8)} received — Rajawali D'Cabin`;
+  const roomsBlock =
+    b.rooms && b.rooms.length > 1
+      ? [
+          ``,
+          `Rooms in this reservation:`,
+          ...b.rooms.map((r, i) => `  ${i + 1}. ${r.name} — ${money(r.total)}`),
+        ]
+      : [];
   const body = [
     `Hi ${b.guest_name},`,
     ``,
@@ -49,10 +58,11 @@ export function renderBookingSummaryEmail(b: BookingRow) {
     ``,
     `— Booking Summary —`,
     `Booking number:   ${b.payment_reference ?? b.id.slice(0, 8)}`,
-    `Cabin:            ${b.room_type}`,
+    `Cabin:            ${b.rooms && b.rooms.length > 1 ? `${b.rooms.length} rooms` : b.room_type}`,
     `Check-in:         ${fmtDate(b.check_in)} (3:00 PM)`,
     `Check-out:        ${fmtDate(b.check_out)} (12:00 PM)`,
     `Nights / guests:  ${b.nights ?? "—"} night(s) · ${b.guests} guest(s)`,
+    ...roomsBlock,
     `Total cost:       ${money(total)}`,
     `Deposit paid:     ${money(deposit)}  ✓`,
     `Remaining balance:${money(remaining)}  (due 7 days before check-in)`,
@@ -94,6 +104,10 @@ export function renderBalanceReminderEmail(b: BookingRow, manageUrl: string) {
 
 export function renderFullyPaidEmail(b: BookingRow) {
   const subject = `You're fully paid ✓  Key-locker code inside — ${b.payment_reference ?? b.id.slice(0, 8)}`;
+  const roomsBlock =
+    b.rooms && b.rooms.length > 1
+      ? [``, `Rooms:       ${b.rooms.map((r) => r.name).join(", ")}`]
+      : [];
   const body = [
     `Hi ${b.guest_name},`,
     ``,
@@ -102,6 +116,7 @@ export function renderFullyPaidEmail(b: BookingRow) {
     `— Self check-in —`,
     `Check-in:    From 3:00 PM on ${fmtDate(b.check_in)}`,
     `Check-out:   By 12:00 PM on ${fmtDate(b.check_out)}`,
+    ...roomsBlock,
     `Key locker:  ${b.locker_code ? `Code ${b.locker_code}` : `Code will be shared on check-in day via WhatsApp`}`,
     ``,
     `Locker tips: please return keys to the locker on check-out and keep`,

@@ -16,6 +16,7 @@ import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { Plus, Minus, X } from "lucide-react";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -38,6 +39,8 @@ type CabinGroup = {
   label: string;
   rooms: Cabin[];
 };
+
+type CartItem = { cabinType: string; qty: number };
 
 function typeLabel(c: Cabin) {
   // "Deluxe Queen 1" -> "Deluxe Queen", "Family Suite 2" -> "Family Suite"
@@ -69,11 +72,10 @@ function BookPage() {
   const bt = t.book;
 
   const [cabins, setCabins] = useState<Cabin[]>([]);
-  const [cabinType, setCabinType] = useState<string>("");
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [checkin, setCheckin] = useState(search.checkin);
   const [checkout, setCheckout] = useState(search.checkout);
   const [guests, setGuests] = useState(search.guests);
-  const [numRooms, setNumRooms] = useState("1");
   const [comforter, setComforter] = useState(false);
 
   const [name, setName] = useState("");
@@ -107,7 +109,8 @@ function BookPage() {
       const list = (data ?? []) as Cabin[];
       setCabins(list);
       const match = list.find((c) => c.name === search.room || c.cabin_type === search.room);
-      setCabinType(match?.cabin_type ?? list[0]?.cabin_type ?? "");
+      const startType = match?.cabin_type ?? list[0]?.cabin_type ?? "";
+      if (startType) setCart([{ cabinType: startType, qty: 1 }]);
     })();
   }, []);
 
@@ -125,46 +128,61 @@ function BookPage() {
     return Array.from(map.values());
   }, [cabins]);
 
-  const selectedGroup = useMemo(
-    () => cabinGroups.find((g) => g.type === cabinType),
-    [cabinGroups, cabinType],
-  );
-  const selectedCabin = selectedGroup?.rooms[0];
-  const numRoomsN = Math.max(1, Math.min(2, Number(numRooms) || 1));
-  const maxRoomsForType = selectedGroup?.rooms.length ?? 2;
+  const groupByType = useMemo(() => {
+    const m = new Map<string, CabinGroup>();
+    for (const g of cabinGroups) m.set(g.type, g);
+    return m;
+  }, [cabinGroups]);
 
-  // Price preview
+  const totalRooms = cart.reduce((s, it) => s + it.qty, 0);
+  // First item drives the sidebar preview image
+  const previewGroup = cart[0] ? groupByType.get(cart[0].cabinType) : undefined;
+  const previewCabin = previewGroup?.rooms[0];
+
+  // Price preview — sum across all cart items
   useEffect(() => {
-    if (!selectedCabin || !checkin || !checkout) return;
+    if (cart.length === 0 || !checkin || !checkout) {
+      setPrice(null);
+      return;
+    }
     if (new Date(checkout) <= new Date(checkin)) {
       setPrice(null);
       return;
     }
     (async () => {
       try {
-        const p = await previewPrice({ data: { cabinId: selectedCabin.id, checkIn: checkin, checkOut: checkout, comforter } });
-        // Multiply by number of rooms (each room of the type is priced identically)
-        setPrice({
-          nights: p.nights,
-          subtotal: p.subtotal * numRoomsN,
-          comforter_total: p.comforter_total * numRoomsN,
-          total: p.total * numRoomsN,
-        });
+        let nights = 0;
+        let subtotal = 0;
+        let comforter_total = 0;
+        let total = 0;
+        for (const it of cart) {
+          const g = groupByType.get(it.cabinType);
+          const sample = g?.rooms[0];
+          if (!sample) continue;
+          const p = await previewPrice({
+            data: { cabinId: sample.id, checkIn: checkin, checkOut: checkout, comforter },
+          });
+          nights = p.nights;
+          subtotal += p.subtotal * it.qty;
+          comforter_total += p.comforter_total * it.qty;
+          total += p.total * it.qty;
+        }
+        setPrice({ nights, subtotal, comforter_total, total });
       } catch {
         setPrice(null);
       }
     })();
-  }, [selectedCabin?.id, checkin, checkout, comforter, numRoomsN]);
+  }, [cart, checkin, checkout, comforter, groupByType]);
 
-  // Availability for every room in the selected type (next 90 days)
+  // Availability for every cabin (next 90 days) — needed across mixed types
   useEffect(() => {
-    if (!selectedGroup) return;
+    if (cabins.length === 0) return;
     (async () => {
       try {
         const from = todayStr;
         const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
         const entries = await Promise.all(
-          selectedGroup.rooms.map(async (c) => {
+          cabins.map(async (c) => {
             try {
               const r = await getTakenDates({ data: { cabinId: c.id, from, to } });
               return [c.id, r.dates] as const;
@@ -178,30 +196,35 @@ function BookPage() {
         setTakenByCabin({});
       }
     })();
-  }, [selectedGroup?.type]);
+  }, [cabins]);
 
-  // Date is blocked for the type when free rooms in that type < requested rooms
+  // Date is blocked when ANY cart line can't be satisfied that night
   const blockedDates = useMemo<string[]>(() => {
-    if (!selectedGroup) return [];
-    const counts = new Map<string, number>();
-    for (const c of selectedGroup.rooms) {
-      for (const d of takenByCabin[c.id] ?? []) {
-        counts.set(d, (counts.get(d) ?? 0) + 1);
+    if (cart.length === 0) return [];
+    const blocked = new Set<string>();
+    for (const it of cart) {
+      const g = groupByType.get(it.cabinType);
+      if (!g) continue;
+      const counts = new Map<string, number>();
+      for (const c of g.rooms) {
+        for (const d of takenByCabin[c.id] ?? []) {
+          counts.set(d, (counts.get(d) ?? 0) + 1);
+        }
+      }
+      const total = g.rooms.length;
+      for (const [d, n] of counts) {
+        if (total - n < it.qty) blocked.add(d);
       }
     }
-    const total = selectedGroup.rooms.length;
-    const out: string[] = [];
-    for (const [d, n] of counts) {
-      if (total - n < numRoomsN) out.push(d);
-    }
-    return out;
-  }, [selectedGroup, takenByCabin, numRoomsN]);
+    return Array.from(blocked);
+  }, [cart, groupByType, takenByCabin]);
 
-  function freeCabinsInRange(): Cabin[] {
-    if (!selectedGroup || !checkin || !checkout) return [];
+  function freeCabinsForType(type: string): Cabin[] {
+    const g = groupByType.get(type);
+    if (!g || !checkin || !checkout) return [];
     const start = new Date(checkin);
     const end = new Date(checkout);
-    return selectedGroup.rooms.filter((c) => {
+    return g.rooms.filter((c) => {
       const tk = takenByCabin[c.id] ?? [];
       return !tk.some((d) => {
         const dd = new Date(d);
@@ -212,13 +235,13 @@ function BookPage() {
 
   function datesOverlapTaken() {
     if (!checkin || !checkout) return false;
-    return freeCabinsInRange().length < numRoomsN;
+    return cart.some((it) => freeCabinsForType(it.cabinType).length < it.qty);
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!selectedGroup) return setError(bt.errors.pickCabin);
+    if (cart.length === 0) return setError(bt.errors.pickCabin);
     if (new Date(checkout) <= new Date(checkin)) return setError(bt.errors.dates);
     if (datesOverlapTaken()) return setError(bt.errors.overlap);
     if (name.trim().length < 2) return setError(bt.errors.name);
@@ -228,18 +251,12 @@ function BookPage() {
 
     setSubmitting(true);
     try {
-      const free = freeCabinsInRange();
-      if (free.length < numRoomsN) {
-        throw new Error(bt.errors.overlap);
-      }
-      const assignedCabin = free[0];
       const res = await createBooking({
         data: {
-          cabinId: assignedCabin.id,
+          items: cart.map((it) => ({ cabinType: it.cabinType, numRooms: it.qty })),
           checkIn: checkin,
           checkOut: checkout,
           guests: Number(guests.replace("+", "")) || 1,
-          numRooms: numRoomsN,
           comforter,
           guestName: name.trim(),
           email: email.trim(),
@@ -291,13 +308,14 @@ function BookPage() {
       {step === "details" && (
         <DetailsStep
           {...{
-            cabinGroups, cabinType, setCabinType, maxRoomsForType,
+            cabinGroups, cart, setCart,
             checkin, setCheckin, checkout, setCheckout,
-            guests, setGuests, numRooms, setNumRooms, comforter, setComforter,
+            guests, setGuests, comforter, setComforter,
             name, setName, email, setEmail, phone, setPhone,
             relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
             notes, setNotes,
-            price, selectedCabin, selectedGroup, blockedDates,
+            price, previewCabin, blockedDates, totalRooms,
+            freeCabinsForType,
             submit, submitting, error,
             agreed, setAgreed,
           }}
@@ -312,7 +330,7 @@ function BookPage() {
           uploading={uploading}
           error={error}
           name={name}
-          cabinName={selectedCabin?.name ?? ""}
+          cabinName={previewCabin?.name ?? ""}
           checkin={checkin}
           checkout={checkout}
         />
@@ -326,12 +344,12 @@ function BookPage() {
 
 // ============ STEP 1: details ============
 function DetailsStep(props: {
-  cabinGroups: CabinGroup[]; cabinType: string; setCabinType: (s: string) => void;
-  maxRoomsForType: number;
+  cabinGroups: CabinGroup[];
+  cart: CartItem[];
+  setCart: (updater: (c: CartItem[]) => CartItem[]) => void;
   checkin: string; setCheckin: (s: string) => void;
   checkout: string; setCheckout: (s: string) => void;
   guests: string; setGuests: (s: string) => void;
-  numRooms: string; setNumRooms: (s: string) => void;
   comforter: boolean; setComforter: (b: boolean) => void;
   name: string; setName: (s: string) => void;
   email: string; setEmail: (s: string) => void;
@@ -341,9 +359,10 @@ function DetailsStep(props: {
   vehicleNumber: string; setVehicleNumber: (s: string) => void;
   notes: string; setNotes: (s: string) => void;
   price: { nights: number; subtotal: number; comforter_total: number; total: number } | null;
-  selectedCabin?: Cabin;
-  selectedGroup?: CabinGroup;
+  previewCabin?: Cabin;
   blockedDates: string[];
+  totalRooms: number;
+  freeCabinsForType: (type: string) => Cabin[];
   submit: (e: React.FormEvent) => void;
   submitting: boolean;
   error: string | null;
@@ -353,16 +372,37 @@ function DetailsStep(props: {
   const { t } = useLanguage();
   const bt = t.book;
   const {
-    cabinGroups, cabinType, setCabinType, maxRoomsForType,
+    cabinGroups, cart, setCart,
     checkin, setCheckin, checkout, setCheckout,
-    guests, setGuests, numRooms, setNumRooms, comforter, setComforter,
+    guests, setGuests, comforter, setComforter,
     name, setName, email, setEmail, phone, setPhone,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
-    price, selectedCabin, selectedGroup, blockedDates, submit, submitting, error, agreed, setAgreed,
+    price, previewCabin, blockedDates, totalRooms, freeCabinsForType,
+    submit, submitting, error, agreed, setAgreed,
   } = props;
 
-  const roomOptions = Array.from({ length: maxRoomsForType }, (_, i) => String(i + 1));
+  const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
+  const usedTypes = new Set(cart.map((it) => it.cabinType));
+  const remainingGroups = cabinGroups.filter((g) => !usedTypes.has(g.type));
+
+  function setCartLineQty(idx: number, qty: number) {
+    setCart((c) =>
+      c.map((it, i) => {
+        if (i !== idx) return it;
+        const g = groupByType.get(it.cabinType);
+        const max = g?.rooms.length ?? 1;
+        return { ...it, qty: Math.max(1, Math.min(max, qty)) };
+      }),
+    );
+  }
+  function removeCartLine(idx: number) {
+    setCart((c) => c.filter((_, i) => i !== idx));
+  }
+  function addCartLine(type: string) {
+    if (!type) return;
+    setCart((c) => (c.find((x) => x.cabinType === type) ? c : [...c, { cabinType: type, qty: 1 }]));
+  }
 
   return (
     <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
@@ -375,7 +415,7 @@ function DetailsStep(props: {
             <div>
               <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Availability</p>
               <h3 className="mt-1 font-display text-lg text-forest">
-                Blocked dates {selectedCabin ? `· ${selectedCabin.name}` : ""}
+                Blocked dates {cart.length > 0 ? `· ${totalRooms} room${totalRooms > 1 ? "s" : ""}` : ""}
               </h3>
             </div>
             <div className="flex items-center gap-4 text-xs text-stone">
@@ -405,29 +445,98 @@ function DetailsStep(props: {
         </div>
 
         <div className="mt-6 rounded-2xl border border-border bg-card p-5">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Accommodation</p>
-          <h3 className="mt-1 font-display text-lg text-forest">Cabin type</h3>
-          <div className="mt-3">
-            <SelectCabinType
-              value={cabinType}
-              onChange={setCabinType}
-              groups={cabinGroups}
-              loadingLabel={bt.f.loading}
-              className="bg-transparent px-0 py-0"
-            />
-            {selectedGroup && (
-              <p className="mt-2 text-xs text-stone">
-                {selectedGroup.rooms.length} rooms available in this type · sleeps {selectedCabin?.capacity ?? 0} per room
-              </p>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Your rooms</p>
+          <h3 className="mt-1 font-display text-lg text-forest">Pick the cabins for this stay</h3>
+
+          <ul className="mt-4 flex flex-col gap-3">
+            {cart.length === 0 && (
+              <li className="rounded-xl border border-dashed border-border bg-coconut/50 px-5 py-4 text-sm text-stone">
+                No rooms selected yet — add one below.
+              </li>
             )}
-          </div>
+            {cart.map((it, idx) => {
+              const g = groupByType.get(it.cabinType);
+              if (!g) return null;
+              const sample = g.rooms[0];
+              const maxQty = g.rooms.length;
+              const free = freeCabinsForType(it.cabinType).length;
+              const tooMany = free < it.qty;
+              return (
+                <li key={it.cabinType} className="rounded-xl border border-border bg-background px-5 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="font-display text-base text-forest">{g.label}</p>
+                      <p className="text-xs text-stone">
+                        Sleeps {sample?.capacity ?? "?"} · from RM {sample?.weekday_rate ?? 0}/night · {maxQty} room{maxQty > 1 ? "s" : ""} in this type
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCartLineQty(idx, it.qty - 1)}
+                        disabled={it.qty <= 1}
+                        aria-label="Decrease rooms"
+                        className="grid h-8 w-8 place-items-center rounded-full border border-border text-stone hover:text-forest disabled:opacity-40"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="min-w-[1.5rem] text-center text-base font-medium text-forest">{it.qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => setCartLineQty(idx, it.qty + 1)}
+                        disabled={it.qty >= maxQty}
+                        aria-label="Increase rooms"
+                        className="grid h-8 w-8 place-items-center rounded-full border border-border text-stone hover:text-forest disabled:opacity-40"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeCartLine(idx)}
+                        aria-label="Remove cabin"
+                        className="ml-2 grid h-8 w-8 place-items-center rounded-full text-stone hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  {tooMany && (
+                    <p className="mt-2 text-xs text-red-700">
+                      Only {free} {g.label} room{free === 1 ? "" : "s"} free for these dates — reduce qty or change dates.
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          {remainingGroups.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+              <span className="text-xs uppercase tracking-widest text-stone">Add another type</span>
+              {remainingGroups.map((g) => (
+                <button
+                  key={g.type}
+                  type="button"
+                  onClick={() => addCartLine(g.type)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-forest hover:bg-coconut"
+                >
+                  <Plus className="h-3.5 w-3.5" /> {g.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
           <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
           <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
           <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
-          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={roomOptions} />
+          <div className="flex flex-col gap-1 bg-card px-5 py-4 text-left">
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{bt.f.rooms}</span>
+            <span className="text-base text-foreground">
+              {totalRooms} room{totalRooms === 1 ? "" : "s"}
+            </span>
+          </div>
         </div>
 
         <label className="mt-5 flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4">
@@ -491,40 +600,49 @@ function DetailsStep(props: {
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <img
             src={
-              selectedCabin
-                ? selectedCabin.cabin_type === "Queen"
+              previewCabin
+                ? previewCabin.cabin_type === "Queen"
                   ? cabinQueenImg
-                  : selectedCabin.cabin_type === "Twin"
+                  : previewCabin.cabin_type === "Twin"
                     ? cabinTwinImg
-                    : selectedCabin.cabin_type === "Family"
+                    : previewCabin.cabin_type === "Family"
                       ? cabinFamilyImg
-                      : selectedCabin.cabin_type === "Triple"
+                      : previewCabin.cabin_type === "Triple"
                         ? cabinTripleImg
                         : heroRiverside
                 : heroRiverside
             }
-            alt={selectedCabin?.name ?? "Rajawali D'Cabin cabin interior"}
+            alt={previewCabin?.name ?? "Rajawali D'Cabin cabin interior"}
             className="aspect-[4/3] w-full object-cover"
           />
           <div className="p-6">
             <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.summary.eyebrow}</p>
             <h2 className="mt-2 font-display text-2xl text-forest">
-              {selectedCabin?.name ?? bt.summary.pickCabin}
+              {cart.length === 0
+                ? bt.summary.pickCabin
+                : cart.length === 1
+                  ? groupByType.get(cart[0].cabinType)?.label ?? previewCabin?.name ?? ""
+                  : `${totalRooms} rooms · ${cart.length} cabin types`}
             </h2>
-            {selectedCabin && (
-              <p className="mt-1 text-sm text-stone">
-                {bt.summary.capacityLine
-                  .replace("{cap}", String(selectedCabin.capacity))
-                  .replace("{min}", String(selectedCabin.weekday_rate))
-                  .replace("{max}", String(selectedCabin.school_holiday_rate))}
-              </p>
+            {cart.length > 0 && (
+              <ul className="mt-3 flex flex-col gap-1 text-sm text-stone">
+                {cart.map((it) => {
+                  const g = groupByType.get(it.cabinType);
+                  return (
+                    <li key={it.cabinType} className="flex justify-between">
+                      <span>{g?.label}</span>
+                      <span className="text-foreground">× {it.qty}</span>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
             <dl className="mt-6 divide-y divide-border text-sm">
               <Row label={bt.summary.checkin} value={fmt(checkin, bt.locale)} />
               <Row label={bt.summary.checkout} value={fmt(checkout, bt.locale)} />
               <Row label={bt.summary.nights} value={String(price?.nights ?? "—")} />
               <Row label={bt.summary.guests} value={guests} />
-              <Row label={bt.summary.rooms} value={numRooms} />
+              <Row label={bt.summary.rooms} value={String(totalRooms)} />
               {price && (
                 <>
                   <Row label={bt.summary.roomSubtotal} value={`RM ${price.subtotal.toFixed(2)}`} />
