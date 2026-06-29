@@ -295,11 +295,14 @@ function DetailsStep(props: {
     price, selectedCabin, taken, availability, submit, submitting, error, agreed, setAgreed,
   } = props;
 
-  const totalRooms = Math.max(availability.total || 0, 2);
+  const totalRooms = availability.total > 0 ? availability.total : 2;
+  const wanted = Math.max(1, Number(numRooms) || 1);
   const fullDates: Date[] = [];
   const partialDates: Date[] = [];
   for (const [d, c] of Object.entries(availability.counts)) {
-    if (c >= totalRooms) fullDates.push(new Date(d));
+    const remaining = totalRooms - c;
+    if (remaining <= 0) fullDates.push(new Date(d));
+    else if (remaining < wanted) fullDates.push(new Date(d));
     else if (c > 0) partialDates.push(new Date(d));
   }
 
