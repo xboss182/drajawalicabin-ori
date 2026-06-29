@@ -347,20 +347,25 @@ function DetailsStep(props: {
               components={{
                 DayButton: (props) => {
                   const m = props.modifiers as Record<string, boolean>;
+                  const key = props.day.date.toISOString().slice(0, 10);
+                  const booked = availability.counts[key] ?? 0;
+                  const remaining = Math.max(0, totalRooms - booked);
                   return (
                     <CalendarDayButton
                       {...props}
                       title={
                         m.full
-                          ? "Fully booked"
+                          ? remaining === 0
+                            ? `Fully booked (0 of ${totalRooms} rooms left)`
+                            : `${remaining} of ${totalRooms} rooms left — need ${wanted}`
                           : m.partial
-                            ? `1 room left of ${totalRooms}`
+                            ? `${remaining} of ${totalRooms} rooms left`
                             : `${totalRooms} rooms available`
                       }
                     >
                       <span>{props.day.date.getDate()}</span>
                       {m.partial && !m.full && (
-                        <span className="text-[9px] font-medium text-amber-600">1 left</span>
+                        <span className="text-[9px] font-medium text-amber-600">{remaining} left</span>
                       )}
                     </CalendarDayButton>
                   );
