@@ -231,7 +231,7 @@ function BookPage() {
             name, setName, email, setEmail, phone, setPhone,
             relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
             notes, setNotes,
-            price, selectedCabin, taken,
+            price, selectedCabin, taken, availability,
             submit, submitting, error,
             agreed, setAgreed,
           }}
