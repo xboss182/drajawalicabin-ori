@@ -379,6 +379,7 @@ export const confirmBooking = createServerFn({ method: "POST" })
     });
     if (!isAdmin.data) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
     const { error } = await supabaseAdmin
       .from("booking_requests")
       .update({
@@ -386,7 +387,7 @@ export const confirmBooking = createServerFn({ method: "POST" })
         confirmed_at: new Date().toISOString(),
         confirmed_by: context.userId,
       })
-      .eq("id", data.bookingId);
+      .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -401,10 +402,11 @@ export const rejectBooking = createServerFn({ method: "POST" })
     });
     if (!isAdmin.data) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
     const { error } = await supabaseAdmin
       .from("booking_requests")
       .update({ status: "cancelled" })
-      .eq("id", data.bookingId);
+      .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
