@@ -296,6 +296,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      booking_accepts_proof: { Args: { _booking_id: string }; Returns: boolean }
       cabin_taken_dates: {
         Args: { _cabin_id: string; _from: string; _to: string }
         Returns: {
