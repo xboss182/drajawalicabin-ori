@@ -327,7 +327,7 @@ function DetailsStep(props: {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm border border-amber-500 bg-amber-100" />
-                1 room left
+                Partially booked
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm border border-border bg-background" />
