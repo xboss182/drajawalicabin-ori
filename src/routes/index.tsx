@@ -362,11 +362,7 @@ function AvailabilitySearch() {
             <Calendar
               mode="range"
               selected={range}
-              onSelect={function(r, triggerDate, modifiers, e) {
-                console.log("Calendar onSelect args count", arguments.length, "r", r, "triggerDate", triggerDate, "modifiers", modifiers, "e", e?.type);
-                setRange(r);
-                if (r?.from && r?.to) setOpenCal(false);
-              }}
+              onSelect={handleRangeSelect}
               numberOfMonths={2}
               disabled={{ before: todayDate }}
               defaultMonth={range?.from ?? todayDate}
