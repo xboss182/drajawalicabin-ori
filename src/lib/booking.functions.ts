@@ -541,35 +541,51 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => getByIdSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: b, error } = await supabaseAdmin
+    const { data: lead, error } = await supabaseAdmin
       .from("booking_requests")
       .select(
-        "id, guest_name, email, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, balance_paid_at, payment_reference, status, locker_code, comforter, comforter_total, guest_token"
+        "id, booking_group_id, guest_token"
       )
       .eq("id", data.bookingId)
       .maybeSingle();
-    if (error || !b) throw new Error("Booking not found");
-    if (b.guest_token !== data.guestToken) throw new Error("Booking not found");
-    const total = Number(b.total_amount ?? 0);
-    const deposit = Number(b.deposit_amount ?? 50);
-    const remaining = b.balance_amount != null ? Number(b.balance_amount) : Math.max(0, total - deposit);
+    if (error || !lead) throw new Error("Booking not found");
+    if (lead.guest_token !== data.guestToken) throw new Error("Booking not found");
+    const gid = (lead.booking_group_id as string) ?? lead.id;
+    const { data: rows } = await supabaseAdmin
+      .from("booking_requests")
+      .select(
+        "id, guest_name, email, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, balance_paid_at, payment_reference, status, locker_code, comforter, comforter_total, guest_token, created_at"
+      )
+      .eq("booking_group_id", gid)
+      .order("created_at", { ascending: true });
+    if (!rows || rows.length === 0) throw new Error("Booking not found");
+    const head = rows[0];
+    const total = rows.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
+    // Deposit is a flat RM50 per reservation (not per room)
+    const deposit = Number(head.deposit_amount ?? 50);
+    const remainingExplicit = rows.reduce(
+      (s, r) => s + (r.balance_amount != null ? Number(r.balance_amount) : 0),
+      0,
+    );
+    const remaining = remainingExplicit > 0 ? remainingExplicit : Math.max(0, total - deposit);
     return {
-      id: b.id,
-      reference: b.payment_reference,
-      guestName: b.guest_name,
-      email: b.email,
-      checkIn: b.check_in,
-      checkOut: b.check_out,
-      guests: b.guests,
-      nights: b.nights,
-      roomType: b.room_type,
+      id: head.id,
+      reference: head.payment_reference,
+      guestName: head.guest_name,
+      email: head.email,
+      checkIn: head.check_in,
+      checkOut: head.check_out,
+      guests: head.guests,
+      nights: head.nights,
+      roomType: rows.map((r) => r.room_type).join(", "),
+      rooms: rows.map((r) => ({ id: r.id, name: r.room_type, nights: r.nights, total: Number(r.total_amount ?? 0) })),
       total,
       deposit,
       remaining,
-      status: b.status,
-      lockerCode: b.locker_code,
-      balancePaidAt: b.balance_paid_at,
-      comforter: b.comforter,
+      status: head.status,
+      lockerCode: head.locker_code,
+      balancePaidAt: head.balance_paid_at,
+      comforter: head.comforter,
     };
   });
 
@@ -587,17 +603,18 @@ export const attachBalanceProof = createServerFn({ method: "POST" })
     }
     const { data: b } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, status, guest_token")
+      .select("id, status, guest_token, booking_group_id")
       .eq("id", data.bookingId)
       .maybeSingle();
     if (!b) throw new Error("Booking not found");
     if (b.guest_token !== data.guestToken) throw new Error("Booking not found");
     if (b.status === "fully_paid") throw new Error("This booking is already fully paid.");
     if (b.status === "cancelled") throw new Error("This booking is no longer active.");
+    const gid = (b.booking_group_id as string) ?? b.id;
     const { error } = await supabaseAdmin
       .from("booking_requests")
       .update({ balance_proof_path: data.path, balance_paid_at: new Date().toISOString() })
-      .eq("id", data.bookingId);
+      .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -616,6 +633,7 @@ export const markFullyPaid = createServerFn({ method: "POST" })
     });
     if (!isAdmin.data) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
     const { error } = await supabaseAdmin
       .from("booking_requests")
       .update({
@@ -623,18 +641,25 @@ export const markFullyPaid = createServerFn({ method: "POST" })
         locker_code: data.lockerCode,
         balance_paid_at: new Date().toISOString(),
       })
-      .eq("id", data.bookingId);
+      .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
 
-    const { data: full } = await supabaseAdmin
+    const { data: rows } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, payment_reference, locker_code")
-      .eq("id", data.bookingId)
-      .maybeSingle();
-    if (full) {
+      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, payment_reference, locker_code, created_at")
+      .eq("booking_group_id", gid)
+      .order("created_at", { ascending: true });
+    const head = rows?.[0];
+    if (head) {
+      const total = (rows ?? []).reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
+      const aggregate = {
+        ...head,
+        total_amount: total,
+        rooms: (rows ?? []).map((r) => ({ name: r.room_type, nights: r.nights, total: Number(r.total_amount ?? 0) })),
+      };
       const { renderFullyPaidEmail, enqueueEmail } = await import("./email.server");
-      const { subject, body } = renderFullyPaidEmail(full as never);
-      await enqueueEmail(supabaseAdmin, { kind: "fully_paid", toEmail: full.email, subject, body, bookingId: full.id });
+      const { subject, body } = renderFullyPaidEmail(aggregate as never);
+      await enqueueEmail(supabaseAdmin, { kind: "fully_paid", toEmail: head.email, subject, body, bookingId: head.id });
     }
     return { ok: true };
   });
