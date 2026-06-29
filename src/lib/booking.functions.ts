@@ -34,10 +34,19 @@ export const createBooking = createServerFn({ method: "POST" })
     }
 
     // Availability check
+    // checkout date is exclusive — query up to checkOut - 1
+    const lastNight = new Date(data.checkIn);
+    const co = new Date(data.checkOut);
+    co.setUTCDate(co.getUTCDate() - 1);
+    const lastNightStr = co.toISOString().slice(0, 10);
+    if (co < new Date(data.checkIn)) {
+      throw new Error("Check-out must be after check-in");
+    }
+    void lastNight;
     const { data: taken, error: takenErr } = await supabaseAdmin.rpc("cabin_taken_dates", {
       _cabin_id: data.cabinId,
       _from: data.checkIn,
-      _to: data.checkOut,
+      _to: lastNightStr,
     });
     if (takenErr) throw new Error(takenErr.message);
     if (taken && taken.length > 0) {
