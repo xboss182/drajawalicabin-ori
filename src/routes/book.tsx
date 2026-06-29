@@ -6,7 +6,6 @@ import {
   previewPrice,
   attachPaymentProof,
   getTakenDates,
-  getCabinTypeAvailability,
 } from "@/lib/booking.functions";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinQueenImg from "@/assets/cabin-queen.jpg";
@@ -15,7 +14,7 @@ import cabinFamilyImg from "@/assets/cabin-family.jpg";
 import cabinTripleImg from "@/assets/cabin-triple.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
-import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
+import { Calendar } from "@/components/ui/calendar";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -75,7 +74,6 @@ function BookPage() {
 
   const [price, setPrice] = useState<{ nights: number; subtotal: number; comforter_total: number; total: number } | null>(null);
   const [taken, setTaken] = useState<string[]>([]);
-  const [availability, setAvailability] = useState<{ counts: Record<string, number>; total: number }>({ counts: {}, total: 0 });
 
   const [step, setStep] = useState<Step>("details");
   const [submitting, setSubmitting] = useState(false);
@@ -120,29 +118,20 @@ function BookPage() {
     })();
   }, [cabinId, checkin, checkout, comforter]);
 
-  // Availability for selected cabin (next 90 days) + per-type aggregated counts
-  const cabinType = selectedCabin?.cabin_type;
+  // Availability for selected cabin (next 90 days)
   useEffect(() => {
-    if (!cabinId || !cabinType) return;
-    const from = todayStr;
-    const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+    if (!cabinId) return;
     (async () => {
       try {
+        const from = todayStr;
+        const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
         const r = await getTakenDates({ data: { cabinId, from, to } });
         setTaken(r.dates);
       } catch {
         setTaken([]);
       }
-      try {
-        const a = await getCabinTypeAvailability({
-          data: { cabinType, from, to },
-        });
-        setAvailability(a);
-      } catch {
-        setAvailability({ counts: {}, total: 0 });
-      }
     })();
-  }, [cabinId, cabinType]);
+  }, [cabinId]);
 
   function datesOverlapTaken() {
     if (!checkin || !checkout) return false;
@@ -232,7 +221,7 @@ function BookPage() {
             name, setName, email, setEmail, phone, setPhone,
             relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
             notes, setNotes,
-            price, selectedCabin, taken, availability,
+            price, selectedCabin, taken,
             submit, submitting, error,
             agreed, setAgreed,
           }}
@@ -277,7 +266,6 @@ function DetailsStep(props: {
   price: { nights: number; subtotal: number; comforter_total: number; total: number } | null;
   selectedCabin?: Cabin;
   taken: string[];
-  availability: { counts: Record<string, number>; total: number };
   submit: (e: React.FormEvent) => void;
   submitting: boolean;
   error: string | null;
@@ -292,19 +280,8 @@ function DetailsStep(props: {
     name, setName, email, setEmail, phone, setPhone,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
-    price, selectedCabin, taken, availability, submit, submitting, error, agreed, setAgreed,
+    price, selectedCabin, taken, submit, submitting, error, agreed, setAgreed,
   } = props;
-
-  const totalRooms = availability.total > 0 ? availability.total : 2;
-  const wanted = Math.max(1, Number(numRooms) || 1);
-  const fullDates: Date[] = [];
-  const partialDates: Date[] = [];
-  for (const [d, c] of Object.entries(availability.counts)) {
-    const remaining = totalRooms - c;
-    if (remaining <= 0) fullDates.push(new Date(d));
-    else if (remaining < wanted) fullDates.push(new Date(d));
-    else if (c > 0) partialDates.push(new Date(d));
-  }
 
   return (
     <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
@@ -312,22 +289,35 @@ function DetailsStep(props: {
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
-        <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
+          <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
+          <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
+          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
+          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
+          <SelectCabin label={bt.f.cabinType} value={cabinId} onChange={setCabinId} cabins={cabins} loadingLabel={bt.f.loading} optionTpl={bt.f.cabinOption} />
+        </div>
+
+        {taken.length > 0 && (
+          <p className="mt-3 text-xs text-stone">
+            {bt.takenPrefix} {selectedCabin?.name}:{" "}
+            <span className="text-foreground/70">
+              {taken.slice(0, 8).join(", ")}{taken.length > 8 ? "…" : ""}
+            </span>
+          </p>
+        )}
+
+        <div className="mt-6 rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Availability</p>
               <h3 className="mt-1 font-display text-lg text-forest">
-                Blocked dates {selectedCabin ? `· ${selectedCabin.cabin_type}` : ""}
+                Blocked dates {selectedCabin ? `· ${selectedCabin.name}` : ""}
               </h3>
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone">
+            <div className="flex items-center gap-4 text-xs text-stone">
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm bg-red-500/80" />
-                Fully booked
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-sm border border-amber-500 bg-amber-100" />
-                Partially booked
+                Booked
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm border border-border bg-background" />
@@ -337,47 +327,17 @@ function DetailsStep(props: {
           </div>
           <div className="mt-3 overflow-x-auto">
             <Calendar
+              mode="single"
               numberOfMonths={2}
               disabled={{ before: new Date() }}
-              modifiers={{ full: fullDates, partial: partialDates }}
+              modifiers={{ booked: taken.map((d) => new Date(d)) }}
               modifiersClassNames={{
-                full: "bg-red-500/80 text-white line-through hover:bg-red-500/80 focus:bg-red-500/80",
+                booked:
+                  "bg-red-500/80 text-white line-through hover:bg-red-500/80 focus:bg-red-500/80",
               }}
-              components={{
-                DayButton: (props) => {
-                  const m = props.modifiers as Record<string, boolean>;
-                  const key = props.day.date.toISOString().slice(0, 10);
-                  const booked = availability.counts[key] ?? 0;
-                  const remaining = Math.max(0, totalRooms - booked);
-                  return (
-                    <CalendarDayButton
-                      {...props}
-                      title={
-                        m.full
-                          ? remaining === 0
-                            ? `Fully booked (0 of ${totalRooms} rooms left)`
-                            : `${remaining} of ${totalRooms} rooms left — need ${wanted}`
-                          : m.partial
-                            ? `${remaining} of ${totalRooms} rooms left`
-                            : `${totalRooms} rooms available`
-                      }
-                    >
-                      <span>{props.day.date.getDate()}</span>
-                    </CalendarDayButton>
-                  );
-                },
-              }}
-              className="p-0"
+              className="pointer-events-auto p-0"
             />
           </div>
-        </div>
-
-        <div className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-          <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
-          <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
-          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
-          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
-          <SelectCabin label={bt.f.cabinType} value={cabinId} onChange={setCabinId} cabins={cabins} loadingLabel={bt.f.loading} optionTpl={bt.f.cabinOption} />
         </div>
 
         <label className="mt-5 flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4">
@@ -739,21 +699,14 @@ function Select({ label, value, onChange, options }: { label: string; value: str
 }
 
 function SelectCabin({ label, value, onChange, cabins, loadingLabel, optionTpl }: { label: string; value: string; onChange: (v: string) => void; cabins: Cabin[]; loadingLabel: string; optionTpl: string }) {
-  const seen = new Set<string>();
-  const uniqueByType: Cabin[] = [];
-  for (const c of cabins) {
-    if (seen.has(c.cabin_type)) continue;
-    seen.add(c.cabin_type);
-    uniqueByType.push(c);
-  }
   return (
     <label className="flex flex-col gap-1 bg-card px-5 py-4 text-left">
       <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)}
         className="appearance-none bg-transparent text-base text-foreground outline-none">
-        {uniqueByType.length === 0 && <option>{loadingLabel}</option>}
-        {uniqueByType.map((c) => (
-          <option key={c.id} value={c.id}>{optionTpl.replace("{name}", c.cabin_type).replace("{cap}", String(c.capacity))}</option>
+        {cabins.length === 0 && <option>{loadingLabel}</option>}
+        {cabins.map((c) => (
+          <option key={c.id} value={c.id}>{optionTpl.replace("{name}", c.name).replace("{cap}", String(c.capacity))}</option>
         ))}
       </select>
     </label>

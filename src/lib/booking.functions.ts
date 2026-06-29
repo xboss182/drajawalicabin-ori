@@ -172,59 +172,6 @@ export const getTakenDates = createServerFn({ method: "POST" })
     return { dates: (rows ?? []).map((r: { d: string }) => r.d) };
   });
 
-const cabinTypeAvailSchema = z.object({
-  cabinType: z.string().trim().min(1).max(50),
-  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-});
-
-export const getCabinTypeAvailability = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => cabinTypeAvailSchema.parse(d))
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: cabinRows, error: cErr } = await supabaseAdmin
-      .from("cabins")
-      .select("id")
-      .eq("cabin_type", data.cabinType)
-      .eq("is_active", true);
-    if (cErr) throw new Error(cErr.message);
-    const ids = (cabinRows ?? []).map((c) => c.id);
-    if (ids.length === 0) return { counts: {} as Record<string, number>, total: 0 };
-
-    const { data: bookings, error: bErr } = await supabaseAdmin
-      .from("booking_requests")
-      .select("check_in, check_out, status, hold_expires_at, created_at, num_rooms")
-      .in("cabin_id", ids)
-      .lt("check_in", data.to)
-      .gt("check_out", data.from);
-    if (bErr) throw new Error(bErr.message);
-
-    const counts: Record<string, number> = {};
-    const now = Date.now();
-    const active = new Set(["confirmed", "awaiting_review", "fully_paid"]);
-    for (const b of bookings ?? []) {
-      const status = String(b.status);
-      const isActive =
-        active.has(status) ||
-        (status === "pending_payment" &&
-          new Date(
-            b.hold_expires_at ??
-              new Date(new Date(b.created_at).getTime() + 30 * 60_000).toISOString(),
-          ).getTime() > now);
-      if (!isActive) continue;
-      const rooms = Math.max(1, Number((b as { num_rooms?: number }).num_rooms ?? 1));
-      let d = new Date(b.check_in);
-      const end = new Date(b.check_out);
-      while (d < end) {
-        const key = d.toISOString().slice(0, 10);
-        counts[key] = (counts[key] ?? 0) + rooms;
-        d = new Date(d.getTime() + 86400000);
-      }
-    }
-    // Each cabin has 2 rooms.
-    return { counts, total: ids.length * 2 };
-  });
-
 const previewSchema = z.object({
   cabinId: z.string().uuid(),
   checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
