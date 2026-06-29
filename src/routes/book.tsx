@@ -14,6 +14,7 @@ import cabinFamilyImg from "@/assets/cabin-family.jpg";
 import cabinTripleImg from "@/assets/cabin-triple.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
+import { Calendar } from "@/components/ui/calendar";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -304,6 +305,40 @@ function DetailsStep(props: {
             </span>
           </p>
         )}
+
+        <div className="mt-6 rounded-2xl border border-border bg-card p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Availability</p>
+              <h3 className="mt-1 font-display text-lg text-forest">
+                Blocked dates {selectedCabin ? `· ${selectedCabin.name}` : ""}
+              </h3>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-stone">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 rounded-sm bg-red-500/80" />
+                Booked
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 rounded-sm border border-border bg-background" />
+                Available
+              </span>
+            </div>
+          </div>
+          <div className="mt-3 overflow-x-auto">
+            <Calendar
+              mode="single"
+              numberOfMonths={2}
+              disabled={{ before: new Date() }}
+              modifiers={{ booked: taken.map((d) => new Date(d)) }}
+              modifiersClassNames={{
+                booked:
+                  "bg-red-500/80 text-white line-through hover:bg-red-500/80 focus:bg-red-500/80",
+              }}
+              className="pointer-events-auto p-0"
+            />
+          </div>
+        </div>
 
         <label className="mt-5 flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4">
           <input
