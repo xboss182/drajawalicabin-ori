@@ -314,10 +314,14 @@ function DetailsStep(props: {
                 Blocked dates {selectedCabin ? `· ${selectedCabin.name}` : ""}
               </h3>
             </div>
-            <div className="flex items-center gap-4 text-xs text-stone">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone">
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm bg-red-500/80" />
-                Booked
+                Already booked
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 rounded-sm bg-stone/30" />
+                Unavailable / past
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm border border-border bg-background" />
@@ -334,6 +338,24 @@ function DetailsStep(props: {
               modifiersClassNames={{
                 booked:
                   "bg-red-500/80 text-white line-through hover:bg-red-500/80 focus:bg-red-500/80",
+              }}
+              components={{
+                DayButton: ({ day, modifiers, ...rest }) => {
+                  const isBooked = (modifiers as Record<string, boolean>).booked;
+                  const isPast = (modifiers as Record<string, boolean>).disabled && !isBooked;
+                  const label = day.date.toLocaleDateString(undefined, {
+                    weekday: "short",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  });
+                  const title = isBooked
+                    ? `${label} — Already booked by another guest`
+                    : isPast
+                      ? `${label} — Past date, unavailable`
+                      : `${label} — Available`;
+                  return <button type="button" title={title} {...rest} />;
+                },
               }}
               className="pointer-events-auto p-0"
             />
