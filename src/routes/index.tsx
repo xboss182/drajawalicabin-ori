@@ -300,6 +300,7 @@ function AvailabilitySearch() {
     a.getDate() === b.getDate();
 
   const handleRangeSelect = (newRange: DateRange | undefined) => {
+    console.log("handleRangeSelect", newRange, "current", range);
     if (!newRange?.from) {
       setRange(newRange);
       return;
