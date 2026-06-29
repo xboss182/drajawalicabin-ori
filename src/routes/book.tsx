@@ -308,13 +308,14 @@ function BookPage() {
       {step === "details" && (
         <DetailsStep
           {...{
-            cabinGroups, cabinType, setCabinType, maxRoomsForType,
+            cabinGroups, cart, setCart,
             checkin, setCheckin, checkout, setCheckout,
-            guests, setGuests, numRooms, setNumRooms, comforter, setComforter,
+            guests, setGuests, comforter, setComforter,
             name, setName, email, setEmail, phone, setPhone,
             relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
             notes, setNotes,
-            price, selectedCabin, selectedGroup, blockedDates,
+            price, previewCabin, blockedDates, totalRooms,
+            freeCabinsForType,
             submit, submitting, error,
             agreed, setAgreed,
           }}
@@ -329,7 +330,7 @@ function BookPage() {
           uploading={uploading}
           error={error}
           name={name}
-          cabinName={selectedCabin?.name ?? ""}
+          cabinName={previewCabin?.name ?? ""}
           checkin={checkin}
           checkout={checkout}
         />
