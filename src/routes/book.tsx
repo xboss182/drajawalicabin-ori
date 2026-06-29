@@ -6,6 +6,7 @@ import {
   previewPrice,
   attachPaymentProof,
   getTakenDates,
+  getCabinTypeAvailability,
 } from "@/lib/booking.functions";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinQueenImg from "@/assets/cabin-queen.jpg";
@@ -74,6 +75,7 @@ function BookPage() {
 
   const [price, setPrice] = useState<{ nights: number; subtotal: number; comforter_total: number; total: number } | null>(null);
   const [taken, setTaken] = useState<string[]>([]);
+  const [availability, setAvailability] = useState<{ counts: Record<string, number>; total: number }>({ counts: {}, total: 0 });
 
   const [step, setStep] = useState<Step>("details");
   const [submitting, setSubmitting] = useState(false);
@@ -118,20 +120,28 @@ function BookPage() {
     })();
   }, [cabinId, checkin, checkout, comforter]);
 
-  // Availability for selected cabin (next 90 days)
+  // Availability for selected cabin (next 90 days) + per-type aggregated counts
   useEffect(() => {
-    if (!cabinId) return;
+    if (!cabinId || !selectedCabin) return;
+    const from = todayStr;
+    const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
     (async () => {
       try {
-        const from = todayStr;
-        const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
         const r = await getTakenDates({ data: { cabinId, from, to } });
         setTaken(r.dates);
       } catch {
         setTaken([]);
       }
+      try {
+        const a = await getCabinTypeAvailability({
+          data: { cabinType: selectedCabin.cabin_type, from, to },
+        });
+        setAvailability(a);
+      } catch {
+        setAvailability({ counts: {}, total: 0 });
+      }
     })();
-  }, [cabinId]);
+  }, [cabinId, selectedCabin]);
 
   function datesOverlapTaken() {
     if (!checkin || !checkout) return false;
