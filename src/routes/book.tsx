@@ -394,7 +394,7 @@ function DetailsStep(props: {
               mode="single"
               numberOfMonths={2}
               disabled={{ before: new Date() }}
-              modifiers={{ booked: taken.map((d) => new Date(d)) }}
+              modifiers={{ booked: blockedDates.map((d) => new Date(d)) }}
               modifiersClassNames={{
                 booked:
                   "bg-red-500/80 text-white line-through hover:bg-red-500/80 focus:bg-red-500/80",
@@ -408,14 +408,18 @@ function DetailsStep(props: {
           <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Accommodation</p>
           <h3 className="mt-1 font-display text-lg text-forest">Cabin type</h3>
           <div className="mt-3">
-            <SelectCabin
-              value={cabinId}
-              onChange={setCabinId}
-              cabins={cabins}
+            <SelectCabinType
+              value={cabinType}
+              onChange={setCabinType}
+              groups={cabinGroups}
               loadingLabel={bt.f.loading}
-              optionTpl={bt.f.cabinOption}
               className="bg-transparent px-0 py-0"
             />
+            {selectedGroup && (
+              <p className="mt-2 text-xs text-stone">
+                {selectedGroup.rooms.length} rooms available in this type · sleeps {selectedCabin?.capacity ?? 0} per room
+              </p>
+            )}
           </div>
         </div>
 
@@ -423,7 +427,7 @@ function DetailsStep(props: {
           <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
           <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
           <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
-          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
+          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={roomOptions} />
         </div>
 
         <label className="mt-5 flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4">
