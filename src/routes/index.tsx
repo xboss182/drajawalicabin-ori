@@ -300,18 +300,15 @@ function AvailabilitySearch() {
         onSubmit={submit}
         className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-2xl shadow-forest/25 lg:flex-row lg:items-stretch"
       >
-        {/* Dates */}
+        {/* Dates - wider */}
         <Popover open={openCal} onOpenChange={setOpenCal}>
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="group flex flex-1 items-center gap-4 px-5 py-4 text-left transition hover:bg-muted/40 lg:px-7 lg:py-5"
+              className="group flex flex-[1.6] min-w-0 items-center gap-4 px-5 py-3 text-left transition hover:bg-muted/40 lg:px-7 lg:py-4"
             >
-              <CalendarIcon className="h-6 w-6 shrink-0 text-forest" />
-              <DateCell
-                label={t.search.checkin}
-                date={range?.from}
-              />
+              <CalendarIcon className="h-5 w-5 shrink-0 text-forest" />
+              <DateCell label={t.search.checkin} date={range?.from} />
               <div className="hidden flex-col items-center px-2 text-stone sm:flex">
                 <span className="text-[10px] uppercase tracking-[0.2em]">
                   {nights} {nights === 1 ? "night" : "nights"}
@@ -321,10 +318,7 @@ function AvailabilitySearch() {
               <DateCell label={t.search.checkout} date={range?.to} />
             </button>
           </PopoverTrigger>
-          <PopoverContent
-            align="start"
-            className="w-auto p-0 pointer-events-auto"
-          >
+          <PopoverContent align="start" className="pointer-events-auto w-auto p-0">
             <Calendar
               mode="range"
               selected={range}
@@ -343,15 +337,15 @@ function AvailabilitySearch() {
 
         <div className="h-px w-full bg-border lg:h-auto lg:w-px" />
 
-        {/* Guests */}
-        <div className="flex flex-1 items-center gap-4 px-5 py-4 lg:px-7 lg:py-5">
-          <Users className="h-6 w-6 shrink-0 text-forest" />
-          <div className="flex flex-1 flex-col gap-0.5">
+        {/* Guests - narrower */}
+        <div className="flex flex-[0.6] min-w-0 items-center gap-4 px-5 py-3 lg:px-6 lg:py-4">
+          <Users className="h-5 w-5 shrink-0 text-forest" />
+          <div className="flex flex-1 min-w-0 flex-col gap-0.5">
             <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
               {t.search.guests}
             </span>
             <Select value={guests} onValueChange={setGuests}>
-              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-lg font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0">
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-base font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 [&>span]:truncate">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -367,15 +361,15 @@ function AvailabilitySearch() {
 
         <div className="h-px w-full bg-border lg:h-auto lg:w-px" />
 
-        {/* Room type */}
-        <div className="flex flex-1 items-center gap-4 px-5 py-4 lg:px-7 lg:py-5">
-          <BedDouble className="h-6 w-6 shrink-0 text-forest" />
-          <div className="flex flex-1 flex-col gap-0.5">
+        {/* Room type - narrower */}
+        <div className="flex flex-[0.8] min-w-0 items-center gap-4 px-5 py-3 lg:px-6 lg:py-4">
+          <BedDouble className="h-5 w-5 shrink-0 text-forest" />
+          <div className="flex flex-1 min-w-0 flex-col gap-0.5">
             <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
               {t.search.room}
             </span>
             <Select value={room} onValueChange={setRoom}>
-              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-lg font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0">
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-base font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 [&>span]:truncate">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -391,7 +385,7 @@ function AvailabilitySearch() {
         <button
           type="submit"
           className={cn(
-            "flex items-center justify-center gap-2 bg-forest px-8 py-5 text-base font-semibold text-coconut transition hover:bg-forest/90",
+            "flex items-center justify-center gap-2 bg-forest px-8 py-4 text-base font-semibold text-coconut transition hover:bg-forest/90",
             "lg:m-2 lg:rounded-2xl lg:px-10",
           )}
         >
@@ -408,13 +402,13 @@ function AvailabilitySearch() {
 
 function DateCell({ label, date }: { label: string; date?: Date }) {
   return (
-    <div className="flex flex-1 flex-col gap-0.5">
+    <div className="flex flex-1 min-w-0 flex-col gap-0">
       <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
         {label}
       </span>
       {date ? (
         <div className="flex items-baseline gap-2">
-          <span className="font-display text-2xl font-semibold leading-none text-foreground">
+          <span className="font-display text-xl font-semibold leading-none text-foreground">
             {date.getDate()}
           </span>
           <span className="text-sm text-foreground/80">
