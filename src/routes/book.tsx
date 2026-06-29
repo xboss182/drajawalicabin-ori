@@ -121,8 +121,9 @@ function BookPage() {
   }, [cabinId, checkin, checkout, comforter]);
 
   // Availability for selected cabin (next 90 days) + per-type aggregated counts
+  const cabinType = selectedCabin?.cabin_type;
   useEffect(() => {
-    if (!cabinId || !selectedCabin) return;
+    if (!cabinId || !cabinType) return;
     const from = todayStr;
     const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
     (async () => {
@@ -134,14 +135,14 @@ function BookPage() {
       }
       try {
         const a = await getCabinTypeAvailability({
-          data: { cabinType: selectedCabin.cabin_type, from, to },
+          data: { cabinType, from, to },
         });
         setAvailability(a);
       } catch {
         setAvailability({ counts: {}, total: 0 });
       }
     })();
-  }, [cabinId, selectedCabin]);
+  }, [cabinId, cabinType]);
 
   function datesOverlapTaken() {
     if (!checkin || !checkout) return false;
