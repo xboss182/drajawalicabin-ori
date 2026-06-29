@@ -344,12 +344,12 @@ function BookPage() {
 
 // ============ STEP 1: details ============
 function DetailsStep(props: {
-  cabinGroups: CabinGroup[]; cabinType: string; setCabinType: (s: string) => void;
-  maxRoomsForType: number;
+  cabinGroups: CabinGroup[];
+  cart: CartItem[];
+  setCart: (updater: (c: CartItem[]) => CartItem[]) => void;
   checkin: string; setCheckin: (s: string) => void;
   checkout: string; setCheckout: (s: string) => void;
   guests: string; setGuests: (s: string) => void;
-  numRooms: string; setNumRooms: (s: string) => void;
   comforter: boolean; setComforter: (b: boolean) => void;
   name: string; setName: (s: string) => void;
   email: string; setEmail: (s: string) => void;
@@ -359,9 +359,10 @@ function DetailsStep(props: {
   vehicleNumber: string; setVehicleNumber: (s: string) => void;
   notes: string; setNotes: (s: string) => void;
   price: { nights: number; subtotal: number; comforter_total: number; total: number } | null;
-  selectedCabin?: Cabin;
-  selectedGroup?: CabinGroup;
+  previewCabin?: Cabin;
   blockedDates: string[];
+  totalRooms: number;
+  freeCabinsForType: (type: string) => Cabin[];
   submit: (e: React.FormEvent) => void;
   submitting: boolean;
   error: string | null;
@@ -371,16 +372,37 @@ function DetailsStep(props: {
   const { t } = useLanguage();
   const bt = t.book;
   const {
-    cabinGroups, cabinType, setCabinType, maxRoomsForType,
+    cabinGroups, cart, setCart,
     checkin, setCheckin, checkout, setCheckout,
-    guests, setGuests, numRooms, setNumRooms, comforter, setComforter,
+    guests, setGuests, comforter, setComforter,
     name, setName, email, setEmail, phone, setPhone,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
-    price, selectedCabin, selectedGroup, blockedDates, submit, submitting, error, agreed, setAgreed,
+    price, previewCabin, blockedDates, totalRooms, freeCabinsForType,
+    submit, submitting, error, agreed, setAgreed,
   } = props;
 
-  const roomOptions = Array.from({ length: maxRoomsForType }, (_, i) => String(i + 1));
+  const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
+  const usedTypes = new Set(cart.map((it) => it.cabinType));
+  const remainingGroups = cabinGroups.filter((g) => !usedTypes.has(g.type));
+
+  function setCartLineQty(idx: number, qty: number) {
+    setCart((c) =>
+      c.map((it, i) => {
+        if (i !== idx) return it;
+        const g = groupByType.get(it.cabinType);
+        const max = g?.rooms.length ?? 1;
+        return { ...it, qty: Math.max(1, Math.min(max, qty)) };
+      }),
+    );
+  }
+  function removeCartLine(idx: number) {
+    setCart((c) => c.filter((_, i) => i !== idx));
+  }
+  function addCartLine(type: string) {
+    if (!type) return;
+    setCart((c) => (c.find((x) => x.cabinType === type) ? c : [...c, { cabinType: type, qty: 1 }]));
+  }
 
   return (
     <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
@@ -393,7 +415,7 @@ function DetailsStep(props: {
             <div>
               <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Availability</p>
               <h3 className="mt-1 font-display text-lg text-forest">
-                Blocked dates {selectedCabin ? `· ${selectedCabin.name}` : ""}
+                Blocked dates {cart.length > 0 ? `· ${totalRooms} room${totalRooms > 1 ? "s" : ""}` : ""}
               </h3>
             </div>
             <div className="flex items-center gap-4 text-xs text-stone">
@@ -423,29 +445,98 @@ function DetailsStep(props: {
         </div>
 
         <div className="mt-6 rounded-2xl border border-border bg-card p-5">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Accommodation</p>
-          <h3 className="mt-1 font-display text-lg text-forest">Cabin type</h3>
-          <div className="mt-3">
-            <SelectCabinType
-              value={cabinType}
-              onChange={setCabinType}
-              groups={cabinGroups}
-              loadingLabel={bt.f.loading}
-              className="bg-transparent px-0 py-0"
-            />
-            {selectedGroup && (
-              <p className="mt-2 text-xs text-stone">
-                {selectedGroup.rooms.length} rooms available in this type · sleeps {selectedCabin?.capacity ?? 0} per room
-              </p>
+          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Your rooms</p>
+          <h3 className="mt-1 font-display text-lg text-forest">Pick the cabins for this stay</h3>
+
+          <ul className="mt-4 flex flex-col gap-3">
+            {cart.length === 0 && (
+              <li className="rounded-xl border border-dashed border-border bg-coconut/50 px-5 py-4 text-sm text-stone">
+                No rooms selected yet — add one below.
+              </li>
             )}
-          </div>
+            {cart.map((it, idx) => {
+              const g = groupByType.get(it.cabinType);
+              if (!g) return null;
+              const sample = g.rooms[0];
+              const maxQty = g.rooms.length;
+              const free = freeCabinsForType(it.cabinType).length;
+              const tooMany = free < it.qty;
+              return (
+                <li key={it.cabinType} className="rounded-xl border border-border bg-background px-5 py-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="font-display text-base text-forest">{g.label}</p>
+                      <p className="text-xs text-stone">
+                        Sleeps {sample?.capacity ?? "?"} · from RM {sample?.weekday_rate ?? 0}/night · {maxQty} room{maxQty > 1 ? "s" : ""} in this type
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCartLineQty(idx, it.qty - 1)}
+                        disabled={it.qty <= 1}
+                        aria-label="Decrease rooms"
+                        className="grid h-8 w-8 place-items-center rounded-full border border-border text-stone hover:text-forest disabled:opacity-40"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="min-w-[1.5rem] text-center text-base font-medium text-forest">{it.qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => setCartLineQty(idx, it.qty + 1)}
+                        disabled={it.qty >= maxQty}
+                        aria-label="Increase rooms"
+                        className="grid h-8 w-8 place-items-center rounded-full border border-border text-stone hover:text-forest disabled:opacity-40"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeCartLine(idx)}
+                        aria-label="Remove cabin"
+                        className="ml-2 grid h-8 w-8 place-items-center rounded-full text-stone hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  {tooMany && (
+                    <p className="mt-2 text-xs text-red-700">
+                      Only {free} {g.label} room{free === 1 ? "" : "s"} free for these dates — reduce qty or change dates.
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+
+          {remainingGroups.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+              <span className="text-xs uppercase tracking-widest text-stone">Add another type</span>
+              {remainingGroups.map((g) => (
+                <button
+                  key={g.type}
+                  type="button"
+                  onClick={() => addCartLine(g.type)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-forest hover:bg-coconut"
+                >
+                  <Plus className="h-3.5 w-3.5" /> {g.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
           <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
           <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
           <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
-          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={roomOptions} />
+          <div className="flex flex-col gap-1 bg-card px-5 py-4 text-left">
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{bt.f.rooms}</span>
+            <span className="text-base text-foreground">
+              {totalRooms} room{totalRooms === 1 ? "" : "s"}
+            </span>
+          </div>
         </div>
 
         <label className="mt-5 flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4">
@@ -509,40 +600,49 @@ function DetailsStep(props: {
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <img
             src={
-              selectedCabin
-                ? selectedCabin.cabin_type === "Queen"
+              previewCabin
+                ? previewCabin.cabin_type === "Queen"
                   ? cabinQueenImg
-                  : selectedCabin.cabin_type === "Twin"
+                  : previewCabin.cabin_type === "Twin"
                     ? cabinTwinImg
-                    : selectedCabin.cabin_type === "Family"
+                    : previewCabin.cabin_type === "Family"
                       ? cabinFamilyImg
-                      : selectedCabin.cabin_type === "Triple"
+                      : previewCabin.cabin_type === "Triple"
                         ? cabinTripleImg
                         : heroRiverside
                 : heroRiverside
             }
-            alt={selectedCabin?.name ?? "Rajawali D'Cabin cabin interior"}
+            alt={previewCabin?.name ?? "Rajawali D'Cabin cabin interior"}
             className="aspect-[4/3] w-full object-cover"
           />
           <div className="p-6">
             <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.summary.eyebrow}</p>
             <h2 className="mt-2 font-display text-2xl text-forest">
-              {selectedCabin?.name ?? bt.summary.pickCabin}
+              {cart.length === 0
+                ? bt.summary.pickCabin
+                : cart.length === 1
+                  ? groupByType.get(cart[0].cabinType)?.label ?? previewCabin?.name ?? ""
+                  : `${totalRooms} rooms · ${cart.length} cabin types`}
             </h2>
-            {selectedCabin && (
-              <p className="mt-1 text-sm text-stone">
-                {bt.summary.capacityLine
-                  .replace("{cap}", String(selectedCabin.capacity))
-                  .replace("{min}", String(selectedCabin.weekday_rate))
-                  .replace("{max}", String(selectedCabin.school_holiday_rate))}
-              </p>
+            {cart.length > 0 && (
+              <ul className="mt-3 flex flex-col gap-1 text-sm text-stone">
+                {cart.map((it) => {
+                  const g = groupByType.get(it.cabinType);
+                  return (
+                    <li key={it.cabinType} className="flex justify-between">
+                      <span>{g?.label}</span>
+                      <span className="text-foreground">× {it.qty}</span>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
             <dl className="mt-6 divide-y divide-border text-sm">
               <Row label={bt.summary.checkin} value={fmt(checkin, bt.locale)} />
               <Row label={bt.summary.checkout} value={fmt(checkout, bt.locale)} />
               <Row label={bt.summary.nights} value={String(price?.nights ?? "—")} />
               <Row label={bt.summary.guests} value={guests} />
-              <Row label={bt.summary.rooms} value={numRooms} />
+              <Row label={bt.summary.rooms} value={String(totalRooms)} />
               {price && (
                 <>
                   <Row label={bt.summary.roomSubtotal} value={`RM ${price.subtotal.toFixed(2)}`} />
