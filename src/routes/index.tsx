@@ -592,13 +592,8 @@ function Footer() {
               </a>
             </li>
             <li>
-              <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" className="hover:text-forest">
+              <a href="https://www.facebook.com/p/Rajawali-DCabin-Chalet-100068093830245/" target="_blank" rel="noreferrer" className="hover:text-forest">
                 Facebook
-              </a>
-            </li>
-            <li>
-              <a href="https://www.instagram.com/" target="_blank" rel="noreferrer" className="hover:text-forest">
-                Instagram
               </a>
             </li>
           </ul>
