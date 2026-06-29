@@ -170,6 +170,10 @@ function CalendarDayButton({
         className,
       )}
       {...props}
+      onClick={(e) => {
+        console.log("CalendarDayButton onClick", day.date.toLocaleDateString(), props.onClick ? "has onClick" : "no onClick");
+        props.onClick?.(e);
+      }}
     />
   );
 }

@@ -322,7 +322,8 @@ function AvailabilitySearch() {
             <Calendar
               mode="range"
               selected={range}
-              onSelect={(r) => {
+              onSelect={function(r, triggerDate, modifiers, e) {
+                console.log("Calendar onSelect args count", arguments.length, "r", r, "triggerDate", triggerDate, "modifiers", modifiers, "e", e?.type);
                 setRange(r);
                 if (r?.from && r?.to) setOpenCal(false);
               }}
@@ -330,7 +331,7 @@ function AvailabilitySearch() {
               disabled={{ before: todayDate }}
               defaultMonth={range?.from ?? todayDate}
               initialFocus
-              className="p-3"
+              className="p-3 pointer-events-auto"
             />
           </PopoverContent>
         </Popover>
