@@ -410,43 +410,73 @@ function DetailsStep(props: {
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
-        <div className="mt-6 rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center justify-between gap-4">
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Availability</p>
               <h3 className="mt-1 font-display text-lg text-forest">
-                Blocked dates {cart.length > 0 ? `· ${totalRooms} room${totalRooms > 1 ? "s" : ""}` : ""}
+                {cart.length > 0
+                  ? `${totalRooms} room${totalRooms > 1 ? "s" : ""} · live calendar`
+                  : "Pick your nights"}
               </h3>
+              <p className="mt-1 text-xs text-stone">
+                {blockedDates.length === 0
+                  ? "All nights available in the next 90 days."
+                  : `${blockedDates.length} night${blockedDates.length === 1 ? "" : "s"} unavailable for this cart.`}
+              </p>
             </div>
-            <div className="flex items-center gap-4 text-xs text-stone">
+            <div className="flex items-center gap-4 text-[11px] uppercase tracking-widest text-stone">
               <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-sm bg-red-500/80" />
-                Booked
+                <span className="inline-block h-2.5 w-2.5 rounded-full border border-border bg-background" />
+                Available
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-sm border border-border bg-background" />
-                Available
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-forest" />
+                Your stay
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-200" />
+                Booked
               </span>
             </div>
           </div>
-          <div className="mt-3 overflow-x-auto">
+          <div className="mt-4 overflow-x-auto">
             <Calendar
-              mode="single"
+              mode="range"
               numberOfMonths={2}
-              disabled={{ before: new Date() }}
+              selected={
+                checkin && checkout && new Date(checkout) > new Date(checkin)
+                  ? { from: new Date(checkin), to: new Date(new Date(checkout).getTime() - 86400000) }
+                  : undefined
+              }
+              onSelect={(r) => {
+                if (r?.from) setCheckin(r.from.toISOString().slice(0, 10));
+                if (r?.to) {
+                  const co = new Date(r.to.getTime() + 86400000);
+                  setCheckout(co.toISOString().slice(0, 10));
+                }
+              }}
+              disabled={[{ before: new Date() }, ...blockedDates.map((d) => new Date(d))]}
               modifiers={{ booked: blockedDates.map((d) => new Date(d)) }}
               modifiersClassNames={{
                 booked:
-                  "bg-red-500/80 text-white line-through hover:bg-red-500/80 focus:bg-red-500/80",
+                  "bg-red-100 text-red-700 line-through opacity-90 hover:bg-red-100",
               }}
               className="pointer-events-auto p-0"
             />
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-border bg-card p-5">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Your rooms</p>
-          <h3 className="mt-1 font-display text-lg text-forest">Pick the cabins for this stay</h3>
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Your rooms</p>
+              <h3 className="mt-1 font-display text-lg text-forest">Pick the cabins for this stay</h3>
+            </div>
+            <span className="rounded-full bg-coconut px-3 py-1 text-[11px] uppercase tracking-widest text-forest">
+              {totalRooms} room{totalRooms === 1 ? "" : "s"}
+            </span>
+          </div>
 
           <ul className="mt-4 flex flex-col gap-3">
             {cart.length === 0 && (
