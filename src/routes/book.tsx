@@ -819,6 +819,37 @@ function SelectCabin({
   );
 }
 
+function SelectCabinType({
+  value,
+  onChange,
+  groups,
+  loadingLabel,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  groups: CabinGroup[];
+  loadingLabel: string;
+  className?: string;
+}) {
+  return (
+    <label className={cn("flex flex-col gap-1 bg-card px-5 py-4 text-left", className)}>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="appearance-none bg-transparent text-base text-foreground outline-none"
+      >
+        {groups.length === 0 && <option>{loadingLabel}</option>}
+        {groups.map((g) => (
+          <option key={g.type} value={g.type}>
+            {g.label} · sleeps {g.rooms[0]?.capacity ?? 0} · {g.rooms.length} rooms available
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between py-2.5">
