@@ -769,14 +769,21 @@ function Select({ label, value, onChange, options }: { label: string; value: str
 }
 
 function SelectCabin({ label, value, onChange, cabins, loadingLabel, optionTpl }: { label: string; value: string; onChange: (v: string) => void; cabins: Cabin[]; loadingLabel: string; optionTpl: string }) {
+  const seen = new Set<string>();
+  const uniqueByType: Cabin[] = [];
+  for (const c of cabins) {
+    if (seen.has(c.cabin_type)) continue;
+    seen.add(c.cabin_type);
+    uniqueByType.push(c);
+  }
   return (
     <label className="flex flex-col gap-1 bg-card px-5 py-4 text-left">
       <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>
       <select value={value} onChange={(e) => onChange(e.target.value)}
         className="appearance-none bg-transparent text-base text-foreground outline-none">
-        {cabins.length === 0 && <option>{loadingLabel}</option>}
-        {cabins.map((c) => (
-          <option key={c.id} value={c.id}>{optionTpl.replace("{name}", c.name).replace("{cap}", String(c.capacity))}</option>
+        {uniqueByType.length === 0 && <option>{loadingLabel}</option>}
+        {uniqueByType.map((c) => (
+          <option key={c.id} value={c.id}>{optionTpl.replace("{name}", c.cabin_type).replace("{cap}", String(c.capacity))}</option>
         ))}
       </select>
     </label>
