@@ -337,26 +337,7 @@ function DetailsStep(props: {
           </div>
           <div className="mt-3 overflow-x-auto">
             <Calendar
-              mode="range"
-              selected={{
-                from: checkin ? new Date(checkin) : undefined,
-                to: checkout ? new Date(checkout) : undefined,
-              }}
-              defaultMonth={checkin ? new Date(checkin) : new Date()}
-              onSelect={(range) => {
-                const toIso = (d: Date) =>
-                  new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-                    .toISOString()
-                    .slice(0, 10);
-                if (!range?.from) return;
-                setCheckin(toIso(range.from));
-                if (range.to && range.to.getTime() !== range.from.getTime()) {
-                  setCheckout(toIso(range.to));
-                } else {
-                  // new range started — leave checkout empty until user picks end
-                  setCheckout("");
-                }
-              }}
+              mode="default"
               numberOfMonths={2}
               disabled={{ before: new Date() }}
               modifiers={{ full: fullDates, partial: partialDates }}
@@ -387,7 +368,7 @@ function DetailsStep(props: {
                   );
                 },
               }}
-              className="pointer-events-auto p-0"
+              className="p-0"
             />
           </div>
         </div>
