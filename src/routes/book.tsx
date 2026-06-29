@@ -326,7 +326,8 @@ function BookPage() {
 
 // ============ STEP 1: details ============
 function DetailsStep(props: {
-  cabins: Cabin[]; cabinId: string; setCabinId: (s: string) => void;
+  cabinGroups: CabinGroup[]; cabinType: string; setCabinType: (s: string) => void;
+  maxRoomsForType: number;
   checkin: string; setCheckin: (s: string) => void;
   checkout: string; setCheckout: (s: string) => void;
   guests: string; setGuests: (s: string) => void;
@@ -341,7 +342,8 @@ function DetailsStep(props: {
   notes: string; setNotes: (s: string) => void;
   price: { nights: number; subtotal: number; comforter_total: number; total: number } | null;
   selectedCabin?: Cabin;
-  taken: string[];
+  selectedGroup?: CabinGroup;
+  blockedDates: string[];
   submit: (e: React.FormEvent) => void;
   submitting: boolean;
   error: string | null;
@@ -351,13 +353,16 @@ function DetailsStep(props: {
   const { t } = useLanguage();
   const bt = t.book;
   const {
-    cabins, cabinId, setCabinId, checkin, setCheckin, checkout, setCheckout,
+    cabinGroups, cabinType, setCabinType, maxRoomsForType,
+    checkin, setCheckin, checkout, setCheckout,
     guests, setGuests, numRooms, setNumRooms, comforter, setComforter,
     name, setName, email, setEmail, phone, setPhone,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
-    price, selectedCabin, taken, submit, submitting, error, agreed, setAgreed,
+    price, selectedCabin, selectedGroup, blockedDates, submit, submitting, error, agreed, setAgreed,
   } = props;
+
+  const roomOptions = Array.from({ length: maxRoomsForType }, (_, i) => String(i + 1));
 
   return (
     <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
