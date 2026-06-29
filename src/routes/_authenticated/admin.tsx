@@ -40,6 +40,8 @@ type Booking = {
   balance_paid_at?: string | null;
   locker_code?: string | null;
   deposit_amount?: number | null;
+  num_rooms?: number;
+  rooms?: Array<{ id: string; cabinId: string | null; name: string; nights: number | null; total: number }>;
 };
 
 function AdminPage() {
@@ -191,7 +193,9 @@ function Card({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-widest text-stone">
-            {b.payment_reference ?? "—"} · {b.room_type}
+            {b.payment_reference ?? "—"} · {(b.rooms?.length ?? 1) > 1
+              ? `${b.rooms?.length} rooms`
+              : b.room_type}
           </p>
           <h3 className="mt-1 font-display text-xl text-forest">{b.guest_name}</h3>
           <p className="text-sm text-foreground/70">
@@ -207,6 +211,16 @@ function Card({
           </p>
         </div>
       </div>
+      {b.rooms && b.rooms.length > 1 && (
+        <ul className="mt-3 flex flex-col gap-1 rounded-lg bg-coconut/60 px-3 py-2 text-xs text-stone">
+          {b.rooms.map((r) => (
+            <li key={r.id} className="flex justify-between">
+              <span>{r.name}</span>
+              <span className="text-foreground">RM {r.total.toFixed(2)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
         <Row label="Check-in" value={b.check_in} />
         <Row label="Check-out" value={b.check_out} />
