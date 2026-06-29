@@ -312,15 +312,7 @@ function DetailsStep(props: {
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-          <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
-          <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
-          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
-          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
-          <SelectCabin label={bt.f.cabinType} value={cabinId} onChange={setCabinId} cabins={cabins} loadingLabel={bt.f.loading} optionTpl={bt.f.cabinOption} />
-        </div>
-
-        <div className="mt-5 rounded-2xl border border-border bg-card p-5">
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Availability</p>
@@ -350,18 +342,19 @@ function DetailsStep(props: {
                 from: checkin ? new Date(checkin) : undefined,
                 to: checkout ? new Date(checkout) : undefined,
               }}
+              defaultMonth={checkin ? new Date(checkin) : new Date()}
               onSelect={(range) => {
                 const toIso = (d: Date) =>
                   new Date(d.getTime() - d.getTimezoneOffset() * 60000)
                     .toISOString()
                     .slice(0, 10);
-                if (range?.from) setCheckin(toIso(range.from));
-                if (range?.to) {
+                if (!range?.from) return;
+                setCheckin(toIso(range.from));
+                if (range.to && range.to.getTime() !== range.from.getTime()) {
                   setCheckout(toIso(range.to));
-                } else if (range?.from) {
-                  const next = new Date(range.from);
-                  next.setDate(next.getDate() + 1);
-                  setCheckout(toIso(next));
+                } else {
+                  // new range started — leave checkout empty until user picks end
+                  setCheckout("");
                 }
               }}
               numberOfMonths={2}
@@ -397,6 +390,14 @@ function DetailsStep(props: {
               className="pointer-events-auto p-0"
             />
           </div>
+        </div>
+
+        <div className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
+          <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
+          <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
+          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
+          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
+          <SelectCabin label={bt.f.cabinType} value={cabinId} onChange={setCabinId} cabins={cabins} loadingLabel={bt.f.loading} optionTpl={bt.f.cabinOption} />
         </div>
 
         <label className="mt-5 flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4">
