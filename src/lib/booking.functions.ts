@@ -9,11 +9,18 @@ function generateRef() {
 }
 
 const createSchema = z.object({
-  cabinId: z.string().uuid(),
+  items: z
+    .array(
+      z.object({
+        cabinType: z.string().trim().min(1).max(60),
+        numRooms: z.number().int().min(1).max(8),
+      }),
+    )
+    .min(1)
+    .max(8),
   checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   guests: z.number().int().min(1).max(12),
-  numRooms: z.number().int().min(1).max(8).default(1),
   comforter: z.boolean(),
   guestName: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
@@ -33,24 +40,18 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error("Check-out must be after check-in");
     }
 
-    const { data: requestedCabin, error: cabinErr } = await supabaseAdmin
-      .from("cabins")
-      .select("id, name, cabin_type")
-      .eq("id", data.cabinId)
-      .eq("is_active", true)
-      .maybeSingle();
-    if (cabinErr) throw new Error(cabinErr.message);
-    if (!requestedCabin) throw new Error("Cabin not found");
+    // Collapse duplicate types in case the UI sent them split.
+    const itemMap = new Map<string, number>();
+    for (const it of data.items) {
+      itemMap.set(it.cabinType, (itemMap.get(it.cabinType) ?? 0) + it.numRooms);
+    }
+    const items = Array.from(itemMap, ([cabinType, numRooms]) => ({ cabinType, numRooms }));
+    const totalRooms = items.reduce((s, it) => s + it.numRooms, 0);
+    if (totalRooms < 1 || totalRooms > 8) {
+      throw new Error("Pick between 1 and 8 rooms.");
+    }
 
-    const { data: cabinsInType, error: cabinsErr } = await supabaseAdmin
-      .from("cabins")
-      .select("id, name, cabin_type")
-      .eq("cabin_type", requestedCabin.cabin_type)
-      .eq("is_active", true)
-      .order("display_order");
-    if (cabinsErr) throw new Error(cabinsErr.message);
-
-    // Availability check. Check-out is exclusive, so only booked nights are tested.
+    // Check-out is exclusive, so only booked nights are tested.
     const co = new Date(data.checkOut);
     co.setUTCDate(co.getUTCDate() - 1);
     const lastNightStr = co.toISOString().slice(0, 10);
@@ -58,75 +59,136 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error("Check-out must be after check-in");
     }
 
-    const availableCabins: Array<{ id: string; name: string; cabin_type: string }> = [];
-    for (const cabin of cabinsInType ?? []) {
-      const { data: taken, error: takenErr } = await supabaseAdmin.rpc("cabin_taken_dates", {
-        _cabin_id: cabin.id,
-        _from: data.checkIn,
-        _to: lastNightStr,
+    // Resolve cabins per type and pick available rooms for each.
+    type Assigned = {
+      cabinId: string;
+      cabinName: string;
+      cabinType: string;
+      nights: number;
+      subtotal: number;
+      comforterTotal: number;
+      total: number;
+    };
+    const assigned: Assigned[] = [];
+
+    for (const it of items) {
+      const { data: cabinsInType, error: cabinsErr } = await supabaseAdmin
+        .from("cabins")
+        .select("id, name, cabin_type")
+        .eq("cabin_type", it.cabinType)
+        .eq("is_active", true)
+        .order("display_order");
+      if (cabinsErr) throw new Error(cabinsErr.message);
+      if (!cabinsInType || cabinsInType.length === 0) {
+        throw new Error(`Cabin type ${it.cabinType} not found.`);
+      }
+
+      const free: Array<{ id: string; name: string; cabin_type: string }> = [];
+      for (const cabin of cabinsInType) {
+        const { data: taken, error: takenErr } = await supabaseAdmin.rpc("cabin_taken_dates", {
+          _cabin_id: cabin.id,
+          _from: data.checkIn,
+          _to: lastNightStr,
+        });
+        if (takenErr) throw new Error(takenErr.message);
+        if (!taken || taken.length === 0) free.push(cabin);
+      }
+      if (free.length < it.numRooms) {
+        throw new Error("Sorry, those dates were just taken. Please pick different dates.");
+      }
+
+      const sample = free[0];
+      const { data: priceRows, error: priceErr } = await supabaseAdmin.rpc("compute_booking_price", {
+        _cabin_id: sample.id,
+        _check_in: data.checkIn,
+        _check_out: data.checkOut,
+        _comforter: data.comforter,
       });
-      if (takenErr) throw new Error(takenErr.message);
-      if (!taken || taken.length === 0) availableCabins.push(cabin);
-    }
+      if (priceErr) throw new Error(priceErr.message);
+      const price = Array.isArray(priceRows) ? priceRows[0] : priceRows;
+      if (!price) throw new Error("Could not compute price");
 
-    if (availableCabins.length < data.numRooms) {
-      throw new Error("Sorry, those dates were just taken. Please pick different dates.");
+      for (let i = 0; i < it.numRooms; i++) {
+        const cabin = free[i];
+        assigned.push({
+          cabinId: cabin.id,
+          cabinName: cabin.name,
+          cabinType: cabin.cabin_type,
+          nights: Number(price.nights),
+          subtotal: Number(price.subtotal),
+          comforterTotal: Number(price.comforter_total),
+          total: Number(price.total),
+        });
+      }
     }
-    const assignedCabin = availableCabins[0];
-
-    // Price computation
-    const { data: priceRows, error: priceErr } = await supabaseAdmin.rpc("compute_booking_price", {
-      _cabin_id: assignedCabin.id,
-      _check_in: data.checkIn,
-      _check_out: data.checkOut,
-      _comforter: data.comforter,
-    });
-    if (priceErr) throw new Error(priceErr.message);
-    const price = Array.isArray(priceRows) ? priceRows[0] : priceRows;
-    if (!price) throw new Error("Could not compute price");
-    const cabinTypeLabel = requestedCabin.name.replace(/\s*\d+\s*$/, "").trim() || requestedCabin.cabin_type;
 
     const reference = generateRef();
     const holdMinutes = 30;
     const holdExpires = new Date(Date.now() + holdMinutes * 60_000).toISOString();
+    // Shared identifiers across all rows in the reservation.
+    const groupId = (globalThis.crypto?.randomUUID?.() ?? null);
+    const guestToken = (globalThis.crypto?.randomUUID?.() ?? null);
 
-    const insertPayload = {
+    // Build a single combined room_type label (used by emails / older list code).
+    const typeCounts = new Map<string, { label: string; count: number }>();
+    for (const a of assigned) {
+      const label = a.cabinName.replace(/\s*\d+\s*$/, "").trim() || a.cabinType;
+      const cur = typeCounts.get(a.cabinType);
+      if (cur) cur.count += 1;
+      else typeCounts.set(a.cabinType, { label, count: 1 });
+    }
+    const roomTypeSummary = Array.from(typeCounts.values())
+      .map((t) => (t.count > 1 ? `${t.label} × ${t.count}` : t.label))
+      .join(" + ");
+
+    const sharedBase = {
       guest_name: data.guestName,
       email: data.email,
       phone: data.phone,
       check_in: data.checkIn,
       check_out: data.checkOut,
       guests: data.guests,
-      num_rooms: data.numRooms,
-      room_type: data.numRooms > 1 ? `${cabinTypeLabel} (${data.numRooms} rooms)` : assignedCabin.name,
       notes: data.notes ?? null,
       relationship: data.relationship ?? null,
       vehicle_type: data.vehicleType ?? null,
       vehicle_number: data.vehicleNumber ?? null,
-      cabin_id: assignedCabin.id,
-      nights: price.nights,
-      subtotal: Number(price.subtotal) * data.numRooms,
       comforter: data.comforter,
-      comforter_total: Number(price.comforter_total) * data.numRooms,
-      total_amount: Number(price.total) * data.numRooms,
       payment_reference: reference,
       hold_expires_at: holdExpires,
       status: "pending_payment",
+      num_rooms: 1,
     };
+
+    const rows = assigned.map((a) => ({
+      ...sharedBase,
+      cabin_id: a.cabinId,
+      room_type: assigned.length > 1 ? `${a.cabinName} (part of ${roomTypeSummary})` : a.cabinName,
+      nights: a.nights,
+      subtotal: a.subtotal,
+      comforter_total: a.comforterTotal,
+      total_amount: a.total,
+      ...(groupId ? { booking_group_id: groupId } : {}),
+      ...(guestToken ? { guest_token: guestToken } : {}),
+    }));
 
     const { data: inserted, error: insErr } = await supabaseAdmin
       .from("booking_requests")
-      .insert(insertPayload as any)
-      .select("id, payment_reference, total_amount, hold_expires_at, guest_token")
-      .single();
+      .insert(rows as any)
+      .select("id, booking_group_id, guest_token, payment_reference, total_amount, hold_expires_at, created_at")
+      .order("created_at", { ascending: true });
     if (insErr) throw new Error(insErr.message);
+    if (!inserted || inserted.length === 0) throw new Error("Could not create booking");
+
+    const lead = inserted[0];
+    const total = inserted.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
 
     return {
-      bookingId: inserted.id as string,
-      reference: inserted.payment_reference as string,
-      total: Number(inserted.total_amount),
-      holdExpiresAt: inserted.hold_expires_at as string,
-      guestToken: inserted.guest_token as string,
+      bookingId: lead.id as string,
+      groupId: (lead.booking_group_id as string) ?? lead.id,
+      reference: lead.payment_reference as string,
+      total,
+      holdExpiresAt: lead.hold_expires_at as string,
+      guestToken: lead.guest_token as string,
     };
   });
 
