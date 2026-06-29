@@ -33,29 +33,50 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error("Check-out must be after check-in");
     }
 
-    // Availability check
-    // checkout date is exclusive — query up to checkOut - 1
-    const lastNight = new Date(data.checkIn);
+    const { data: requestedCabin, error: cabinErr } = await supabaseAdmin
+      .from("cabins")
+      .select("id, name, cabin_type")
+      .eq("id", data.cabinId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (cabinErr) throw new Error(cabinErr.message);
+    if (!requestedCabin) throw new Error("Cabin not found");
+
+    const { data: cabinsInType, error: cabinsErr } = await supabaseAdmin
+      .from("cabins")
+      .select("id, name, cabin_type")
+      .eq("cabin_type", requestedCabin.cabin_type)
+      .eq("is_active", true)
+      .order("display_order");
+    if (cabinsErr) throw new Error(cabinsErr.message);
+
+    // Availability check. Check-out is exclusive, so only booked nights are tested.
     const co = new Date(data.checkOut);
     co.setUTCDate(co.getUTCDate() - 1);
     const lastNightStr = co.toISOString().slice(0, 10);
     if (co < new Date(data.checkIn)) {
       throw new Error("Check-out must be after check-in");
     }
-    void lastNight;
-    const { data: taken, error: takenErr } = await supabaseAdmin.rpc("cabin_taken_dates", {
-      _cabin_id: data.cabinId,
-      _from: data.checkIn,
-      _to: lastNightStr,
-    });
-    if (takenErr) throw new Error(takenErr.message);
-    if (taken && taken.length > 0) {
+
+    const availableCabins: Array<{ id: string; name: string; cabin_type: string }> = [];
+    for (const cabin of cabinsInType ?? []) {
+      const { data: taken, error: takenErr } = await supabaseAdmin.rpc("cabin_taken_dates", {
+        _cabin_id: cabin.id,
+        _from: data.checkIn,
+        _to: lastNightStr,
+      });
+      if (takenErr) throw new Error(takenErr.message);
+      if (!taken || taken.length === 0) availableCabins.push(cabin);
+    }
+
+    if (availableCabins.length < data.numRooms) {
       throw new Error("Sorry, those dates were just taken. Please pick different dates.");
     }
+    const assignedCabin = availableCabins[0];
 
     // Price computation
     const { data: priceRows, error: priceErr } = await supabaseAdmin.rpc("compute_booking_price", {
-      _cabin_id: data.cabinId,
+      _cabin_id: assignedCabin.id,
       _check_in: data.checkIn,
       _check_out: data.checkOut,
       _comforter: data.comforter,
@@ -63,13 +84,7 @@ export const createBooking = createServerFn({ method: "POST" })
     if (priceErr) throw new Error(priceErr.message);
     const price = Array.isArray(priceRows) ? priceRows[0] : priceRows;
     if (!price) throw new Error("Could not compute price");
-
-    // Get cabin name for room_type
-    const { data: cabin } = await supabaseAdmin
-      .from("cabins")
-      .select("name")
-      .eq("id", data.cabinId)
-      .maybeSingle();
+    const cabinTypeLabel = requestedCabin.name.replace(/\s*\d+\s*$/, "").trim() || requestedCabin.cabin_type;
 
     const reference = generateRef();
     const holdMinutes = 30;
@@ -83,17 +98,17 @@ export const createBooking = createServerFn({ method: "POST" })
       check_out: data.checkOut,
       guests: data.guests,
       num_rooms: data.numRooms,
-      room_type: cabin?.name ?? "Cabin",
+      room_type: data.numRooms > 1 ? `${cabinTypeLabel} (${data.numRooms} rooms)` : assignedCabin.name,
       notes: data.notes ?? null,
       relationship: data.relationship ?? null,
       vehicle_type: data.vehicleType ?? null,
       vehicle_number: data.vehicleNumber ?? null,
-      cabin_id: data.cabinId,
+      cabin_id: assignedCabin.id,
       nights: price.nights,
-      subtotal: price.subtotal,
+      subtotal: Number(price.subtotal) * data.numRooms,
       comforter: data.comforter,
-      comforter_total: price.comforter_total,
-      total_amount: price.total,
+      comforter_total: Number(price.comforter_total) * data.numRooms,
+      total_amount: Number(price.total) * data.numRooms,
       payment_reference: reference,
       hold_expires_at: holdExpires,
       status: "pending_payment",
