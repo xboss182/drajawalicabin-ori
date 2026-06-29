@@ -337,7 +337,6 @@ function DetailsStep(props: {
           </div>
           <div className="mt-3 overflow-x-auto">
             <Calendar
-              mode="default"
               numberOfMonths={2}
               disabled={{ before: new Date() }}
               modifiers={{ full: fullDates, partial: partialDates }}
