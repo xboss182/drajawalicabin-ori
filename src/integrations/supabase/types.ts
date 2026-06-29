@@ -20,6 +20,7 @@ export type Database = {
           balance_paid_at: string | null
           balance_proof_path: string | null
           balance_reminder_sent_at: string | null
+          booking_group_id: string
           cabin_id: string | null
           check_in: string
           check_out: string
@@ -56,6 +57,7 @@ export type Database = {
           balance_paid_at?: string | null
           balance_proof_path?: string | null
           balance_reminder_sent_at?: string | null
+          booking_group_id?: string
           cabin_id?: string | null
           check_in: string
           check_out: string
@@ -92,6 +94,7 @@ export type Database = {
           balance_paid_at?: string | null
           balance_proof_path?: string | null
           balance_reminder_sent_at?: string | null
+          booking_group_id?: string
           cabin_id?: string | null
           check_in?: string
           check_out?: string
