@@ -193,7 +193,7 @@ export const getCabinTypeAvailability = createServerFn({ method: "POST" })
 
     const { data: bookings, error: bErr } = await supabaseAdmin
       .from("booking_requests")
-      .select("check_in, check_out, status, hold_expires_at, created_at")
+      .select("check_in, check_out, status, hold_expires_at, created_at, num_rooms")
       .in("cabin_id", ids)
       .lt("check_in", data.to)
       .gt("check_out", data.from);
@@ -212,15 +212,17 @@ export const getCabinTypeAvailability = createServerFn({ method: "POST" })
               new Date(new Date(b.created_at).getTime() + 30 * 60_000).toISOString(),
           ).getTime() > now);
       if (!isActive) continue;
+      const rooms = Math.max(1, Number((b as { num_rooms?: number }).num_rooms ?? 1));
       let d = new Date(b.check_in);
       const end = new Date(b.check_out);
       while (d < end) {
         const key = d.toISOString().slice(0, 10);
-        counts[key] = (counts[key] ?? 0) + 1;
+        counts[key] = (counts[key] ?? 0) + rooms;
         d = new Date(d.getTime() + 86400000);
       }
     }
-    return { counts, total: ids.length };
+    // Each cabin has 2 rooms.
+    return { counts, total: ids.length * 2 };
   });
 
 const previewSchema = z.object({

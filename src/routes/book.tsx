@@ -121,8 +121,9 @@ function BookPage() {
   }, [cabinId, checkin, checkout, comforter]);
 
   // Availability for selected cabin (next 90 days) + per-type aggregated counts
+  const cabinType = selectedCabin?.cabin_type;
   useEffect(() => {
-    if (!cabinId || !selectedCabin) return;
+    if (!cabinId || !cabinType) return;
     const from = todayStr;
     const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
     (async () => {
@@ -134,14 +135,14 @@ function BookPage() {
       }
       try {
         const a = await getCabinTypeAvailability({
-          data: { cabinType: selectedCabin.cabin_type, from, to },
+          data: { cabinType, from, to },
         });
         setAvailability(a);
       } catch {
         setAvailability({ counts: {}, total: 0 });
       }
     })();
-  }, [cabinId, selectedCabin]);
+  }, [cabinId, cabinType]);
 
   function datesOverlapTaken() {
     if (!checkin || !checkout) return false;
@@ -294,11 +295,14 @@ function DetailsStep(props: {
     price, selectedCabin, taken, availability, submit, submitting, error, agreed, setAgreed,
   } = props;
 
-  const totalRooms = Math.max(availability.total || 0, 2);
+  const totalRooms = availability.total > 0 ? availability.total : 2;
+  const wanted = Math.max(1, Number(numRooms) || 1);
   const fullDates: Date[] = [];
   const partialDates: Date[] = [];
   for (const [d, c] of Object.entries(availability.counts)) {
-    if (c >= totalRooms) fullDates.push(new Date(d));
+    const remaining = totalRooms - c;
+    if (remaining <= 0) fullDates.push(new Date(d));
+    else if (remaining < wanted) fullDates.push(new Date(d));
     else if (c > 0) partialDates.push(new Date(d));
   }
 
@@ -323,7 +327,7 @@ function DetailsStep(props: {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm border border-amber-500 bg-amber-100" />
-                1 room left
+                Partially booked
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm border border-border bg-background" />
@@ -343,20 +347,25 @@ function DetailsStep(props: {
               components={{
                 DayButton: (props) => {
                   const m = props.modifiers as Record<string, boolean>;
+                  const key = props.day.date.toISOString().slice(0, 10);
+                  const booked = availability.counts[key] ?? 0;
+                  const remaining = Math.max(0, totalRooms - booked);
                   return (
                     <CalendarDayButton
                       {...props}
                       title={
                         m.full
-                          ? "Fully booked"
+                          ? remaining === 0
+                            ? `Fully booked (0 of ${totalRooms} rooms left)`
+                            : `${remaining} of ${totalRooms} rooms left — need ${wanted}`
                           : m.partial
-                            ? `1 room left of ${totalRooms}`
+                            ? `${remaining} of ${totalRooms} rooms left`
                             : `${totalRooms} rooms available`
                       }
                     >
                       <span>{props.day.date.getDate()}</span>
                       {m.partial && !m.full && (
-                        <span className="text-[9px] font-medium text-amber-600">1 left</span>
+                        <span className="text-[9px] font-medium text-amber-600">{remaining} left</span>
                       )}
                     </CalendarDayButton>
                   );
