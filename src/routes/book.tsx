@@ -14,7 +14,7 @@ import cabinFamilyImg from "@/assets/cabin-family.jpg";
 import cabinTripleImg from "@/assets/cabin-triple.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -314,10 +314,14 @@ function DetailsStep(props: {
                 Blocked dates {selectedCabin ? `· ${selectedCabin.name}` : ""}
               </h3>
             </div>
-            <div className="flex items-center gap-4 text-xs text-stone">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone">
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm bg-red-500/80" />
-                Booked
+                Already booked
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 rounded-sm bg-stone/30" />
+                Unavailable / past
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm border border-border bg-background" />
@@ -334,6 +338,23 @@ function DetailsStep(props: {
               modifiersClassNames={{
                 booked:
                   "bg-red-500/80 text-white line-through hover:bg-red-500/80 focus:bg-red-500/80",
+              }}
+              components={{
+                DayButton: (props) => {
+                  const m = props.modifiers as Record<string, boolean>;
+                  const label = props.day.date.toLocaleDateString(undefined, {
+                    weekday: "short",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  });
+                  const title = m.booked
+                    ? `${label} — Already booked by another guest`
+                    : m.disabled
+                      ? `${label} — Past date, unavailable`
+                      : `${label} — Available`;
+                  return <CalendarDayButton {...props} title={title} />;
+                },
               }}
               className="pointer-events-auto p-0"
             />
