@@ -1,5 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { CalendarIcon, Users, BedDouble, Search } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import type { DateRange } from "react-day-picker";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinsExterior from "@/assets/cabins-exterior.jpg";
 import cabinQueen from "@/assets/cabin-queen.jpg";
@@ -239,46 +251,151 @@ function Hero() {
 /* ---------------- Availability ---------------- */
 function AvailabilitySearch() {
   const { t } = useLanguage();
-  const today = new Date().toISOString().slice(0, 10);
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  const [checkin, setCheckin] = useState(today);
-  const [checkout, setCheckout] = useState(tomorrow);
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(todayDate);
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+
+  const [range, setRange] = useState<DateRange | undefined>({
+    from: todayDate,
+    to: tomorrowDate,
+  });
   const [guests, setGuests] = useState("2");
-  const [room, setRoom] = useState("Any cabin");
+  const [room, setRoom] = useState(t.search.anyCabin);
+  const [openCal, setOpenCal] = useState(false);
   const navigate = useNavigate();
+
+  const fmtISO = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const nights =
+    range?.from && range?.to
+      ? Math.max(
+          1,
+          Math.round((range.to.getTime() - range.from.getTime()) / 86400000),
+        )
+      : 0;
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!range?.from || !range?.to) return;
     navigate({
       to: "/book",
-      search: { checkin, checkout, guests, room },
+      search: {
+        checkin: fmtISO(range.from),
+        checkout: fmtISO(range.to),
+        guests,
+        room,
+      },
     });
   }
 
   return (
-    <section id="book" className="relative z-20 -mt-20 px-6 lg:px-10">
+    <section id="book" className="relative z-20 -mt-24 px-4 sm:px-6 lg:px-10">
       <form
         onSubmit={submit}
-        className="mx-auto grid max-w-6xl grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-2xl shadow-forest/20 md:grid-cols-[1fr_1fr_0.7fr_1fr_auto]"
+        className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-2xl shadow-forest/25 lg:flex-row lg:items-stretch"
       >
-        <Field label={t.search.checkin} type="date" value={checkin} min={today} onChange={setCheckin} />
-        <Field label={t.search.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
-        <SelectField
-          label={t.search.guests}
-          value={guests}
-          onChange={setGuests}
-          options={["1", "2", "3", "4", "5", "6+"]}
-        />
-        <SelectField
-          label={t.search.room}
-          value={room}
-          onChange={setRoom}
-          options={[t.search.anyCabin, "Deluxe Queen", "Deluxe Twin", "Family Suite", "Triple Suite"]}
-        />
+        {/* Dates */}
+        <Popover open={openCal} onOpenChange={setOpenCal}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="group flex flex-1 items-center gap-4 px-5 py-4 text-left transition hover:bg-muted/40 lg:px-7 lg:py-5"
+            >
+              <CalendarIcon className="h-6 w-6 shrink-0 text-forest" />
+              <DateCell
+                label={t.search.checkin}
+                date={range?.from}
+              />
+              <div className="hidden flex-col items-center px-2 text-stone sm:flex">
+                <span className="text-[10px] uppercase tracking-[0.2em]">
+                  {nights} {nights === 1 ? "night" : "nights"}
+                </span>
+                <div className="mt-1 h-px w-8 bg-border" />
+              </div>
+              <DateCell label={t.search.checkout} date={range?.to} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="start"
+            className="w-auto p-0 pointer-events-auto"
+          >
+            <Calendar
+              mode="range"
+              selected={range}
+              onSelect={(r) => {
+                setRange(r);
+                if (r?.from && r?.to) setOpenCal(false);
+              }}
+              numberOfMonths={2}
+              disabled={{ before: todayDate }}
+              defaultMonth={range?.from ?? todayDate}
+              initialFocus
+              className="p-3"
+            />
+          </PopoverContent>
+        </Popover>
+
+        <div className="h-px w-full bg-border lg:h-auto lg:w-px" />
+
+        {/* Guests */}
+        <div className="flex flex-1 items-center gap-4 px-5 py-4 lg:px-7 lg:py-5">
+          <Users className="h-6 w-6 shrink-0 text-forest" />
+          <div className="flex flex-1 flex-col gap-0.5">
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
+              {t.search.guests}
+            </span>
+            <Select value={guests} onValueChange={setGuests}>
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-lg font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {["1", "2", "3", "4", "5", "6+"].map((o) => (
+                  <SelectItem key={o} value={o}>
+                    {o} {t.search.guests.toLowerCase()}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="h-px w-full bg-border lg:h-auto lg:w-px" />
+
+        {/* Room type */}
+        <div className="flex flex-1 items-center gap-4 px-5 py-4 lg:px-7 lg:py-5">
+          <BedDouble className="h-6 w-6 shrink-0 text-forest" />
+          <div className="flex flex-1 flex-col gap-0.5">
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
+              {t.search.room}
+            </span>
+            <Select value={room} onValueChange={setRoom}>
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-lg font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[t.search.anyCabin, "Deluxe Queen", "Deluxe Twin", "Family Suite", "Triple Suite"].map((o) => (
+                  <SelectItem key={o} value={o}>{o}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Submit */}
         <button
           type="submit"
-          className="whitespace-nowrap bg-forest px-8 py-5 text-sm font-medium uppercase tracking-widest text-coconut transition hover:bg-forest/90 md:py-6"
+          className={cn(
+            "flex items-center justify-center gap-2 bg-forest px-8 py-5 text-base font-semibold text-coconut transition hover:bg-forest/90",
+            "lg:m-2 lg:rounded-2xl lg:px-10",
+          )}
         >
+          <Search className="h-5 w-5" />
           {t.search.submit}
         </button>
       </form>
@@ -289,57 +406,30 @@ function AvailabilitySearch() {
   );
 }
 
-function Field({
-  label,
-  type,
-  value,
-  onChange,
-  min,
-}: {
-  label: string;
-  type: string;
-  value: string;
-  onChange: (v: string) => void;
-  min?: string;
-}) {
+function DateCell({ label, date }: { label: string; date?: Date }) {
   return (
-    <label className="flex flex-col gap-1 bg-card px-5 py-3.5 text-left">
-      <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>
-      <input
-        type={type}
-        value={value}
-        min={min}
-        onChange={(e) => onChange(e.target.value)}
-        className="bg-transparent text-base text-foreground outline-none"
-      />
-    </label>
-  );
-}
-
-function SelectField({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-}) {
-  return (
-    <label className="flex flex-col gap-1 bg-card px-5 py-3.5 text-left">
-      <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="appearance-none bg-transparent text-base text-foreground outline-none"
-      >
-        {options.map((o) => (
-          <option key={o} value={o}>{o}</option>
-        ))}
-      </select>
-    </label>
+    <div className="flex flex-1 flex-col gap-0.5">
+      <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
+        {label}
+      </span>
+      {date ? (
+        <div className="flex items-baseline gap-2">
+          <span className="font-display text-2xl font-semibold leading-none text-foreground">
+            {date.getDate()}
+          </span>
+          <span className="text-sm text-foreground/80">
+            {date.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+          </span>
+        </div>
+      ) : (
+        <span className="text-base text-stone">Select date</span>
+      )}
+      {date && (
+        <span className="text-xs text-stone">
+          {date.toLocaleDateString("en-US", { weekday: "long" })}
+        </span>
+      )}
+    </div>
   );
 }
 
