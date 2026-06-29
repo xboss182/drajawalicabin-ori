@@ -16,6 +16,7 @@ import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { Plus, Minus, X } from "lucide-react";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -38,6 +39,8 @@ type CabinGroup = {
   label: string;
   rooms: Cabin[];
 };
+
+type CartItem = { cabinType: string; qty: number };
 
 function typeLabel(c: Cabin) {
   // "Deluxe Queen 1" -> "Deluxe Queen", "Family Suite 2" -> "Family Suite"
@@ -69,11 +72,10 @@ function BookPage() {
   const bt = t.book;
 
   const [cabins, setCabins] = useState<Cabin[]>([]);
-  const [cabinType, setCabinType] = useState<string>("");
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [checkin, setCheckin] = useState(search.checkin);
   const [checkout, setCheckout] = useState(search.checkout);
   const [guests, setGuests] = useState(search.guests);
-  const [numRooms, setNumRooms] = useState("1");
   const [comforter, setComforter] = useState(false);
 
   const [name, setName] = useState("");
@@ -107,7 +109,8 @@ function BookPage() {
       const list = (data ?? []) as Cabin[];
       setCabins(list);
       const match = list.find((c) => c.name === search.room || c.cabin_type === search.room);
-      setCabinType(match?.cabin_type ?? list[0]?.cabin_type ?? "");
+      const startType = match?.cabin_type ?? list[0]?.cabin_type ?? "";
+      if (startType) setCart([{ cabinType: startType, qty: 1 }]);
     })();
   }, []);
 
@@ -125,46 +128,61 @@ function BookPage() {
     return Array.from(map.values());
   }, [cabins]);
 
-  const selectedGroup = useMemo(
-    () => cabinGroups.find((g) => g.type === cabinType),
-    [cabinGroups, cabinType],
-  );
-  const selectedCabin = selectedGroup?.rooms[0];
-  const numRoomsN = Math.max(1, Math.min(2, Number(numRooms) || 1));
-  const maxRoomsForType = selectedGroup?.rooms.length ?? 2;
+  const groupByType = useMemo(() => {
+    const m = new Map<string, CabinGroup>();
+    for (const g of cabinGroups) m.set(g.type, g);
+    return m;
+  }, [cabinGroups]);
 
-  // Price preview
+  const totalRooms = cart.reduce((s, it) => s + it.qty, 0);
+  // First item drives the sidebar preview image
+  const previewGroup = cart[0] ? groupByType.get(cart[0].cabinType) : undefined;
+  const previewCabin = previewGroup?.rooms[0];
+
+  // Price preview — sum across all cart items
   useEffect(() => {
-    if (!selectedCabin || !checkin || !checkout) return;
+    if (cart.length === 0 || !checkin || !checkout) {
+      setPrice(null);
+      return;
+    }
     if (new Date(checkout) <= new Date(checkin)) {
       setPrice(null);
       return;
     }
     (async () => {
       try {
-        const p = await previewPrice({ data: { cabinId: selectedCabin.id, checkIn: checkin, checkOut: checkout, comforter } });
-        // Multiply by number of rooms (each room of the type is priced identically)
-        setPrice({
-          nights: p.nights,
-          subtotal: p.subtotal * numRoomsN,
-          comforter_total: p.comforter_total * numRoomsN,
-          total: p.total * numRoomsN,
-        });
+        let nights = 0;
+        let subtotal = 0;
+        let comforter_total = 0;
+        let total = 0;
+        for (const it of cart) {
+          const g = groupByType.get(it.cabinType);
+          const sample = g?.rooms[0];
+          if (!sample) continue;
+          const p = await previewPrice({
+            data: { cabinId: sample.id, checkIn: checkin, checkOut: checkout, comforter },
+          });
+          nights = p.nights;
+          subtotal += p.subtotal * it.qty;
+          comforter_total += p.comforter_total * it.qty;
+          total += p.total * it.qty;
+        }
+        setPrice({ nights, subtotal, comforter_total, total });
       } catch {
         setPrice(null);
       }
     })();
-  }, [selectedCabin?.id, checkin, checkout, comforter, numRoomsN]);
+  }, [cart, checkin, checkout, comforter, groupByType]);
 
-  // Availability for every room in the selected type (next 90 days)
+  // Availability for every cabin (next 90 days) — needed across mixed types
   useEffect(() => {
-    if (!selectedGroup) return;
+    if (cabins.length === 0) return;
     (async () => {
       try {
         const from = todayStr;
         const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
         const entries = await Promise.all(
-          selectedGroup.rooms.map(async (c) => {
+          cabins.map(async (c) => {
             try {
               const r = await getTakenDates({ data: { cabinId: c.id, from, to } });
               return [c.id, r.dates] as const;
@@ -178,30 +196,35 @@ function BookPage() {
         setTakenByCabin({});
       }
     })();
-  }, [selectedGroup?.type]);
+  }, [cabins]);
 
-  // Date is blocked for the type when free rooms in that type < requested rooms
+  // Date is blocked when ANY cart line can't be satisfied that night
   const blockedDates = useMemo<string[]>(() => {
-    if (!selectedGroup) return [];
-    const counts = new Map<string, number>();
-    for (const c of selectedGroup.rooms) {
-      for (const d of takenByCabin[c.id] ?? []) {
-        counts.set(d, (counts.get(d) ?? 0) + 1);
+    if (cart.length === 0) return [];
+    const blocked = new Set<string>();
+    for (const it of cart) {
+      const g = groupByType.get(it.cabinType);
+      if (!g) continue;
+      const counts = new Map<string, number>();
+      for (const c of g.rooms) {
+        for (const d of takenByCabin[c.id] ?? []) {
+          counts.set(d, (counts.get(d) ?? 0) + 1);
+        }
+      }
+      const total = g.rooms.length;
+      for (const [d, n] of counts) {
+        if (total - n < it.qty) blocked.add(d);
       }
     }
-    const total = selectedGroup.rooms.length;
-    const out: string[] = [];
-    for (const [d, n] of counts) {
-      if (total - n < numRoomsN) out.push(d);
-    }
-    return out;
-  }, [selectedGroup, takenByCabin, numRoomsN]);
+    return Array.from(blocked);
+  }, [cart, groupByType, takenByCabin]);
 
-  function freeCabinsInRange(): Cabin[] {
-    if (!selectedGroup || !checkin || !checkout) return [];
+  function freeCabinsForType(type: string): Cabin[] {
+    const g = groupByType.get(type);
+    if (!g || !checkin || !checkout) return [];
     const start = new Date(checkin);
     const end = new Date(checkout);
-    return selectedGroup.rooms.filter((c) => {
+    return g.rooms.filter((c) => {
       const tk = takenByCabin[c.id] ?? [];
       return !tk.some((d) => {
         const dd = new Date(d);
@@ -212,13 +235,13 @@ function BookPage() {
 
   function datesOverlapTaken() {
     if (!checkin || !checkout) return false;
-    return freeCabinsInRange().length < numRoomsN;
+    return cart.some((it) => freeCabinsForType(it.cabinType).length < it.qty);
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!selectedGroup) return setError(bt.errors.pickCabin);
+    if (cart.length === 0) return setError(bt.errors.pickCabin);
     if (new Date(checkout) <= new Date(checkin)) return setError(bt.errors.dates);
     if (datesOverlapTaken()) return setError(bt.errors.overlap);
     if (name.trim().length < 2) return setError(bt.errors.name);
@@ -228,18 +251,12 @@ function BookPage() {
 
     setSubmitting(true);
     try {
-      const free = freeCabinsInRange();
-      if (free.length < numRoomsN) {
-        throw new Error(bt.errors.overlap);
-      }
-      const assignedCabin = free[0];
       const res = await createBooking({
         data: {
-          cabinId: assignedCabin.id,
+          items: cart.map((it) => ({ cabinType: it.cabinType, numRooms: it.qty })),
           checkIn: checkin,
           checkOut: checkout,
           guests: Number(guests.replace("+", "")) || 1,
-          numRooms: numRoomsN,
           comforter,
           guestName: name.trim(),
           email: email.trim(),
