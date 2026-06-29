@@ -8,6 +8,15 @@ function generateRef() {
   return `RJW-${n}`;
 }
 
+async function groupIdFor(admin: any, bookingId: string): Promise<string> {
+  const { data } = await admin
+    .from("booking_requests")
+    .select("booking_group_id")
+    .eq("id", bookingId)
+    .maybeSingle();
+  return (data?.booking_group_id as string) ?? bookingId;
+}
+
 const createSchema = z.object({
   items: z
     .array(
