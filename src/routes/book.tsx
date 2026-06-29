@@ -345,22 +345,23 @@ function DetailsStep(props: {
           </div>
           <div className="mt-3 overflow-x-auto">
             <Calendar
-              mode="single"
-              selected={checkin ? new Date(checkin) : undefined}
-              onSelect={(d) => {
-                if (!d) return;
-                const iso = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-                  .toISOString()
-                  .slice(0, 10);
-                setCheckin(iso);
-                if (new Date(checkout) <= new Date(iso)) {
-                  const next = new Date(d);
+              mode="range"
+              selected={{
+                from: checkin ? new Date(checkin) : undefined,
+                to: checkout ? new Date(checkout) : undefined,
+              }}
+              onSelect={(range) => {
+                const toIso = (d: Date) =>
+                  new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+                    .toISOString()
+                    .slice(0, 10);
+                if (range?.from) setCheckin(toIso(range.from));
+                if (range?.to) {
+                  setCheckout(toIso(range.to));
+                } else if (range?.from) {
+                  const next = new Date(range.from);
                   next.setDate(next.getDate() + 1);
-                  setCheckout(
-                    new Date(next.getTime() - next.getTimezoneOffset() * 60000)
-                      .toISOString()
-                      .slice(0, 10),
-                  );
+                  setCheckout(toIso(next));
                 }
               }}
               numberOfMonths={2}
@@ -389,9 +390,6 @@ function DetailsStep(props: {
                       }
                     >
                       <span>{props.day.date.getDate()}</span>
-                      {m.partial && !m.full && (
-                        <span className="text-[9px] font-medium text-amber-600">{remaining} left</span>
-                      )}
                     </CalendarDayButton>
                   );
                 },
@@ -400,15 +398,6 @@ function DetailsStep(props: {
             />
           </div>
         </div>
-
-        {taken.length > 0 && (
-          <p className="mt-3 text-xs text-stone">
-            {bt.takenPrefix} {selectedCabin?.name}:{" "}
-            <span className="text-foreground/70">
-              {taken.slice(0, 8).join(", ")}{taken.length > 8 ? "…" : ""}
-            </span>
-          </p>
-        )}
 
         <label className="mt-5 flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4">
           <input
