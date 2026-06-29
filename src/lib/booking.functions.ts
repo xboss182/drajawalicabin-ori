@@ -488,10 +488,19 @@ export const requestManageLink = createServerFn({ method: "POST" })
     const email = data.email.trim().toLowerCase();
     const { data: rows } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, guest_name, email, payment_reference, check_in, room_type, status, guest_token")
+      .select("id, booking_group_id, guest_name, email, payment_reference, check_in, room_type, status, guest_token, created_at")
       .ilike("payment_reference", ref)
-      .limit(5);
-    const match = (rows ?? []).find((r) => (r.email ?? "").trim().toLowerCase() === email);
+      .order("created_at", { ascending: true })
+      .limit(20);
+    // Dedupe by group (one manage link per reservation), keep first row in each group
+    const seen = new Set<string>();
+    const groupLeads = (rows ?? []).filter((r) => {
+      const gid = (r.booking_group_id as string) ?? r.id;
+      if (seen.has(gid)) return false;
+      seen.add(gid);
+      return true;
+    });
+    const match = groupLeads.find((r) => (r.email ?? "").trim().toLowerCase() === email);
 
     if (match && match.status !== "cancelled") {
       // Build the manage link from the request's own origin.
