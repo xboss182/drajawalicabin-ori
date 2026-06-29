@@ -340,21 +340,20 @@ function DetailsStep(props: {
                   "bg-red-500/80 text-white line-through hover:bg-red-500/80 focus:bg-red-500/80",
               }}
               components={{
-                DayButton: ({ day, modifiers, ...rest }) => {
-                  const isBooked = (modifiers as Record<string, boolean>).booked;
-                  const isPast = (modifiers as Record<string, boolean>).disabled && !isBooked;
-                  const label = day.date.toLocaleDateString(undefined, {
+                DayButton: (props) => {
+                  const m = props.modifiers as Record<string, boolean>;
+                  const label = props.day.date.toLocaleDateString(undefined, {
                     weekday: "short",
                     year: "numeric",
                     month: "short",
                     day: "numeric",
                   });
-                  const title = isBooked
+                  const title = m.booked
                     ? `${label} — Already booked by another guest`
-                    : isPast
+                    : m.disabled
                       ? `${label} — Past date, unavailable`
                       : `${label} — Available`;
-                  return <button type="button" title={title} {...rest} />;
+                  return <CalendarDayButton {...props} title={title} />;
                 },
               }}
               className="pointer-events-auto p-0"
