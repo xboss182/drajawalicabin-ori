@@ -276,6 +276,7 @@ function DetailsStep(props: {
   price: { nights: number; subtotal: number; comforter_total: number; total: number } | null;
   selectedCabin?: Cabin;
   taken: string[];
+  availability: { counts: Record<string, number>; total: number };
   submit: (e: React.FormEvent) => void;
   submitting: boolean;
   error: string | null;
@@ -290,8 +291,16 @@ function DetailsStep(props: {
     name, setName, email, setEmail, phone, setPhone,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
-    price, selectedCabin, taken, submit, submitting, error, agreed, setAgreed,
+    price, selectedCabin, taken, availability, submit, submitting, error, agreed, setAgreed,
   } = props;
+
+  const totalRooms = Math.max(availability.total || 0, 2);
+  const fullDates: Date[] = [];
+  const partialDates: Date[] = [];
+  for (const [d, c] of Object.entries(availability.counts)) {
+    if (c >= totalRooms) fullDates.push(new Date(d));
+    else if (c > 0) partialDates.push(new Date(d));
+  }
 
   return (
     <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
@@ -321,17 +330,13 @@ function DetailsStep(props: {
             <div>
               <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Availability</p>
               <h3 className="mt-1 font-display text-lg text-forest">
-                Blocked dates {selectedCabin ? `· ${selectedCabin.name}` : ""}
+                Blocked dates {selectedCabin ? `· ${selectedCabin.cabin_type}` : ""}
               </h3>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone">
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm bg-red-500/80" />
-                Already booked
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-sm bg-stone/30" />
-                Unavailable / past
+                Fully booked
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-sm border border-border bg-background" />
@@ -344,26 +349,30 @@ function DetailsStep(props: {
               mode="single"
               numberOfMonths={2}
               disabled={{ before: new Date() }}
-              modifiers={{ booked: taken.map((d) => new Date(d)) }}
+              modifiers={{ full: fullDates, partial: partialDates }}
               modifiersClassNames={{
-                booked:
-                  "bg-red-500/80 text-white line-through hover:bg-red-500/80 focus:bg-red-500/80",
+                full: "bg-red-500/80 text-white line-through hover:bg-red-500/80 focus:bg-red-500/80",
               }}
               components={{
                 DayButton: (props) => {
                   const m = props.modifiers as Record<string, boolean>;
-                  const label = props.day.date.toLocaleDateString(undefined, {
-                    weekday: "short",
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  });
-                  const title = m.booked
-                    ? `${label} — Already booked by another guest`
-                    : m.disabled
-                      ? `${label} — Past date, unavailable`
-                      : `${label} — Available`;
-                  return <CalendarDayButton {...props} title={title} />;
+                  return (
+                    <CalendarDayButton
+                      {...props}
+                      title={
+                        m.full
+                          ? "Fully booked"
+                          : m.partial
+                            ? `1 room left of ${totalRooms}`
+                            : `${totalRooms} rooms available`
+                      }
+                    >
+                      <span>{props.day.date.getDate()}</span>
+                      {m.partial && !m.full && (
+                        <span className="text-[9px] font-medium text-amber-600">1 left</span>
+                      )}
+                    </CalendarDayButton>
+                  );
                 },
               }}
               className="pointer-events-auto p-0"
