@@ -312,7 +312,15 @@ function DetailsStep(props: {
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
-        <div className="mt-0 rounded-2xl border border-border bg-card p-5">
+        <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
+          <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
+          <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
+          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
+          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
+          <SelectCabin label={bt.f.cabinType} value={cabinId} onChange={setCabinId} cabins={cabins} loadingLabel={bt.f.loading} optionTpl={bt.f.cabinOption} />
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Availability</p>
@@ -338,6 +346,23 @@ function DetailsStep(props: {
           <div className="mt-3 overflow-x-auto">
             <Calendar
               mode="single"
+              selected={checkin ? new Date(checkin) : undefined}
+              onSelect={(d) => {
+                if (!d) return;
+                const iso = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+                  .toISOString()
+                  .slice(0, 10);
+                setCheckin(iso);
+                if (new Date(checkout) <= new Date(iso)) {
+                  const next = new Date(d);
+                  next.setDate(next.getDate() + 1);
+                  setCheckout(
+                    new Date(next.getTime() - next.getTimezoneOffset() * 60000)
+                      .toISOString()
+                      .slice(0, 10),
+                  );
+                }
+              }}
               numberOfMonths={2}
               disabled={{ before: new Date() }}
               modifiers={{ full: fullDates, partial: partialDates }}
@@ -374,14 +399,6 @@ function DetailsStep(props: {
               className="pointer-events-auto p-0"
             />
           </div>
-        </div>
-
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-          <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
-          <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
-          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
-          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
-          <SelectCabin label={bt.f.cabinType} value={cabinId} onChange={setCabinId} cabins={cabins} loadingLabel={bt.f.loading} optionTpl={bt.f.cabinOption} />
         </div>
 
         {taken.length > 0 && (
