@@ -294,6 +294,46 @@ function AvailabilitySearch() {
     });
   }
 
+  const isSameDate = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  const handleRangeSelect = (newRange: DateRange | undefined) => {
+    if (!newRange?.from) {
+      setRange(newRange);
+      return;
+    }
+
+    // Determine which date the user actually clicked by comparing with the current range.
+    const clickedDate = (() => {
+      if (!range?.from) return newRange.from;
+      const oldDates = [range.from];
+      if (range.to) oldDates.push(range.to);
+      const newDates = [newRange.from];
+      if (newRange.to) newDates.push(newRange.to);
+      for (const d of newDates) {
+        if (!oldDates.some((od) => isSameDate(od, d))) return d;
+      }
+      return newRange.from;
+    })();
+
+    // No existing range or a complete range: start a new selection from the clicked date.
+    if (!range?.from || (range.from && range.to)) {
+      setRange({ from: clickedDate, to: undefined });
+      return;
+    }
+
+    // Partial range (from set, to unset)
+    if (isSameDate(clickedDate, range.from) || clickedDate < range.from) {
+      setRange({ from: clickedDate, to: undefined });
+      return;
+    }
+
+    setRange({ from: range.from, to: clickedDate });
+    setOpenCal(false);
+  };
+
   return (
     <section id="book" className="relative z-20 -mt-24 px-4 sm:px-6 lg:px-10">
       <form
@@ -322,15 +362,12 @@ function AvailabilitySearch() {
             <Calendar
               mode="range"
               selected={range}
-              onSelect={(r) => {
-                setRange(r);
-                if (r?.from && r?.to) setOpenCal(false);
-              }}
+              onSelect={handleRangeSelect}
               numberOfMonths={2}
               disabled={{ before: todayDate }}
               defaultMonth={range?.from ?? todayDate}
               initialFocus
-              className="p-3"
+              className="p-3 pointer-events-auto"
             />
           </PopoverContent>
         </Popover>
