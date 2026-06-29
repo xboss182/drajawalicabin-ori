@@ -290,23 +290,6 @@ function DetailsStep(props: {
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
-        <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
-          <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
-          <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
-          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
-          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
-          <SelectCabin label={bt.f.cabinType} value={cabinId} onChange={setCabinId} cabins={cabins} loadingLabel={bt.f.loading} optionTpl={bt.f.cabinOption} />
-        </div>
-
-        {taken.length > 0 && (
-          <p className="mt-3 text-xs text-stone">
-            {bt.takenPrefix} {selectedCabin?.name}:{" "}
-            <span className="text-foreground/70">
-              {taken.slice(0, 8).join(", ")}{taken.length > 8 ? "…" : ""}
-            </span>
-          </p>
-        )}
-
         <div className="mt-6 rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -339,6 +322,28 @@ function DetailsStep(props: {
               className="pointer-events-auto p-0"
             />
           </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-border bg-card p-5">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Accommodation</p>
+          <h3 className="mt-1 font-display text-lg text-forest">Cabin type</h3>
+          <div className="mt-3">
+            <SelectCabin
+              value={cabinId}
+              onChange={setCabinId}
+              cabins={cabins}
+              loadingLabel={bt.f.loading}
+              optionTpl={bt.f.cabinOption}
+              className="bg-transparent px-0 py-0"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
+          <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
+          <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
+          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
+          <Select label={bt.f.rooms} value={numRooms} onChange={setNumRooms} options={["1","2","3","4","5","6","7","8"]} />
         </div>
 
         <label className="mt-5 flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4">
