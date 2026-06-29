@@ -1,5 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { CalendarIcon, Users, BedDouble, Search } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import type { DateRange } from "react-day-picker";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinsExterior from "@/assets/cabins-exterior.jpg";
 import cabinQueen from "@/assets/cabin-queen.jpg";
