@@ -90,7 +90,18 @@ function ManagePage() {
 
             <div className="mt-8 rounded-2xl border border-border bg-card p-6">
               <dl className="grid grid-cols-2 gap-y-2 text-sm">
-                <dt className="text-stone">Cabin</dt><dd>{b.roomType}</dd>
+                <dt className="text-stone">Cabin{(b.rooms?.length ?? 1) > 1 ? "s" : ""}</dt>
+                <dd>
+                  {b.rooms && b.rooms.length > 1 ? (
+                    <ul className="flex flex-col gap-0.5">
+                      {b.rooms.map((r) => (
+                        <li key={r.id}>{r.name}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    b.roomType
+                  )}
+                </dd>
                 <dt className="text-stone">Check-in</dt><dd>{b.checkIn} (3:00 PM)</dd>
                 <dt className="text-stone">Check-out</dt><dd>{b.checkOut} (12:00 PM)</dd>
                 <dt className="text-stone">Guests</dt><dd>{b.guests} · {b.nights ?? "—"} night(s)</dd>
