@@ -318,20 +318,53 @@ export const listBookings = createServerFn({ method: "GET" })
       .limit(200);
     if (error) throw new Error(error.message);
 
-    // sign proof urls
-    const withUrls = await Promise.all(
-      (data ?? []).map(async (b) => {
+    // Group rows by booking_group_id so multi-room reservations show as one card
+    const byGroup = new Map<string, any[]>();
+    for (const row of data ?? []) {
+      const gid = (row.booking_group_id as string | null) ?? row.id;
+      const arr = byGroup.get(gid);
+      if (arr) arr.push(row);
+      else byGroup.set(gid, [row]);
+    }
+    const groups = Array.from(byGroup.values()).map((rows) => {
+      // Order rows by created_at ascending so the lead row (first inserted) is rooms[0]
+      rows.sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at));
+      return rows;
+    });
+    // Sort groups by most recent created_at desc
+    groups.sort((a, b) => +new Date(b[0].created_at) - +new Date(a[0].created_at));
+
+    const result = await Promise.all(
+      groups.map(async (rows) => {
+        const lead = rows[0];
+        const total_amount = rows.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
+        const subtotal = rows.reduce((s, r) => s + Number(r.subtotal ?? 0), 0);
+        const comforter_total = rows.reduce((s, r) => s + Number(r.comforter_total ?? 0), 0);
         let proofUrl: string | null = null;
-        if (b.payment_proof_path) {
+        if (lead.payment_proof_path) {
           const { data: signed } = await supabaseAdmin.storage
             .from("payment-proofs")
-            .createSignedUrl(b.payment_proof_path, 60 * 60);
+            .createSignedUrl(lead.payment_proof_path, 60 * 60);
           proofUrl = signed?.signedUrl ?? null;
         }
-        return { ...b, proofUrl };
+        return {
+          ...lead,
+          total_amount,
+          subtotal,
+          comforter_total,
+          num_rooms: rows.length,
+          rooms: rows.map((r) => ({
+            id: r.id,
+            cabinId: r.cabin_id,
+            name: r.room_type,
+            nights: r.nights,
+            total: Number(r.total_amount ?? 0),
+          })),
+          proofUrl,
+        };
       }),
     );
-    return { bookings: withUrls };
+    return { bookings: result };
   });
 
 const idSchema = z.object({ bookingId: z.string().uuid() });
