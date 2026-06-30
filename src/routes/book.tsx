@@ -19,9 +19,35 @@ import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Plus, Minus, X } from "lucide-react";
 
-const today = () => new Date().toISOString().slice(0, 10);
-const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+// All bookings are evaluated in the property's timezone (Kuala Terengganu, UTC+8)
+// so a guest in any timezone sees the same "today" and never selects a date
+// that's shifted by ±1 day from what the property sees.
+const PROPERTY_TZ = "Asia/Kuala_Lumpur";
 
+function propertyDateParts(d: Date): { y: number; m: number; day: number } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: PROPERTY_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? "0");
+  return { y: get("year"), m: get("month"), day: get("day") };
+}
+
+/** YYYY-MM-DD string for a Date as seen in the property timezone. */
+function formatPropertyDate(d: Date): string {
+  const { y, m, day } = propertyDateParts(d);
+  return `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** Local Date whose year/month/day match the YYYY-MM-DD string — safe for calendar display. */
+function parseLocalDate(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}
+
+/** Convenience: emit a YYYY-MM-DD for the date the calendar component handed back. */
 function formatLocalDate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -29,13 +55,14 @@ function formatLocalDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function parseLocalDate(s: string): Date {
-  const [y, m, d] = s.split("-").map(Number);
-  return new Date(y, (m || 1) - 1, d || 1);
+function addDaysISO(iso: string, days: number): string {
+  const d = parseLocalDate(iso);
+  d.setDate(d.getDate() + days);
+  return formatLocalDate(d);
 }
 
-const todayStr = today();
-const tomorrowStr = tomorrow();
+const todayStr = formatPropertyDate(new Date());
+const tomorrowStr = addDaysISO(todayStr, 1);
 
 type Cabin = {
   id: string;
@@ -166,7 +193,7 @@ function BookPage() {
       setPrice(null);
       return;
     }
-    if (new Date(checkout) <= new Date(checkin)) {
+    if (checkout <= checkin) {
       setPrice(null);
       return;
     }
@@ -227,7 +254,7 @@ function BookPage() {
       setRecommendations([]);
       return;
     }
-    if (!checkin || !checkout || new Date(checkout) <= new Date(checkin)) {
+    if (!checkin || !checkout || checkout <= checkin) {
       setRecommendations([]);
       return;
     }
@@ -300,19 +327,15 @@ function BookPage() {
   function freeCabinsForType(type: string): Cabin[] {
     const g = groupByType.get(type);
     if (!g || !checkin || !checkout) return [];
-    const start = new Date(checkin);
-    const end = new Date(checkout);
     return g.rooms.filter((c) => {
       const tk = takenByCabin[c.id] ?? [];
-      return !tk.some((d) => {
-        const dd = new Date(d);
-        return dd >= start && dd < end;
-      });
+      // Strings are in YYYY-MM-DD format and compare lexicographically.
+      return !tk.some((d) => d >= checkin && d < checkout);
     });
   }
 
   function datesOverlapTaken() {
-    if (!checkin || !checkout) return false;
+    if (!checkin || !checkout || checkout <= checkin) return false;
     return cart.some((it) => freeCabinsForType(it.cabinType).length < it.qty);
   }
 
@@ -320,7 +343,7 @@ function BookPage() {
     e.preventDefault();
     setError(null);
     if (cart.length === 0) return setError(bt.errors.pickCabin);
-    if (new Date(checkout) <= new Date(checkin)) return setError(bt.errors.dates);
+    if (checkout <= checkin) return setError(bt.errors.dates);
     if (datesOverlapTaken()) return setError(bt.errors.overlap);
     if (name.trim().length < 2) return setError(bt.errors.name);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError(bt.errors.email);
@@ -602,8 +625,8 @@ function DetailsStep(props: {
               numberOfMonths={2}
               showOutsideDays={false}
               selected={
-                checkin && checkout && new Date(checkout) > new Date(checkin)
-                  ? { from: parseLocalDate(checkin), to: new Date(parseLocalDate(checkout).getTime() - 86400000) }
+                checkin && checkout && checkout > checkin
+                  ? { from: parseLocalDate(checkin), to: parseLocalDate(addDaysISO(checkout, -1)) }
                   : undefined
               }
               onSelect={(r) => {
@@ -611,9 +634,9 @@ function DetailsStep(props: {
                 const from = r.from;
                 const to = r.to && r.to.getTime() !== from.getTime() ? r.to : from;
                 setCheckin(formatLocalDate(from));
-                setCheckout(formatLocalDate(new Date(to.getTime() + 86400000)));
+                setCheckout(addDaysISO(formatLocalDate(to), 1));
               }}
-              disabled={[{ before: new Date(new Date().setHours(0, 0, 0, 0)) }, ...blockedDates.map((d) => parseLocalDate(d))]}
+              disabled={[{ before: parseLocalDate(todayStr) }, ...blockedDates.map((d) => parseLocalDate(d))]}
               modifiers={{ booked: blockedDates.map((d) => parseLocalDate(d)) }}
               modifiersClassNames={{
                 booked:
@@ -623,8 +646,7 @@ function DetailsStep(props: {
                 DayButton: (btnProps) => {
                   const dateStr = formatLocalDate(btnProps.day.date);
                   const reason = blockedReasonByDate.get(dateStr);
-                  const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
-                  const isPast = btnProps.day.date < startOfToday;
+                  const isPast = dateStr < todayStr;
                   const title = reason
                     ? `Unavailable — ${reason}`
                     : isPast
