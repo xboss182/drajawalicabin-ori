@@ -200,13 +200,6 @@ function Nav() {
           >
             {t.nav.whatsapp}
           </a>
-          <Link
-            to="/auth"
-            className="inline-flex items-center justify-center rounded-full border border-coconut/40 bg-coconut/10 p-2 text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest"
-            aria-label="Owner sign in"
-          >
-            <GoogleIcon />
-          </Link>
         </div>
       </div>
     </header>
