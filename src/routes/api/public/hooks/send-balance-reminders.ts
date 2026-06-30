@@ -26,6 +26,7 @@ export const Route = createFileRoute("/api/public/hooks/send-balance-reminders")
           .lte("balance_due_at", new Date().toISOString())
           .gte("check_in", today)
           .in("status", ["awaiting_review", "confirmed"])
+          .eq("payment_type", "deposit")
           .is("balance_reminder_sent_at", null)
           .is("balance_paid_at", null);
         if (error) {
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/api/public/hooks/send-balance-reminders")
           .eq("check_in", in7Date)
           .is("balance_due_at", null)
           .in("status", ["awaiting_review", "confirmed"])
+          .eq("payment_type", "deposit")
           .is("balance_reminder_sent_at", null)
           .is("balance_paid_at", null);
 
