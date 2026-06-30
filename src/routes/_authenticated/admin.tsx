@@ -1,6 +1,17 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect } from "@tanstack/react-router";
+import { isAdminRecipient } from "@/lib/booking.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  beforeLoad: async () => {
+    try {
+      const { allowed } = await isAdminRecipient();
+      if (!allowed) throw redirect({ to: "/auth", search: { denied: 1 } });
+    } catch (e: unknown) {
+      // re-throw redirects; otherwise treat as denied
+      if (e && typeof e === "object" && "isRedirect" in (e as Record<string, unknown>)) throw e;
+      throw redirect({ to: "/auth", search: { denied: 1 } });
+    }
+  },
   component: () => <Outlet />,
 });
 

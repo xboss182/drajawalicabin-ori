@@ -529,6 +529,67 @@ export const isCurrentUserAdmin = createServerFn({ method: "GET" })
     return { isAdmin: Boolean(data) };
   });
 
+// Admin gate: signed-in user's email must be on the admin_email_recipients allowlist.
+export const isAdminRecipient = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const email = String((context.claims as { email?: string }).email ?? "").trim().toLowerCase();
+    if (!email) return { allowed: false };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("admin_email_recipients")
+      .select("id")
+      .eq("is_active", true)
+      .ilike("email", email)
+      .maybeSingle();
+    return { allowed: Boolean(data) };
+  });
+
+// Customer lookup: view manage-booking by email + reference without an email link.
+const lookupSchema = z.object({
+  email: z.string().trim().email().max(255),
+  reference: z.string().trim().min(3).max(40),
+});
+export const getBookingByEmailAndReference = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => lookupSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const ip = callerIp();
+
+    // Rate limit: 5 attempts per 15 min per IP (shared with manage-link recovery)
+    const since = new Date(Date.now() - 15 * 60_000).toISOString();
+    const { count } = await supabaseAdmin
+      .from("manage_link_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("ip", ip)
+      .gte("requested_at", since);
+    if ((count ?? 0) >= 5) {
+      throw new Error("Too many attempts. Please try again in 15 minutes.");
+    }
+    await supabaseAdmin.from("manage_link_requests").insert({ ip } as never);
+
+    const ref = data.reference.trim().toUpperCase();
+    const email = data.email.trim().toLowerCase();
+    const { data: rows } = await supabaseAdmin
+      .from("booking_requests")
+      .select("id, booking_group_id, email, payment_reference, guest_token, status, created_at")
+      .ilike("payment_reference", ref)
+      .order("created_at", { ascending: true })
+      .limit(20);
+    const seen = new Set<string>();
+    const leads = (rows ?? []).filter((r) => {
+      const gid = (r.booking_group_id as string) ?? r.id;
+      if (seen.has(gid)) return false;
+      seen.add(gid);
+      return true;
+    });
+    const match = leads.find(
+      (r) => (r.email ?? "").trim().toLowerCase() === email && r.status !== "cancelled",
+    );
+    if (!match) throw new Error("No booking matches that email and reference.");
+    return { bookingId: match.id as string, guestToken: match.guest_token as string };
+  });
+
 // ============== FIND BOOKING (lost-link recovery) ==============
 
 const findSchema = z.object({
