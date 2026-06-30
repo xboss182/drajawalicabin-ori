@@ -441,6 +441,11 @@ function DetailsStep(props: {
   error: string | null;
   agreed: boolean;
   setAgreed: (b: boolean) => void;
+  paymentType: "deposit" | "full";
+  setPaymentType: (p: "deposit" | "full") => void;
+  recommendations: Array<{ cabinId: string; cabinType: string; name: string; capacity: number; nights: number; total: number }>;
+  pickRecommendation: (type: string) => void;
+  isAnyCabin: boolean;
 }) {
   const { t } = useLanguage();
   const bt = t.book;
@@ -453,6 +458,7 @@ function DetailsStep(props: {
     notes, setNotes,
     price, previewCabin, blockedDates, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
+    paymentType, setPaymentType, recommendations, pickRecommendation, isAnyCabin,
   } = props;
 
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
