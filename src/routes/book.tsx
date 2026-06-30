@@ -578,7 +578,7 @@ function DetailsStep(props: {
               <p className="mt-1 text-xs text-stone">
                 {blockedDates.length === 0
                   ? "All nights available in the next 90 days."
-                  : `${blockedDates.length} night${blockedDates.length === 1 ? "" : "s"} unavailable for this cart.`}
+                  : `${blockedDates.length} night${blockedDates.length === 1 ? "" : "s"} unavailable for this cart — hover a red date to see why.`}
               </p>
             </div>
             <div className="flex items-center gap-4 text-[11px] uppercase tracking-widest text-stone">
