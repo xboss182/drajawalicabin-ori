@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CalendarIcon, Users, BedDouble, Search } from "lucide-react";
+import { CalendarIcon, Users, BedDouble, Search, MoreHorizontal } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -175,9 +175,11 @@ function Nav() {
           <a href="#about" className="hover:text-coconut">{t.nav.about}</a>
           <a href="#nearby" className="hover:text-coconut">{t.nav.nearby}</a>
           <a href="#book" className="hover:text-coconut">{t.nav.book}</a>
+          <MorePagesMenu />
         </nav>
         <div className="flex items-center gap-3">
           <LanguageToggle />
+          <MorePagesMenu className="md:hidden" />
           <a
             href={waHref(t.whatsappMessage)}
             target="_blank"
@@ -189,6 +191,51 @@ function Nav() {
         </div>
       </div>
     </header>
+  );
+}
+
+function MorePagesMenu({ className }: { className?: string }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="More pages"
+          className={cn(
+            "inline-flex items-center justify-center rounded-full p-2 text-coconut/90 transition hover:bg-coconut/10 hover:text-coconut focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coconut/50",
+            className,
+          )}
+        >
+          <MoreHorizontal className="h-5 w-5" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        className="w-48 border-coconut/10 bg-coconut p-2 text-forest shadow-xl"
+      >
+        <div className="flex flex-col gap-1">
+          <Link
+            to="/find-booking"
+            className="rounded-md px-3 py-2 text-sm font-medium text-forest hover:bg-forest/10"
+          >
+            Find Booking
+          </Link>
+          <Link
+            to="/manage-booking"
+            search={{ id: "", token: "" }}
+            className="rounded-md px-3 py-2 text-sm font-medium text-forest hover:bg-forest/10"
+          >
+            Manage Booking
+          </Link>
+          <Link
+            to="/admin"
+            className="rounded-md px-3 py-2 text-sm font-medium text-forest hover:bg-forest/10"
+          >
+            Admin
+          </Link>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
