@@ -1,44 +1,45 @@
-Several related changes across the header menu, auth, manage-booking flow, and the book page.
+## Goal
+Lock admin access to **xboss182@gmail.com only** for now, keep Google + email/password sign-in for the 3 allowlisted emails, and move admin-recipient management to a dedicated **/admin/members** page.
 
-## 1. Header "more" menu icon
+## 1. Database — activate only xboss182
+Run an UPDATE on `admin_email_recipients`:
+- `xboss182@gmail.com` → `is_active = true` (already)
+- `salikin1305@gmail.com` → `is_active = false`
+- `awang.mfauzi@gmail.com` → `is_active = false` (already)
 
-- Replace the vertical 3-dot (`MoreHorizontal`) trigger in the homepage header with a 3-line hamburger (`Menu` from lucide-react), keeping the same Popover behavior, placement, and styling.
-- Remove the "Admin" entry from this menu. Only keep public/customer-facing links (Find Booking, Manage Booking). Owners reach `/admin` directly by URL or via `/auth`.
+Result: only xboss182 can pass the admin gate. The other two rows stay in the table so you can re-activate them with one click from /admin/members later.
 
-## 2. Auth page — remove sign-up
+## 2. Auth — confirmation, no code changes
+Current behavior is already correct, just confirming:
+- **Sign-in methods on `/auth`**: email+password and Google (both already wired).
+- **Gate**: `isAdminRecipient` server fn checks `admin_email_recipients` where `email = auth.user.email AND is_active = true`. `/admin/*` `beforeLoad` redirects non-matches to `/auth?denied=1`.
+- **Google**: any Google account can attempt sign-in, but only allowlisted+active emails reach `/admin`. Others get "Access denied" and are signed out.
+- **Email/password**: the 3 emails can sign in once they have an account. First-time setup → use "Forgot password" on `/auth` (sends magic link/reset) **or** sign in with Google using the same Gmail address — Google creates the auth user automatically.
 
-- In `src/routes/auth.tsx`, remove the sign-in/sign-up mode toggle. Page only supports sign-in (email + password). Drop the "Need an account? Create one" link and all `signUp` code paths.
-- Keep `claimAdminIfFirst` call after successful sign-in (harmless if no longer first).
+No edits to `auth.tsx` or the gate logic.
 
-## 3. Restrict admin access to allowlisted recipients
+## 3. New page — `/admin/members`
+Create `src/routes/_authenticated/admin.members.tsx` with full CRUD on `admin_email_recipients`:
 
-- Admin access is gated by whether the signed-in user's email is in `admin_email_recipients` (the same recipient list managed in Settings).
-- Add a server function `isAdminRecipient` (in `src/lib/booking.functions.ts`) using `requireSupabaseAuth`: looks up the caller's email in `admin_email_recipients` and returns boolean. (Uses service-role client inside the handler to bypass RLS for the lookup; only returns boolean.)
-- Update `src/routes/_authenticated/route.tsx` (or the admin layout `src/routes/_authenticated/admin.tsx`) to also call `isAdminRecipient` in `beforeLoad` and `throw redirect({ to: "/auth" })` if false. This means a signed-in user who isn't an allowlisted recipient cannot view admin pages.
-- Google sign-in: enable managed Google OAuth (via `configure_social_auth`) and add a "Sign in with Google" button on `/auth`. Same allowlist gate applies — non-recipient Google users land on `/auth` with an "Access denied" message.
-- Show an "Access denied — your email is not on the admin recipient list" message on `/auth` when redirected back from a failed admin check.
+- Table of all recipients: email, label, active toggle, notification flags (new_booking / payment_proof / fully_paid), edit, delete.
+- "Add member" form (email + label + flags + active).
+- Inline **Activate / Deactivate** toggle so flipping access is one click.
+- Uses existing server fns `listAdminRecipients`, `upsertAdminRecipient`, `deleteAdminRecipient` (no new server code needed).
+- Helper note at top: "Only **active** members can access the admin. Members sign in via Google or email/password on `/auth`."
 
-## 4. Manage booking by email + reference
+Add **Members** tab to `AdminTabs` in `admin.tsx` (between Settings and the rest).
 
-- Today `/manage-booking` requires `id` + `token` from the email link. Add a fallback: when `id`/`token` are missing, render a form asking for email + booking reference (RJW-####).
-- On submit, call a new server function `getBookingByEmailAndReference({ email, reference })` that looks up the booking in `booking_requests` and returns the same shape as `getBookingForGuest`. Apply the same rate-limiting pattern used by `requestManageLink` (reuse `manage_link_requests` table or a similar IP/email throttle) to prevent enumeration.
-- On success, hydrate the page state directly (no need to email a link). Subsequent actions (balance proof upload) continue to use the existing guest token returned by the lookup, so server-side authorization is unchanged.
-- Keep the existing `/find-booking` page as-is; link to it from the new inline form for users who'd rather receive the link by email.
+## 4. Clean up settings page
+Remove the recipients section from `admin.settings.tsx` (now lives in `/admin/members`). Keep the app-settings form (deposit amount, balance due days).
 
-## 5. Book page "Recommended for your party" layout
+## 5. Validation pass
+After the migration, verify in DB:
+- `SELECT email, is_active FROM admin_email_recipients` → only xboss182 active.
+- `isAdminRecipient` returns `true` only for xboss182.
+- `/admin` is reachable for xboss182, blocked for the other two until reactivated.
 
-- In `src/routes/book.tsx`, change the "Recommended for your party" recommendations from a 3-column grid to a vertical stack of full-width row cards.
-- Each row: image on the left (fixed aspect), details (name, capacity, price, CTA) on the right, stacked on mobile.
-- No business-logic changes — only the recommendation card layout.
-
-## Technical notes
-
-- New files: none required; reuse existing components.
-- Edited files:
-  - `src/routes/index.tsx` — swap icon, drop Admin link.
-  - `src/routes/auth.tsx` — remove signup mode, add Google sign-in button, show access-denied banner.
-  - `src/routes/_authenticated/admin.tsx` (or `_authenticated/route.tsx`) — add recipient-allowlist gate.
-  - `src/lib/booking.functions.ts` — add `isAdminRecipient`, `getBookingByEmailAndReference`.
-  - `src/routes/manage-booking.tsx` — render lookup form when `id`/`token` missing, wire to new server function.
-  - `src/routes/book.tsx` — row-style recommendation cards.
-- Backend: `configure_social_auth` to enable Google. No schema changes (recipients already in `admin_email_recipients`).
+## Files
+- migration: UPDATE `admin_email_recipients` (deactivate salikin1305)
+- create: `src/routes/_authenticated/admin.members.tsx`
+- edit: `src/routes/_authenticated/admin.tsx` (add Members tab)
+- edit: `src/routes/_authenticated/admin.settings.tsx` (drop recipients section)
