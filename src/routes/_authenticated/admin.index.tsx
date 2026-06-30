@@ -242,6 +242,15 @@ function Card({
           <p className="text-sm text-foreground/70">
             {b.email} · {b.phone}
           </p>
+          <span
+            className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-[10px] uppercase tracking-widest ${
+              b.payment_method === "stripe"
+                ? "bg-emerald-100 text-emerald-800"
+                : "bg-stone-100 text-stone-700"
+            }`}
+          >
+            {b.payment_method === "stripe" ? "Card · auto-confirmed" : "Bank transfer"}
+          </span>
         </div>
         <div className="text-right">
           <p className="font-display text-2xl text-forest">
