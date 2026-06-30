@@ -11,7 +11,9 @@ import {
   deleteBooking,
   adminCreateBooking,
   listCabinsAdmin,
+  cancelAndRefundBooking,
 } from "@/lib/booking.functions";
+import { getStripeEnvironment } from "@/lib/stripe";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -116,6 +118,28 @@ function AdminPage() {
       refresh();
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : "Failed to delete");
+    }
+  }
+  async function onCancelRefund(b: Booking) {
+    if (
+      !confirm(
+        `Cancel booking ${b.payment_reference ?? ""} and refund the card payment via Stripe? This cannot be undone.`,
+      )
+    )
+      return;
+    try {
+      const res = await cancelAndRefundBooking({
+        data: { bookingId: b.id, environment: getStripeEnvironment() },
+      });
+      const lines = res.refunds.map((r) => `${r.kind}: RM ${r.amount.toFixed(2)}`);
+      const msg = lines.length
+        ? `Refunded:\n${lines.join("\n")}`
+        : "Booking cancelled (no Stripe payment to refund).";
+      const errMsg = res.errors.length ? `\n\nErrors:\n${res.errors.join("\n")}` : "";
+      alert(msg + errMsg);
+      refresh();
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Failed to cancel/refund");
     }
   }
   async function signOut() {
