@@ -45,6 +45,7 @@ type Booking = {
   locker_code?: string | null;
   deposit_amount?: number | null;
   num_rooms?: number;
+  payment_method?: string | null;
   rooms?: Array<{ id: string; cabinId: string | null; name: string; nights: number | null; total: number }>;
 };
 
@@ -241,6 +242,15 @@ function Card({
           <p className="text-sm text-foreground/70">
             {b.email} · {b.phone}
           </p>
+          <span
+            className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-[10px] uppercase tracking-widest ${
+              b.payment_method === "stripe"
+                ? "bg-emerald-100 text-emerald-800"
+                : "bg-stone-100 text-stone-700"
+            }`}
+          >
+            {b.payment_method === "stripe" ? "Card · auto-confirmed" : "Bank transfer"}
+          </span>
         </div>
         <div className="text-right">
           <p className="font-display text-2xl text-forest">
@@ -275,7 +285,11 @@ function Card({
         <Row label="Submitted" value={new Date(b.created_at).toLocaleString()} />
       </dl>
       {b.notes && <p className="mt-3 text-sm text-foreground/75">Notes: {b.notes}</p>}
-      {b.proofUrl ? (
+      {b.payment_method === "stripe" ? (
+        <p className="mt-4 text-xs text-emerald-700">
+          Paid by card — auto-confirmed. No proof required.
+        </p>
+      ) : b.proofUrl ? (
         <a
           href={b.proofUrl}
           target="_blank"

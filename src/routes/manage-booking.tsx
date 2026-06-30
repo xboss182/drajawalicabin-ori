@@ -7,6 +7,7 @@ import {
   getBookingByEmailAndReference,
 } from "@/lib/booking.functions";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
+import { isPaymentsConfigured } from "@/lib/stripe";
 
 type Booking = Awaited<ReturnType<typeof getBookingForGuest>>;
 
@@ -217,6 +218,31 @@ function ManagePage() {
               </div>
             ) : (
               <>
+                {isPaymentsConfigured() && (
+                  <div className="mt-8 rounded-2xl border border-forest/30 bg-coconut p-6">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-[0.25em] text-forest">Fastest — auto-confirm</p>
+                        <h2 className="mt-1 font-display text-xl text-forest">Pay balance by card</h2>
+                        <p className="mt-1 text-sm text-foreground/75">
+                          Card payment auto-marks your booking fully paid — no proof upload needed.
+                        </p>
+                      </div>
+                      <Link
+                        to="/checkout"
+                        search={{ id: b.id, token, kind: "balance" }}
+                        className="rounded-full bg-forest px-6 py-3 text-xs font-medium uppercase tracking-widest text-coconut hover:bg-forest/90"
+                      >
+                        Pay RM {b.remaining.toFixed(2)} by card →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                <p className="mt-8 text-[11px] uppercase tracking-[0.3em] text-stone">
+                  Or — pay manually (admin approval required)
+                </p>
+
                 <div className="mt-8 rounded-2xl border border-border bg-card p-6">
                   <p className="text-xs uppercase tracking-widest text-stone">Pay the balance</p>
                   <p className="mt-2 text-2xl font-display text-forest">RM {b.remaining.toFixed(2)}</p>
