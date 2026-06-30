@@ -399,7 +399,7 @@ function BookPage() {
             name, setName, email, setEmail, phone, setPhone,
             relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
             notes, setNotes,
-            price, previewCabin, blockedDates, totalRooms,
+            price, previewCabin, blockedDates, blockedReasonByDate, totalRooms,
             freeCabinsForType,
             submit, submitting, error,
             agreed, setAgreed,
