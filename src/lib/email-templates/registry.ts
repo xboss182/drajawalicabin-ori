@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import { template as bookingSummary } from './booking-summary'
 import { template as balanceReminder } from './balance-reminder'
 import { template as fullyPaid } from './fully-paid'
+import { template as manageLink } from './manage-link'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -24,4 +25,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'booking-summary': bookingSummary,
   'balance-reminder': balanceReminder,
   'fully-paid': fullyPaid,
+  'manage-link': manageLink,
 }
