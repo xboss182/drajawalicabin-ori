@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   createBooking,
@@ -187,28 +187,30 @@ function BookPage() {
   }, [cart, checkin, checkout, comforter, groupByType]);
 
   // Availability for every cabin (next 90 days) — needed across mixed types
-  useEffect(() => {
+  const refreshAvailability = useCallback(async () => {
     if (cabins.length === 0) return;
-    (async () => {
-      try {
-        const from = todayStr;
-        const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
-        const entries = await Promise.all(
-          cabins.map(async (c) => {
-            try {
-              const r = await getTakenDates({ data: { cabinId: c.id, from, to } });
-              return [c.id, r.dates] as const;
-            } catch {
-              return [c.id, [] as string[]] as const;
-            }
-          }),
-        );
-        setTakenByCabin(Object.fromEntries(entries));
-      } catch {
-        setTakenByCabin({});
-      }
-    })();
+    try {
+      const from = todayStr;
+      const to = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+      const entries = await Promise.all(
+        cabins.map(async (c) => {
+          try {
+            const r = await getTakenDates({ data: { cabinId: c.id, from, to } });
+            return [c.id, r.dates] as const;
+          } catch {
+            return [c.id, [] as string[]] as const;
+          }
+        }),
+      );
+      setTakenByCabin(Object.fromEntries(entries));
+    } catch {
+      setTakenByCabin({});
+    }
   }, [cabins]);
+
+  useEffect(() => {
+    refreshAvailability();
+  }, [refreshAvailability]);
 
   // Date is blocked when ANY cart line can't be satisfied that night
   const blockedDates = useMemo<string[]>(() => {
@@ -283,7 +285,13 @@ function BookPage() {
       setStep("payment");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : bt.errors.bookFailed);
+      const msg = e instanceof Error ? e.message : bt.errors.bookFailed;
+      setError(msg);
+      // If the slot was just taken by another guest, refresh the calendar
+      // so the now-unavailable dates show up as blocked immediately.
+      if (/just taken|taken/i.test(msg)) {
+        refreshAvailability();
+      }
     } finally {
       setSubmitting(false);
     }
