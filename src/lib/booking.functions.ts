@@ -389,13 +389,37 @@ export const confirmBooking = createServerFn({ method: "POST" })
     if (!isAdmin.data) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+
+    // Default balance_due_at = check_in - balance_due_days_before (if not already set)
+    let dueDays = 7;
+    try {
+      const { data: s } = await supabaseAdmin
+        .from("app_settings")
+        .select("value")
+        .eq("key", "balance_due_days_before")
+        .maybeSingle();
+      if (s?.value != null) dueDays = Number(s.value);
+    } catch {}
+    const { data: lead } = await supabaseAdmin
+      .from("booking_requests")
+      .select("check_in, balance_due_at")
+      .eq("booking_group_id", gid)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    const update: Record<string, unknown> = {
+      status: "confirmed",
+      confirmed_at: new Date().toISOString(),
+      confirmed_by: context.userId,
+    };
+    if (lead && !lead.balance_due_at) {
+      const due = new Date(lead.check_in as string);
+      due.setUTCDate(due.getUTCDate() - dueDays);
+      update.balance_due_at = due.toISOString();
+    }
     const { error } = await supabaseAdmin
       .from("booking_requests")
-      .update({
-        status: "confirmed",
-        confirmed_at: new Date().toISOString(),
-        confirmed_by: context.userId,
-      })
+      .update(update)
       .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
     return { ok: true };
