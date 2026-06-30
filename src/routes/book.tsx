@@ -553,7 +553,7 @@ function DetailsStep(props: {
                 No matching cabins for these dates — try different nights, or pick rooms manually below.
               </p>
             ) : (
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="mt-4 flex flex-col gap-3">
                 {recommendations.map((r, i) => {
                   const isCombo = !!r.combo && r.combo.length > 1;
                   return (
@@ -565,22 +565,28 @@ function DetailsStep(props: {
                           ? pickComboRecommendation(r.combo!.map((c) => c.cabinType))
                           : pickRecommendation(r.cabinType)
                       }
-                      className="rounded-xl border border-border bg-card p-4 text-left hover:border-forest hover:shadow-sm transition"
+                      className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 text-left hover:border-forest hover:shadow-sm transition"
                     >
-                      {i === 0 && (
-                        <span className="inline-block rounded-full bg-forest px-2 py-0.5 text-[9px] uppercase tracking-widest text-coconut">
-                          Best fit
-                        </span>
-                      )}
-                      <p className="mt-2 font-display text-base text-forest">
-                        {isCombo ? r.combo!.map((c) => c.name).join(" + ") : r.name}
-                      </p>
-                      <p className="mt-0.5 text-xs text-stone">
-                        Sleeps {r.capacity} · {r.nights} night{r.nights > 1 ? "s" : ""}
-                        {isCombo ? ` · ${r.combo!.length} rooms` : ""}
-                      </p>
-                      <p className="mt-2 font-display text-lg text-forest">RM {r.total.toFixed(2)}</p>
-                      <p className="mt-2 text-[10px] uppercase tracking-widest text-forest underline">Select</p>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {i === 0 && (
+                            <span className="inline-block rounded-full bg-forest px-2 py-0.5 text-[9px] uppercase tracking-widest text-coconut">
+                              Best fit
+                            </span>
+                          )}
+                          <p className="font-display text-base text-forest">
+                            {isCombo ? r.combo!.map((c) => c.name).join(" + ") : r.name}
+                          </p>
+                        </div>
+                        <p className="mt-0.5 text-xs text-stone">
+                          Sleeps {r.capacity} · {r.nights} night{r.nights > 1 ? "s" : ""}
+                          {isCombo ? ` · ${r.combo!.length} rooms` : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4 shrink-0">
+                        <p className="font-display text-lg text-forest">RM {r.total.toFixed(2)}</p>
+                        <span className="text-[10px] uppercase tracking-widest text-forest underline">Select</span>
+                      </div>
                     </button>
                   );
                 })}
