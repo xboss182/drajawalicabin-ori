@@ -49,6 +49,17 @@ function CalendarPage() {
   const firstWeekday = new Date(cursor).getUTCDay();
   const blanks = Array.from({ length: firstWeekday }, (_, i) => i);
 
+  // Color palette per room type. Same hue throughout; intensity scales with fill.
+  const TYPE_COLORS: Record<string, { light: string; mid: string; full: string; dot: string; text: string }> = {
+    Twin:   { light: "bg-sky-50",     mid: "bg-sky-200",     full: "bg-sky-500",     dot: "bg-sky-500",     text: "text-sky-900" },
+    Queen:  { light: "bg-rose-50",    mid: "bg-rose-200",    full: "bg-rose-500",    dot: "bg-rose-500",    text: "text-rose-900" },
+    Triple: { light: "bg-amber-50",   mid: "bg-amber-200",   full: "bg-amber-500",   dot: "bg-amber-500",   text: "text-amber-900" },
+    Family: { light: "bg-emerald-50", mid: "bg-emerald-200", full: "bg-emerald-500", dot: "bg-emerald-500", text: "text-emerald-900" },
+  };
+  const fallback = { light: "bg-stone-50", mid: "bg-stone-200", full: "bg-stone-500", dot: "bg-stone-500", text: "text-stone-900" };
+  const colorsFor = (t: string) => TYPE_COLORS[t] ?? fallback;
+  const typeKeys = Object.keys(TYPE_COLORS);
+
   return (
     <main className="min-h-[100svh] bg-background text-foreground">
       <header className="border-b border-border bg-coconut">
@@ -87,11 +98,15 @@ function CalendarPage() {
           </div>
         </div>
 
-        <div className="mt-4 flex gap-3 text-[11px] text-stone">
-          <Legend color="bg-green-100" label="Available" />
-          <Legend color="bg-amber-200" label="Partially booked" />
-          <Legend color="bg-red-200" label="Full" />
-          <span className="ml-2">● = fully paid</span>
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-stone">
+          <span className="font-medium text-foreground">Room types:</span>
+          {typeKeys.map((t) => (
+            <span key={t} className="flex items-center gap-1.5">
+              <span className={`inline-block h-3 w-3 rounded ${colorsFor(t).full}`} />
+              {t}
+            </span>
+          ))}
+          <span className="ml-2">Light = some booked · Solid = fully booked · ● = fully paid</span>
         </div>
 
         <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card">
@@ -107,20 +122,14 @@ function CalendarPage() {
               <div key={`b${b}`} className="h-24 border-b border-r border-border/50 bg-coconut/30" />
             ))}
             {days.map((d) => {
-              const totals = Object.values(d.byType).reduce(
-                (a, t) => ({ booked: a.booked + t.booked, total: a.total + t.total }),
-                { booked: 0, total: 0 },
-              );
-              const ratio = totals.total > 0 ? totals.booked / totals.total : 0;
-              const bg =
-                ratio === 0 ? "bg-green-50" : ratio >= 1 ? "bg-red-100" : "bg-amber-50";
               const allBookings = Object.values(d.byType).flatMap((t) => t.bookings);
               const fullyPaid = allBookings.some((b) => b.status === "fully_paid");
+              const typesWithBookings = Object.entries(d.byType).filter(([, s]) => s.booked > 0);
               return (
                 <button
                   key={d.date}
                   onClick={() => setSelected(d)}
-                  className={`h-24 border-b border-r border-border/50 px-2 py-1 text-left transition hover:brightness-95 ${bg}`}
+                  className="h-28 border-b border-r border-border/50 bg-card px-1.5 py-1 text-left transition hover:brightness-95"
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">
@@ -128,15 +137,27 @@ function CalendarPage() {
                     </span>
                     {fullyPaid && <span className="text-forest">●</span>}
                   </div>
-                  <div className="mt-1 space-y-0.5 text-[10px] text-stone">
-                    {Object.entries(d.byType).map(([type, slot]) => (
-                      <div key={type} className="flex justify-between">
-                        <span className="truncate">{type}</span>
-                        <span className={slot.booked >= slot.total ? "text-red-700" : ""}>
-                          {slot.booked}/{slot.total}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="mt-1 space-y-0.5">
+                    {typesWithBookings.length === 0 && (
+                      <span className="text-[10px] text-stone">Available</span>
+                    )}
+                    {typesWithBookings.map(([type, slot]) => {
+                      const c = colorsFor(type);
+                      const full = slot.booked >= slot.total;
+                      const bg = full ? c.full : c.mid;
+                      const textColor = full ? "text-white" : c.text;
+                      return (
+                        <div
+                          key={type}
+                          className={`flex items-center justify-between rounded px-1.5 py-0.5 text-[10px] font-medium ${bg} ${textColor}`}
+                        >
+                          <span className="truncate">{type}</span>
+                          <span>
+                            {slot.booked}/{slot.total}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </button>
               );
@@ -185,14 +206,5 @@ function CalendarPage() {
         )}
       </section>
     </main>
-  );
-}
-
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <span className="flex items-center gap-1">
-      <span className={`inline-block h-3 w-3 rounded ${color}`} />
-      {label}
-    </span>
   );
 }
