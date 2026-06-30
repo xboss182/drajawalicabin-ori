@@ -462,17 +462,20 @@ function DetailsStep(props: {
                   : undefined
               }
               onSelect={(r) => {
-                if (r?.from) setCheckin(formatLocalDate(r.from));
-                if (r?.to) {
-                  const co = new Date(r.to.getTime() + 86400000);
-                  setCheckout(formatLocalDate(co));
-                }
+                if (!r?.from) return;
+                const from = r.from;
+                const to = r.to && r.to.getTime() !== from.getTime() ? r.to : from;
+                setCheckin(formatLocalDate(from));
+                setCheckout(formatLocalDate(new Date(to.getTime() + 86400000)));
               }}
-              disabled={[{ before: new Date() }, ...blockedDates.map((d) => new Date(d))]}
+              disabled={[{ before: new Date(new Date().setHours(0, 0, 0, 0)) }, ...blockedDates.map((d) => new Date(d))]}
               modifiers={{ booked: blockedDates.map((d) => new Date(d)) }}
               modifiersClassNames={{
                 booked:
                   "bg-red-100 text-red-700 line-through opacity-90 hover:bg-red-100",
+              }}
+              classNames={{
+                today: "font-semibold text-forest underline underline-offset-4",
               }}
               className="pointer-events-auto p-0"
             />
