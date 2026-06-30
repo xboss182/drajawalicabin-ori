@@ -503,26 +503,50 @@ function DetailsStep(props: {
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
-        {isAnyCabin && recommendations.length > 0 && (
+        {isAnyCabin && (
           <div className="mb-6 rounded-2xl border border-forest/30 bg-forest/[0.04] p-5">
             <p className="text-[11px] uppercase tracking-[0.3em] text-forest">Recommended for your party</p>
-            <p className="mt-1 text-xs text-stone">Based on {guests} guest{Number(guests.replace("+","")) > 1 ? "s" : ""} and your selected dates. Pick the best fit:</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              {recommendations.map((r, i) => (
-                <button
-                  key={r.cabinId}
-                  type="button"
-                  onClick={() => pickRecommendation(r.cabinType)}
-                  className="rounded-xl border border-border bg-card p-4 text-left hover:border-forest hover:shadow-sm transition"
-                >
-                  {i === 0 && <span className="inline-block rounded-full bg-forest px-2 py-0.5 text-[9px] uppercase tracking-widest text-coconut">Best fit</span>}
-                  <p className="mt-2 font-display text-base text-forest">{r.name}</p>
-                  <p className="mt-0.5 text-xs text-stone">Sleeps {r.capacity} · {r.nights} night{r.nights > 1 ? "s" : ""}</p>
-                  <p className="mt-2 font-display text-lg text-forest">RM {r.total.toFixed(2)}</p>
-                  <p className="mt-2 text-[10px] uppercase tracking-widest text-forest underline">Select</p>
-                </button>
-              ))}
-            </div>
+            <p className="mt-1 text-xs text-stone">
+              Based on {guests} guest{Number(guests.replace("+", "")) > 1 ? "s" : ""} and your selected dates.
+            </p>
+            {recommendations.length === 0 ? (
+              <p className="mt-3 text-sm text-stone">
+                No matching cabins for these dates — try different nights, or pick rooms manually below.
+              </p>
+            ) : (
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {recommendations.map((r, i) => {
+                  const isCombo = !!r.combo && r.combo.length > 1;
+                  return (
+                    <button
+                      key={`${r.cabinId}-${i}`}
+                      type="button"
+                      onClick={() =>
+                        isCombo
+                          ? pickComboRecommendation(r.combo!.map((c) => c.cabinType))
+                          : pickRecommendation(r.cabinType)
+                      }
+                      className="rounded-xl border border-border bg-card p-4 text-left hover:border-forest hover:shadow-sm transition"
+                    >
+                      {i === 0 && (
+                        <span className="inline-block rounded-full bg-forest px-2 py-0.5 text-[9px] uppercase tracking-widest text-coconut">
+                          Best fit
+                        </span>
+                      )}
+                      <p className="mt-2 font-display text-base text-forest">
+                        {isCombo ? r.combo!.map((c) => c.name).join(" + ") : r.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-stone">
+                        Sleeps {r.capacity} · {r.nights} night{r.nights > 1 ? "s" : ""}
+                        {isCombo ? ` · ${r.combo!.length} rooms` : ""}
+                      </p>
+                      <p className="mt-2 font-display text-lg text-forest">RM {r.total.toFixed(2)}</p>
+                      <p className="mt-2 text-[10px] uppercase tracking-widest text-forest underline">Select</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
