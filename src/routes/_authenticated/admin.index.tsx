@@ -285,7 +285,11 @@ function Card({
         <Row label="Submitted" value={new Date(b.created_at).toLocaleString()} />
       </dl>
       {b.notes && <p className="mt-3 text-sm text-foreground/75">Notes: {b.notes}</p>}
-      {b.proofUrl ? (
+      {b.payment_method === "stripe" ? (
+        <p className="mt-4 text-xs text-emerald-700">
+          Paid by card — auto-confirmed. No proof required.
+        </p>
+      ) : b.proofUrl ? (
         <a
           href={b.proofUrl}
           target="_blank"
