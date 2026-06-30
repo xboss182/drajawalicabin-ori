@@ -261,10 +261,14 @@ function BookPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // Date is blocked when ANY cart line can't be satisfied that night
-  const blockedDates = useMemo<string[]>(() => {
-    if (cart.length === 0) return [];
-    const blocked = new Set<string>();
+  // Date is blocked when ANY cart line can't be satisfied that night.
+  // We also return a per-date human-readable reason for tooltips.
+  const { blockedDates, blockedReasonByDate } = useMemo<{
+    blockedDates: string[];
+    blockedReasonByDate: Map<string, string>;
+  }>(() => {
+    if (cart.length === 0) return { blockedDates: [], blockedReasonByDate: new Map() };
+    const reasonByDate = new Map<string, string[]>();
     for (const it of cart) {
       const g = groupByType.get(it.cabinType);
       if (!g) continue;
@@ -276,10 +280,21 @@ function BookPage() {
       }
       const total = g.rooms.length;
       for (const [d, n] of counts) {
-        if (total - n < it.qty) blocked.add(d);
+        const free = total - n;
+        if (free < it.qty) {
+          const msg =
+            free === 0
+              ? `${g.label}: all ${total} rooms booked`
+              : `${g.label}: only ${free} of ${total} free (need ${it.qty})`;
+          const arr = reasonByDate.get(d) ?? [];
+          arr.push(msg);
+          reasonByDate.set(d, arr);
+        }
       }
     }
-    return Array.from(blocked);
+    const map = new Map<string, string>();
+    for (const [d, msgs] of reasonByDate) map.set(d, msgs.join(" · "));
+    return { blockedDates: Array.from(map.keys()), blockedReasonByDate: map };
   }, [cart, groupByType, takenByCabin]);
 
   function freeCabinsForType(type: string): Cabin[] {
