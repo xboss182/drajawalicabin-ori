@@ -452,8 +452,12 @@ function DetailsStep(props: {
   setAgreed: (b: boolean) => void;
   paymentType: "deposit" | "full";
   setPaymentType: (p: "deposit" | "full") => void;
-  recommendations: Array<{ cabinId: string; cabinType: string; name: string; capacity: number; nights: number; total: number }>;
+  recommendations: Array<{
+    cabinId: string; cabinType: string; name: string; capacity: number; nights: number; total: number;
+    combo?: Array<{ cabinType: string; name: string; capacity: number }>;
+  }>;
   pickRecommendation: (type: string) => void;
+  pickComboRecommendation: (types: string[]) => void;
   isAnyCabin: boolean;
 }) {
   const { t } = useLanguage();
@@ -467,7 +471,7 @@ function DetailsStep(props: {
     notes, setNotes,
     price, previewCabin, blockedDates, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
-    paymentType, setPaymentType, recommendations, pickRecommendation, isAnyCabin,
+    paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
   } = props;
 
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
