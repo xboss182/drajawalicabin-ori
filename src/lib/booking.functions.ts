@@ -1287,3 +1287,86 @@ export const listEmailLog = createServerFn({ method: "POST" })
 
     return { rows: rows ?? [], totalCount: count ?? 0, kinds, summary };
   });
+
+// ============== PUBLIC: recommend best-fit cabins for "Any cabin" ==============
+
+const recommendSchema = z.object({
+  checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  guests: z.number().int().min(1).max(12),
+  comforter: z.boolean().optional(),
+});
+
+export const recommendCabins = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => recommendSchema.parse(d))
+  .handler(async ({ data }) => {
+    if (new Date(data.checkOut) <= new Date(data.checkIn)) {
+      return { picks: [] };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Last booked night (checkout is exclusive)
+    const co = new Date(data.checkOut);
+    co.setUTCDate(co.getUTCDate() - 1);
+    const lastNightStr = co.toISOString().slice(0, 10);
+
+    // Fetch active cabins that fit the guest count
+    const { data: cabins, error } = await supabaseAdmin
+      .from("cabins")
+      .select("id, name, cabin_type, capacity, weekday_rate, weekend_rate, school_holiday_rate")
+      .eq("is_active", true)
+      .gte("capacity", data.guests)
+      .order("capacity");
+    if (error) throw new Error(error.message);
+    if (!cabins || cabins.length === 0) return { picks: [] };
+
+    // For each cabin type group, pick one available representative (cheapest by display_order already)
+    type Pick = {
+      cabinId: string;
+      cabinType: string;
+      name: string;
+      capacity: number;
+      nights: number;
+      total: number;
+      score: number;
+    };
+    const byType = new Map<string, Pick>();
+
+    for (const c of cabins) {
+      const { data: taken } = await supabaseAdmin.rpc("cabin_taken_dates", {
+        _cabin_id: c.id,
+        _from: data.checkIn,
+        _to: lastNightStr,
+      });
+      if (taken && taken.length > 0) continue;
+
+      const { data: priceRows } = await supabaseAdmin.rpc("compute_booking_price", {
+        _cabin_id: c.id,
+        _check_in: data.checkIn,
+        _check_out: data.checkOut,
+        _comforter: data.comforter ?? false,
+      });
+      const price = Array.isArray(priceRows) ? priceRows[0] : priceRows;
+      if (!price) continue;
+      const total = Number(price.total);
+      // Lower score wins: prefer just-right capacity (less excess), then cheaper
+      const score = (Number(c.capacity) - data.guests) * 1000 + total;
+      const existing = byType.get(c.cabin_type);
+      if (!existing || score < existing.score) {
+        byType.set(c.cabin_type, {
+          cabinId: c.id,
+          cabinType: c.cabin_type,
+          name: c.name.replace(/\s*\d+\s*$/, "").trim(),
+          capacity: Number(c.capacity),
+          nights: Number(price.nights),
+          total,
+          score,
+        });
+      }
+    }
+
+    const picks = Array.from(byType.values())
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3);
+    return { picks };
+  });
