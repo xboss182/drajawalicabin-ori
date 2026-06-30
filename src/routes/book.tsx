@@ -116,6 +116,7 @@ function BookPage() {
   const isAnyCabin = (search.room ?? "").toLowerCase().includes("any");
   const [recommendations, setRecommendations] = useState<Array<{
     cabinId: string; cabinType: string; name: string; capacity: number; nights: number; total: number;
+    combo?: Array<{ cabinType: string; name: string; capacity: number }>;
   }>>([]);
 
   // Load cabins
@@ -252,6 +253,14 @@ function BookPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function pickComboRecommendation(types: string[]) {
+    // Group repeats into qty per type
+    const counts = new Map<string, number>();
+    for (const t of types) counts.set(t, (counts.get(t) ?? 0) + 1);
+    setCart(() => Array.from(counts.entries()).map(([cabinType, qty]) => ({ cabinType, qty })));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   // Date is blocked when ANY cart line can't be satisfied that night
   const blockedDates = useMemo<string[]>(() => {
     if (cart.length === 0) return [];
@@ -381,6 +390,7 @@ function BookPage() {
             agreed, setAgreed,
             paymentType, setPaymentType,
             recommendations, pickRecommendation, isAnyCabin,
+            pickComboRecommendation,
           }}
         />
       )}
@@ -443,8 +453,12 @@ function DetailsStep(props: {
   setAgreed: (b: boolean) => void;
   paymentType: "deposit" | "full";
   setPaymentType: (p: "deposit" | "full") => void;
-  recommendations: Array<{ cabinId: string; cabinType: string; name: string; capacity: number; nights: number; total: number }>;
+  recommendations: Array<{
+    cabinId: string; cabinType: string; name: string; capacity: number; nights: number; total: number;
+    combo?: Array<{ cabinType: string; name: string; capacity: number }>;
+  }>;
   pickRecommendation: (type: string) => void;
+  pickComboRecommendation: (types: string[]) => void;
   isAnyCabin: boolean;
 }) {
   const { t } = useLanguage();
@@ -458,7 +472,7 @@ function DetailsStep(props: {
     notes, setNotes,
     price, previewCabin, blockedDates, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
-    paymentType, setPaymentType, recommendations, pickRecommendation, isAnyCabin,
+    paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
   } = props;
 
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
@@ -489,26 +503,50 @@ function DetailsStep(props: {
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
-        {isAnyCabin && recommendations.length > 0 && (
+        {isAnyCabin && (
           <div className="mb-6 rounded-2xl border border-forest/30 bg-forest/[0.04] p-5">
             <p className="text-[11px] uppercase tracking-[0.3em] text-forest">Recommended for your party</p>
-            <p className="mt-1 text-xs text-stone">Based on {guests} guest{Number(guests.replace("+","")) > 1 ? "s" : ""} and your selected dates. Pick the best fit:</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              {recommendations.map((r, i) => (
-                <button
-                  key={r.cabinId}
-                  type="button"
-                  onClick={() => pickRecommendation(r.cabinType)}
-                  className="rounded-xl border border-border bg-card p-4 text-left hover:border-forest hover:shadow-sm transition"
-                >
-                  {i === 0 && <span className="inline-block rounded-full bg-forest px-2 py-0.5 text-[9px] uppercase tracking-widest text-coconut">Best fit</span>}
-                  <p className="mt-2 font-display text-base text-forest">{r.name}</p>
-                  <p className="mt-0.5 text-xs text-stone">Sleeps {r.capacity} · {r.nights} night{r.nights > 1 ? "s" : ""}</p>
-                  <p className="mt-2 font-display text-lg text-forest">RM {r.total.toFixed(2)}</p>
-                  <p className="mt-2 text-[10px] uppercase tracking-widest text-forest underline">Select</p>
-                </button>
-              ))}
-            </div>
+            <p className="mt-1 text-xs text-stone">
+              Based on {guests} guest{Number(guests.replace("+", "")) > 1 ? "s" : ""} and your selected dates.
+            </p>
+            {recommendations.length === 0 ? (
+              <p className="mt-3 text-sm text-stone">
+                No matching cabins for these dates — try different nights, or pick rooms manually below.
+              </p>
+            ) : (
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {recommendations.map((r, i) => {
+                  const isCombo = !!r.combo && r.combo.length > 1;
+                  return (
+                    <button
+                      key={`${r.cabinId}-${i}`}
+                      type="button"
+                      onClick={() =>
+                        isCombo
+                          ? pickComboRecommendation(r.combo!.map((c) => c.cabinType))
+                          : pickRecommendation(r.cabinType)
+                      }
+                      className="rounded-xl border border-border bg-card p-4 text-left hover:border-forest hover:shadow-sm transition"
+                    >
+                      {i === 0 && (
+                        <span className="inline-block rounded-full bg-forest px-2 py-0.5 text-[9px] uppercase tracking-widest text-coconut">
+                          Best fit
+                        </span>
+                      )}
+                      <p className="mt-2 font-display text-base text-forest">
+                        {isCombo ? r.combo!.map((c) => c.name).join(" + ") : r.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-stone">
+                        Sleeps {r.capacity} · {r.nights} night{r.nights > 1 ? "s" : ""}
+                        {isCombo ? ` · ${r.combo!.length} rooms` : ""}
+                      </p>
+                      <p className="mt-2 font-display text-lg text-forest">RM {r.total.toFixed(2)}</p>
+                      <p className="mt-2 text-[10px] uppercase tracking-widest text-forest underline">Select</p>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -545,7 +583,7 @@ function DetailsStep(props: {
           <div className="mt-4 overflow-x-auto">
             <Calendar
               mode="range"
-              numberOfMonths={2}
+              numberOfMonths={1}
               selected={
                 checkin && checkout && new Date(checkout) > new Date(checkin)
                   ? { from: parseLocalDate(checkin), to: new Date(parseLocalDate(checkout).getTime() - 86400000) }
@@ -736,7 +774,21 @@ function DetailsStep(props: {
         <div className="mt-8 rounded-2xl border border-border bg-card p-5">
           <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.terms.eyebrow}</p>
           <h3 className="mt-2 font-display text-lg text-forest">{bt.terms.title}</h3>
-          <p className="mt-2 text-sm text-foreground/75">{bt.terms.summary}</p>
+          {paymentType === "deposit" ? (
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-foreground/80">
+              <li>RM 50 deposit secures your dates once we verify the receipt.</li>
+              <li>Balance is due 7 days before check-in; we'll email a reminder.</li>
+              <li>Cancellations within 7 days of arrival are non-refundable.</li>
+              <li>Locker code is shared on the morning of check-in via WhatsApp.</li>
+            </ul>
+          ) : (
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-foreground/80">
+              <li>Pay the full amount now — no balance step later.</li>
+              <li>Locker code is issued on WhatsApp once we verify your receipt.</li>
+              <li>Cancellations within 7 days of arrival are non-refundable.</li>
+              <li>Refunds for earlier cancellations are processed within 7 working days.</li>
+            </ul>
+          )}
           <label className="mt-4 flex items-start gap-3">
             <input
               type="checkbox"
@@ -744,7 +796,11 @@ function DetailsStep(props: {
               onChange={(e) => setAgreed(e.target.checked)}
               className="mt-1 h-4 w-4 accent-forest"
             />
-            <span className="text-sm leading-relaxed text-foreground/85">{bt.terms.agree}</span>
+            <span className="text-sm leading-relaxed text-foreground/85">
+              {paymentType === "deposit"
+                ? "I agree to the property rules (RM 50 deposit to secure dates, balance due 7 days before check-in, 7-day cancellation policy)."
+                : "I agree to the property rules (full payment now, locker code on verification, 7-day cancellation policy)."}
+            </span>
           </label>
         </div>
 
