@@ -556,18 +556,20 @@ function DetailsStep(props: {
           </ul>
 
           {remainingGroups.length > 0 && (
-            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
-              <span className="text-xs uppercase tracking-widest text-stone">Add another type</span>
-              {remainingGroups.map((g) => (
-                <button
-                  key={g.type}
-                  type="button"
-                  onClick={() => addCartLine(g.type)}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-forest hover:bg-coconut"
-                >
-                  <Plus className="h-3.5 w-3.5" /> {g.label}
-                </button>
-              ))}
+            <div className="mt-4 border-t border-border pt-4">
+              <p className="text-xs uppercase tracking-widest text-stone">Add another room</p>
+              <div className="mt-2 flex flex-nowrap items-center gap-2 overflow-x-auto">
+                {remainingGroups.map((g) => (
+                  <button
+                    key={g.type}
+                    type="button"
+                    onClick={() => addCartLine(g.type)}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-forest hover:bg-coconut"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> {g.label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
