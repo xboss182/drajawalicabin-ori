@@ -187,7 +187,7 @@ function BookPage() {
   }, [cart, checkin, checkout, comforter, groupByType]);
 
   // Availability for every cabin (next 90 days) — needed across mixed types
-  const refreshAvailability = React.useCallback(async () => {
+  const refreshAvailability = useCallback(async () => {
     if (cabins.length === 0) return;
     try {
       const from = todayStr;
