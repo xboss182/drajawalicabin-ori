@@ -459,6 +459,7 @@ function DetailsStep(props: {
   price: { nights: number; subtotal: number; comforter_total: number; total: number } | null;
   previewCabin?: Cabin;
   blockedDates: string[];
+  blockedReasonByDate: Map<string, string>;
   totalRooms: number;
   freeCabinsForType: (type: string) => Cabin[];
   submit: (e: React.FormEvent) => void;
