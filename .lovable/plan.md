@@ -1,75 +1,111 @@
-# Mixed cabin-type booking
+## Admin dashboard backend expansion
 
-Let a guest book several rooms of *different* cabin types (e.g. 1 Deluxe Queen + 1 Family Suite) in a single reservation, with one payment, one reference, and one confirmation email.
+All new surfaces live under `/admin/*` (TanStack `_authenticated/admin.*.tsx`), gated by existing `has_role('admin')`. Top tab bar on the existing admin page: **Bookings · Invoices · Calendar · Cabins · Holidays · Stats · Settings**.
 
-## UX on `/book`
+### 1. Invoice viewer (per booking, 2‑step payment)
 
-Replace the single "Cabin type" + "Rooms (1–2)" controls with a **room cart**:
+The current schema already models a 2‑step payment:
+- `deposit_amount` (the RM 50 booking deposit) + first proof → status `awaiting_review` → admin **Confirm payment** → `confirmed`.
+- Balance proof → `balance_paid_at` → admin **Mark fully paid + set locker code** → `fully_paid`.
+
+New `/admin/invoice/$id` route renders a printable invoice for a booking group:
+- Header: logo, reference, status badge, issue date.
+- Guest block: name, email, phone.
+- Stay block: check‑in/out, nights, guests, comforter.
+- Rooms table: each row from the group (cabin name, nights, subtotal, comforter portion, line total).
+- Payment schedule table:
+  1. Booking deposit — RM 50 (or `deposit_amount`) — paid date from `created_at` of the deposit proof, status badge, link to deposit proof file.
+  2. Balance — `total − deposit` — due date = check‑in − N days (admin‑editable, see Settings), paid date = `balance_paid_at`, status, link to balance proof file.
+- Totals + "Locker code: …" once `fully_paid`.
+- Buttons: **Print**, **Download PDF** (browser print‑to‑PDF, no new lib), **Open in new tab**, **Resend confirmation email**.
+
+A "View invoice" link is added on every admin booking card.
+
+New server fn `getInvoice({ bookingId })` (admin‑only) returns the aggregated group + both proof signed URLs + schedule fields. Re‑uses `listBookings` aggregation logic.
+
+### 2. Balance due‑date scheduling
+
+Add `balance_due_at TIMESTAMPTZ` column to `booking_requests` (migration). On `confirmBooking`, default it to `check_in − settings.balance_due_days_before`. Admin can edit it from the invoice view:
+
+- New server fn `setBalanceDueAt({ bookingId, dueAt })` updates every row in the group.
+- The existing `send-balance-reminders` cron route already exists at `src/routes/api/public/hooks/send-balance-reminders.ts` — it will switch from "computed offset" to reading `balance_due_at` directly.
+
+### 3. Live calendar occupancy
+
+New route `/admin/calendar`. Month view (prev/next month controls). Each day cell shows, per cabin type:
+- `booked X / Y` (occupied / total active cabins of that type), where occupied = any active group with `check_in ≤ day < check_out`.
+- Color: green (0%), amber (partial), red (full).
+- Click a day → side panel lists each booking on that day (reference, guest, cabin, status, link to invoice).
+
+New server fn `getOccupancy({ from, to })` (admin‑only): runs a single SQL aggregating `booking_requests` joined to `cabins`, returning `[{ date, byType: { typeName: { booked, total, bookings: [...] } } }]`. Uses statuses `confirmed`, `fully_paid`, `awaiting_review`, and live `pending_payment` (hold not expired) — matches `cabin_taken_dates` semantics so the UI matches what guests see blocked.
+
+A small legend explains the colors and includes "Fully paid" markers (a filled dot) so the owner can scan which booked dates are already paid in full vs still awaiting balance.
+
+### 4. Admin email recipients (multi‑recipient, editable)
+
+Today `src/lib/config.server.ts` reads owner address from env. Replace with a DB‑backed list editable from admin.
+
+New table `public.admin_email_recipients`:
+- `email TEXT NOT NULL UNIQUE`
+- `label TEXT` (e.g. "Owner", "Front desk")
+- `notify_new_booking BOOLEAN DEFAULT true`
+- `notify_payment_proof BOOLEAN DEFAULT true`
+- `notify_fully_paid BOOLEAN DEFAULT true`
+- `is_active BOOLEAN DEFAULT true`
+- timestamps
+
+RLS: only `has_role(auth.uid(),'admin')` can SELECT/INSERT/UPDATE/DELETE; service_role full access.
+
+New `/admin/settings` route with two cards:
+- **Notification recipients** — table with inline add/edit/delete, per‑event checkboxes.
+- **Payment settings** — `deposit_amount_default` (RM 50), `balance_due_days_before` (default 7). Stored in a `public.app_settings` single‑row table or as rows in a key/value table.
+
+Server fns: `listAdminRecipients`, `upsertAdminRecipient`, `deleteAdminRecipient`, `getAppSettings`, `updateAppSettings` — all admin‑gated.
+
+`src/lib/email.server.ts` updated: when sending any admin notification (new booking, proof uploaded, fully paid), it queries active recipients filtered by the matching `notify_*` flag and enqueues one email per recipient (idempotency key includes recipient email).
+
+### 5. Cabin & rate management
+
+`/admin/cabins`. Editable: `name`, `cabin_type`, `capacity`, `weekday_rate`, `weekend_rate`, `school_holiday_rate`, `is_active`. Soft‑disable via `is_active` to preserve history. Server fns: `listCabinsAdmin`, `upsertCabin`, `setCabinActive`.
+
+### 6. School holidays manager
+
+`/admin/holidays`. CRUD over `school_holidays`. Server fns: `listHolidays`, `upsertHoliday`, `deleteHoliday`. Validates `ends_on ≥ starts_on`. `compute_booking_price` already reads this table.
+
+### 7. Stats & email‑log dashboard
+
+`/admin/stats`. Two sections.
+
+**Bookings stats** (date range, default last 30 days):
+- Cards: total reservations, confirmed revenue, deposit‑only revenue, nights sold, occupancy %.
+- Per‑cabin‑type table.
+
+**Email delivery** (rules from the email dashboard guide):
+- Filters: time range (24h/7d/30d/custom), template name, status.
+- Stat cards: unique emails, sent, failed, suppressed — counted with `DISTINCT ON (message_id)`.
+- Paginated table (50/page).
+
+Server fns: `getBookingStats`, `listEmailLog`.
+
+### Migrations (single file)
 
 ```text
-┌─ Your rooms ────────────────────────────────────┐
-│ • Deluxe Queen   [-] 1 [+]    RM 280/night  ✕   │
-│ • Family Suite   [-] 1 [+]    RM 480/night  ✕   │
-│ [+ Add another cabin type]                      │
-└─────────────────────────────────────────────────┘
+1. ALTER booking_requests ADD COLUMN balance_due_at timestamptz;
+2. CREATE TABLE admin_email_recipients (...);
+   GRANTs to authenticated + service_role; RLS + has_role('admin') policies.
+3. CREATE TABLE app_settings (key text pk, value jsonb, updated_at);
+   GRANTs + admin-only RLS. Seed { deposit_amount_default: 50, balance_due_days_before: 7 }.
+4. Backfill balance_due_at on existing confirmed/fully_paid rows using check_in − 7 days.
 ```
 
-- Each line = a cabin type with a qty 1..(rooms available in that type).
-- "Add another cabin type" shows a dropdown of remaining types not yet in the cart.
-- Calendar shows blocked dates = any date where the cart can't be satisfied (free rooms in any selected type < requested qty for that type).
-- Price preview sums across all cart lines (nights × type rate × qty + comforter × total rooms × nights).
-- Guest/contact fields, comforter toggle, payment step are unchanged — comforter applies to all rooms.
+No changes to `auth`, `storage`, `realtime`, `supabase_functions`, `vault`.
 
-Single-type bookings still work — the cart just has one line.
+### Files touched
 
-## Server changes (`src/lib/booking.functions.ts`)
-
-`createBooking` input becomes:
-
-```ts
-items: Array<{ cabinType: string; numRooms: number }>  // replaces cabinId + numRooms
-```
-
-Handler logic:
-1. For each item, resolve available cabins of that type for the date range (reusing `cabin_taken_dates`); if `available < numRooms` → throw "those dates were just taken".
-2. Compute price per item via `compute_booking_price` against one cabin of that type × qty, sum totals.
-3. Generate one `payment_reference` + one `booking_group_id` (uuid).
-4. Insert **one `booking_requests` row per assigned cabin** (qty rows per item), all sharing `booking_group_id`, `payment_reference`, `guest_token`, contact fields, dates, hold expiry. Each row keeps its own `cabin_id`, its own room's `subtotal` / `comforter_total` / `total_amount`. `num_rooms` stays 1 on each row.
-5. Return `{ bookingId: <first row id>, reference, total: <sum>, holdExpiresAt, guestToken, groupId }`.
-
-`attachPaymentProof` / `attachBalanceProof`: look up by `payment_reference` and update **all rows in the group** in one statement (path + status). Confirmation email is sent once, summarising every room in the group.
-
-`getBookingForGuest`: load all rows where `guest_token` matches; return an aggregate `{ reference, status, total, rooms: [{ roomType, cabinName, nights, subtotal, comforterTotal }] }`. Admin `listBookings` groups rows by `booking_group_id` so the dashboard shows one card per reservation with N rooms inside; confirm/reject act on the whole group.
-
-## DB migration
-
-```sql
-ALTER TABLE public.booking_requests
-  ADD COLUMN booking_group_id uuid;
-CREATE INDEX ON public.booking_requests (booking_group_id);
--- backfill existing rows so each old booking is its own group
-UPDATE public.booking_requests SET booking_group_id = id WHERE booking_group_id IS NULL;
-ALTER TABLE public.booking_requests
-  ALTER COLUMN booking_group_id SET NOT NULL,
-  ALTER COLUMN booking_group_id SET DEFAULT gen_random_uuid();
-```
-
-`cabin_taken_dates` already handles per-cabin and per-type contention correctly — no SQL function change needed, because each room is now its own row with `num_rooms = 1`.
-
-## Email
-
-`renderBookingSummaryEmail` (in `src/lib/email.server.ts`) is updated to accept a `rooms[]` array and render a per-room breakdown plus the aggregate total. The pipeline (single enqueue per reservation via `email_outbox`) is unchanged.
-
-## Out of scope
-
-- Home page search bar — stays as today (date + guests + single cabin type / "Any cabin"); the cart only lives on `/book`. The home-page "room" param still pre-selects the first cart line.
-- Admin per-room edits — admin still acts on the whole group.
-- Raising the per-type cap above current inventory.
-
-## Files touched
-
-- `supabase/migrations/<new>.sql` — add `booking_group_id` + backfill.
-- `src/lib/booking.functions.ts` — new `items[]` input, group-aware create/attach/get/list.
-- `src/lib/email.server.ts` — multi-room summary template.
-- `src/routes/book.tsx` — room cart UI, multi-type availability, aggregated price.
-- `src/routes/manage-booking.tsx` + `src/routes/_authenticated/admin.tsx` — render the room list per reservation.
+- `supabase/migrations/<new>.sql` — schema above.
+- `src/lib/booking.functions.ts` — `getInvoice`, `setBalanceDueAt`, `getOccupancy`, `listAdminRecipients`, `upsertAdminRecipient`, `deleteAdminRecipient`, `getAppSettings`, `updateAppSettings`, `listCabinsAdmin`, `upsertCabin`, `setCabinActive`, `listHolidays`, `upsertHoliday`, `deleteHoliday`, `getBookingStats`, `listEmailLog`.
+- `src/lib/email.server.ts` — admin notifications fan out to active recipients per event flag.
+- `src/lib/config.server.ts` — owner email source becomes the new table (env kept as fallback seed).
+- `src/routes/api/public/hooks/send-balance-reminders.ts` — read `balance_due_at`.
+- `src/routes/_authenticated/admin.tsx` — top tab bar + "View invoice" link per card.
+- New routes: `admin.invoice.$id.tsx`, `admin.calendar.tsx`, `admin.cabins.tsx`, `admin.holidays.tsx`, `admin.stats.tsx`, `admin.settings.tsx`.

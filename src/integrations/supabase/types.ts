@@ -14,9 +14,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_email_recipients: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_active: boolean
+          label: string | null
+          notify_fully_paid: boolean
+          notify_new_booking: boolean
+          notify_payment_proof: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          notify_fully_paid?: boolean
+          notify_new_booking?: boolean
+          notify_payment_proof?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          notify_fully_paid?: boolean
+          notify_new_booking?: boolean
+          notify_payment_proof?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       booking_requests: {
         Row: {
           balance_amount: number | null
+          balance_due_at: string | null
           balance_paid_at: string | null
           balance_proof_path: string | null
           balance_reminder_sent_at: string | null
@@ -54,6 +109,7 @@ export type Database = {
         }
         Insert: {
           balance_amount?: number | null
+          balance_due_at?: string | null
           balance_paid_at?: string | null
           balance_proof_path?: string | null
           balance_reminder_sent_at?: string | null
@@ -91,6 +147,7 @@ export type Database = {
         }
         Update: {
           balance_amount?: number | null
+          balance_due_at?: string | null
           balance_paid_at?: string | null
           balance_proof_path?: string | null
           balance_reminder_sent_at?: string | null

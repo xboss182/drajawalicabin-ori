@@ -17,7 +17,13 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdminStatsRouteImport } from './routes/_authenticated/admin.stats'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminHolidaysRouteImport } from './routes/_authenticated/admin.holidays'
+import { Route as AuthenticatedAdminCalendarRouteImport } from './routes/_authenticated/admin.calendar'
+import { Route as AuthenticatedAdminCabinsRouteImport } from './routes/_authenticated/admin.cabins'
 import { Route as ApiPublicHooksSendBalanceRemindersRouteImport } from './routes/api/public/hooks/send-balance-reminders'
+import { Route as AuthenticatedAdminInvoiceIdRouteImport } from './routes/_authenticated/admin.invoice.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -58,11 +64,46 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminStatsRoute = AuthenticatedAdminStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminHolidaysRoute =
+  AuthenticatedAdminHolidaysRouteImport.update({
+    id: '/holidays',
+    path: '/holidays',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCalendarRoute =
+  AuthenticatedAdminCalendarRouteImport.update({
+    id: '/calendar',
+    path: '/calendar',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCabinsRoute =
+  AuthenticatedAdminCabinsRouteImport.update({
+    id: '/cabins',
+    path: '/cabins',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const ApiPublicHooksSendBalanceRemindersRoute =
   ApiPublicHooksSendBalanceRemindersRouteImport.update({
     id: '/api/public/hooks/send-balance-reminders',
     path: '/api/public/hooks/send-balance-reminders',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedAdminInvoiceIdRoute =
+  AuthenticatedAdminInvoiceIdRouteImport.update({
+    id: '/invoice/$id',
+    path: '/invoice/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -72,7 +113,13 @@ export interface FileRoutesByFullPath {
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
+  '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
+  '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
 export interface FileRoutesByTo {
@@ -82,7 +129,13 @@ export interface FileRoutesByTo {
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/admin': typeof AuthenticatedAdminRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
+  '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
+  '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
 export interface FileRoutesById {
@@ -94,7 +147,13 @@ export interface FileRoutesById {
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/admin/cabins': typeof AuthenticatedAdminCabinsRoute
+  '/_authenticated/admin/calendar': typeof AuthenticatedAdminCalendarRoute
+  '/_authenticated/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
+  '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/_authenticated/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
 export interface FileRouteTypes {
@@ -107,6 +166,12 @@ export interface FileRouteTypes {
     | '/manage-booking'
     | '/sitemap.xml'
     | '/admin'
+    | '/admin/cabins'
+    | '/admin/calendar'
+    | '/admin/holidays'
+    | '/admin/settings'
+    | '/admin/stats'
+    | '/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -117,6 +182,12 @@ export interface FileRouteTypes {
     | '/manage-booking'
     | '/sitemap.xml'
     | '/admin'
+    | '/admin/cabins'
+    | '/admin/calendar'
+    | '/admin/holidays'
+    | '/admin/settings'
+    | '/admin/stats'
+    | '/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
   id:
     | '__root__'
@@ -128,6 +199,12 @@ export interface FileRouteTypes {
     | '/manage-booking'
     | '/sitemap.xml'
     | '/_authenticated/admin'
+    | '/_authenticated/admin/cabins'
+    | '/_authenticated/admin/calendar'
+    | '/_authenticated/admin/holidays'
+    | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/stats'
+    | '/_authenticated/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
   fileRoutesById: FileRoutesById
 }
@@ -200,6 +277,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/stats': {
+      id: '/_authenticated/admin/stats'
+      path: '/stats'
+      fullPath: '/admin/stats'
+      preLoaderRoute: typeof AuthenticatedAdminStatsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/settings': {
+      id: '/_authenticated/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/holidays': {
+      id: '/_authenticated/admin/holidays'
+      path: '/holidays'
+      fullPath: '/admin/holidays'
+      preLoaderRoute: typeof AuthenticatedAdminHolidaysRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/calendar': {
+      id: '/_authenticated/admin/calendar'
+      path: '/calendar'
+      fullPath: '/admin/calendar'
+      preLoaderRoute: typeof AuthenticatedAdminCalendarRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/cabins': {
+      id: '/_authenticated/admin/cabins'
+      path: '/cabins'
+      fullPath: '/admin/cabins'
+      preLoaderRoute: typeof AuthenticatedAdminCabinsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/api/public/hooks/send-balance-reminders': {
       id: '/api/public/hooks/send-balance-reminders'
       path: '/api/public/hooks/send-balance-reminders'
@@ -207,15 +319,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSendBalanceRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/invoice/$id': {
+      id: '/_authenticated/admin/invoice/$id'
+      path: '/invoice/$id'
+      fullPath: '/admin/invoice/$id'
+      preLoaderRoute: typeof AuthenticatedAdminInvoiceIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminCabinsRoute: typeof AuthenticatedAdminCabinsRoute
+  AuthenticatedAdminCalendarRoute: typeof AuthenticatedAdminCalendarRoute
+  AuthenticatedAdminHolidaysRoute: typeof AuthenticatedAdminHolidaysRoute
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminStatsRoute: typeof AuthenticatedAdminStatsRoute
+  AuthenticatedAdminInvoiceIdRoute: typeof AuthenticatedAdminInvoiceIdRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminCabinsRoute: AuthenticatedAdminCabinsRoute,
+  AuthenticatedAdminCalendarRoute: AuthenticatedAdminCalendarRoute,
+  AuthenticatedAdminHolidaysRoute: AuthenticatedAdminHolidaysRoute,
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedAdminStatsRoute: AuthenticatedAdminStatsRoute,
+  AuthenticatedAdminInvoiceIdRoute: AuthenticatedAdminInvoiceIdRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -235,13 +375,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

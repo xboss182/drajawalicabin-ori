@@ -115,6 +115,7 @@ function AdminPage() {
             <button onClick={signOut} className="text-stone hover:text-forest">Sign out</button>
           </div>
         </div>
+        <AdminTabs current="bookings" />
       </header>
       <section className="mx-auto max-w-6xl px-6 py-12 lg:px-10">
         <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Owner dashboard</p>
@@ -165,6 +166,34 @@ function AdminPage() {
   );
 }
 
+export function AdminTabs({ current }: { current: string }) {
+  const tabs: Array<{ id: string; label: string; to: string }> = [
+    { id: "bookings", label: "Bookings", to: "/admin" },
+    { id: "calendar", label: "Calendar", to: "/admin/calendar" },
+    { id: "cabins", label: "Cabins", to: "/admin/cabins" },
+    { id: "holidays", label: "Holidays", to: "/admin/holidays" },
+    { id: "stats", label: "Stats", to: "/admin/stats" },
+    { id: "settings", label: "Settings", to: "/admin/settings" },
+  ];
+  return (
+    <nav className="mx-auto flex max-w-7xl flex-wrap gap-1 px-6 pb-3 lg:px-10">
+      {tabs.map((t) => (
+        <Link
+          key={t.id}
+          to={t.to}
+          className={`rounded-full px-4 py-1.5 text-[11px] uppercase tracking-widest ${
+            current === t.id
+              ? "bg-forest text-coconut"
+              : "text-stone hover:bg-coconut hover:text-forest"
+          }`}
+        >
+          {t.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 function Section({ title, children, highlight }: { title: string; children: React.ReactNode; highlight?: boolean }) {
   return (
     <div className="mt-10">
@@ -209,6 +238,13 @@ function Card({
           <p className="text-xs text-stone">
             {b.nights ?? "?"} night{(b.nights ?? 0) > 1 ? "s" : ""} · {b.guests} guests
           </p>
+          <Link
+            to="/admin/invoice/$id"
+            params={{ id: b.id }}
+            className="mt-2 inline-block text-[11px] uppercase tracking-widest text-forest underline hover:no-underline"
+          >
+            View invoice
+          </Link>
         </div>
       </div>
       {b.rooms && b.rooms.length > 1 && (
