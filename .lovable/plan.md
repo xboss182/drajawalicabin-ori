@@ -1,58 +1,50 @@
-# Add Stripe payment option (manual transfer stays as-is)
+## 1. Password field in Members tab
 
-## Goals
-- Keep current manual bank transfer / DuitNow QR flow exactly as it is — owner reviews proof and approves.
-- Add **"Pay by card (Stripe)"** as a second option on the booking page and on the manage-booking balance page.
-- Stripe success → booking is **auto-confirmed** (no proof review). Deposit-only payment moves status to `confirmed`; full payment moves to `fully_paid` and triggers the same locker-code/email flow you already have.
-- Malaysia seller, so Stripe is set up with **tax calculation and collection only** (+0.5% per txn on top of base Stripe fees). You handle SST registration/filing.
+Add a **Password** input to the add/edit member form in `/admin/members`. When the admin saves, the backend creates (or updates) the Supabase auth user with that password using the Auth Admin API, so the member can sign in immediately on the `/auth` page with email + password — no invite email needed.
 
-## User-facing flow
+### What changes
 
-### On `/book` (deposit step)
-- New choice block: **Pay deposit by card** (Stripe) or **Pay by bank transfer / DuitNow** (current).
-- Card path: redirects to Stripe Checkout, returns to a success page, booking auto-set to `confirmed`.
-- Bank path: unchanged — upload proof, owner approves.
+**`src/lib/booking.functions.ts`** — extend `upsertAdminRecipient`:
+- Accept an optional `password` field (min 8 chars) in the input validator.
+- After upserting the row in `admin_email_recipients`, if `password` is provided:
+  - Look up an existing auth user by email via `supabaseAdmin.auth.admin.listUsers` (paginated lookup by email).
+  - If none, call `supabaseAdmin.auth.admin.createUser({ email, password, email_confirm: true })`.
+  - If one exists, call `supabaseAdmin.auth.admin.updateUserById(id, { password })`.
+- Guard: only an existing admin (verified by `requireSupabaseAuth` + `is_active` check against `admin_email_recipients`) can call this. Keeps it from becoming a public account-creation endpoint.
+- Load `supabaseAdmin` with `await import("@/integrations/supabase/client.server")` inside the handler.
 
-### On `/manage-booking` (balance step)
-- Same two options for the remaining balance.
-- Card path: auto-marks `fully_paid` and sends locker code if your existing rules say so.
-- Bank path: unchanged.
+**`src/routes/_authenticated/admin.members.tsx`** — UI:
+- Add a `password` field to the editor state (only sent on save, never read back from the server).
+- For a NEW member, the password input is shown with the label *"Initial password (min 8 chars)"*, required.
+- For an EXISTING member, show a collapsed *"Reset password"* control: leave blank to keep current password, or type a new one to overwrite it.
+- Show a small success toast/inline note after save: "Password set — member can now sign in with email + password."
+- No password is ever displayed back; it's a write-only field.
 
-### Admin
-- Bookings list shows payment method per booking ("Card" vs "Transfer") and which payments were Stripe vs manual.
-- Stripe-paid bookings skip the "Approve proof" buttons (already approved).
+Existing Google sign-in flow keeps working unchanged for the same emails.
 
-## Technical details
+### Security notes
+- Password is sent to the server function only and never stored in the `admin_email_recipients` row — Supabase Auth owns it.
+- Server function rejects callers who aren't already an active admin, so this can't be used to bootstrap the first account (the existing `claimAdminIfFirst` flow handles that).
 
-### Setup
-1. Enable Lovable's built-in Stripe (test env created instantly, no API key from you).
-2. Create two Stripe products: `Cabin Deposit` and `Cabin Balance` with dynamic amounts, plus tax codes appropriate for short-term accommodation.
-3. Set Stripe to **tax calculation only** (`automatic_tax: { enabled: true }`).
+---
 
-### Schema (new columns on `booking_requests`)
-- `payment_method text` — `'manual' | 'stripe'`, default `'manual'`.
-- `stripe_session_id text`, `stripe_payment_intent_id text` (for deposit).
-- `stripe_balance_session_id text`, `stripe_balance_payment_intent_id text`.
-- Migration + RLS GRANTs preserved.
+## 2. "Lovable" branding on the Google consent screen
 
-### Server functions / routes
-- `createDepositCheckout` (server fn) — creates Checkout Session for deposit, stores session id on booking, returns redirect URL.
-- `createBalanceCheckout` (server fn) — same for balance.
-- `/api/public/stripe/webhook` (server route) — verifies signature, handles `checkout.session.completed`:
-  - If it's a deposit session → set booking `status = 'confirmed'`, record IDs, send the same confirmation email you send today on manual approval.
-  - If it's a balance session → set `status = 'fully_paid'`, set `balance_paid_at`, run your existing locker-code/email path.
+The "to continue to lovable.app" line on the Google popup comes from the **managed Google OAuth client** that Lovable Cloud provides by default. It's Google's screen, not ours — Google shows whichever app name + domain are registered against the OAuth client ID.
 
-### UI changes
-- `src/routes/book.tsx`: payment method selector + Stripe redirect.
-- `src/routes/manage-booking.tsx`: same selector on the balance section.
-- `src/routes/_authenticated/admin.index.tsx`: badge for Card/Transfer; hide "Approve proof" actions on Stripe-paid rows.
+To remove it, you need to register **your own Google OAuth client** in Google Cloud Console (named e.g. "Rajawali D'Cabin Admin") and paste its Client ID + Secret into Lovable Cloud's Google auth settings. After that, the consent screen says *"to continue to Rajawali D'Cabin"* with your domain.
 
-### Out of scope (ask if you want them)
-- Refunds from the admin UI.
-- Stripe Customer portal for guests.
-- Switching the manual flow itself — it stays exactly as today.
+No code changes are needed for this — it's configuration only. I'll give you step-by-step instructions after you approve this plan:
 
-## Settlement reminder
-First Stripe payout: ~T+7 business days. Subsequent payouts: ~2 business days. You'll claim the Stripe account when ready to go live; test mode works immediately.
+1. In Google Cloud Console → APIs & Services → OAuth consent screen, configure the app name, support email, and authorized domains (`drajawalicabin.com`, `lovable.app`).
+2. Create an OAuth Client ID (Web application) and add the redirect URL shown in Lovable Cloud's Google provider settings.
+3. Paste the Client ID + Secret into Cloud → Users → Authentication Settings → Sign-in methods → Google.
 
-Approve and I'll enable Stripe, then implement.
+Once saved, the next Google sign-in shows your branding instead of Lovable's.
+
+---
+
+## Out of scope
+- No schema changes.
+- No change to Google OAuth code paths.
+- No email-based "send invite link" flow (you chose admin-sets-password).
