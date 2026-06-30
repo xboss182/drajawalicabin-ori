@@ -17,6 +17,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminStatsRouteImport } from './routes/_authenticated/admin.stats'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminHolidaysRouteImport } from './routes/_authenticated/admin.holidays'
@@ -63,6 +64,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const AuthenticatedAdminStatsRoute = AuthenticatedAdminStatsRouteImport.update({
   id: '/stats',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
@@ -129,12 +136,12 @@ export interface FileRoutesByTo {
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
   '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
@@ -153,6 +160,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
 }
@@ -171,6 +179,7 @@ export interface FileRouteTypes {
     | '/admin/holidays'
     | '/admin/settings'
     | '/admin/stats'
+    | '/admin/'
     | '/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
   fileRoutesByTo: FileRoutesByTo
@@ -181,12 +190,12 @@ export interface FileRouteTypes {
     | '/find-booking'
     | '/manage-booking'
     | '/sitemap.xml'
-    | '/admin'
     | '/admin/cabins'
     | '/admin/calendar'
     | '/admin/holidays'
     | '/admin/settings'
     | '/admin/stats'
+    | '/admin'
     | '/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
   id:
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/holidays'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/stats'
+    | '/_authenticated/admin/'
     | '/_authenticated/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
   fileRoutesById: FileRoutesById
@@ -277,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/stats': {
       id: '/_authenticated/admin/stats'
       path: '/stats'
@@ -335,6 +352,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminHolidaysRoute: typeof AuthenticatedAdminHolidaysRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStatsRoute: typeof AuthenticatedAdminStatsRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminInvoiceIdRoute: typeof AuthenticatedAdminInvoiceIdRoute
 }
 
@@ -344,6 +362,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminHolidaysRoute: AuthenticatedAdminHolidaysRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminStatsRoute: AuthenticatedAdminStatsRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminInvoiceIdRoute: AuthenticatedAdminInvoiceIdRoute,
 }
 
