@@ -613,11 +613,25 @@ function DetailsStep(props: {
                 setCheckin(formatLocalDate(from));
                 setCheckout(formatLocalDate(new Date(to.getTime() + 86400000)));
               }}
-              disabled={[{ before: new Date(new Date().setHours(0, 0, 0, 0)) }, ...blockedDates.map((d) => new Date(d))]}
-              modifiers={{ booked: blockedDates.map((d) => new Date(d)) }}
+              disabled={[{ before: new Date(new Date().setHours(0, 0, 0, 0)) }, ...blockedDates.map((d) => parseLocalDate(d))]}
+              modifiers={{ booked: blockedDates.map((d) => parseLocalDate(d)) }}
               modifiersClassNames={{
                 booked:
-                  "bg-red-100 text-red-700 line-through opacity-90 hover:bg-red-100",
+                  "relative !bg-red-100 !text-red-700 cursor-not-allowed [&>*]:line-through aria-disabled:!opacity-100 hover:!bg-red-200 after:absolute after:inset-x-1 after:bottom-0.5 after:h-0.5 after:rounded-full after:bg-red-400",
+              }}
+              components={{
+                DayButton: (btnProps) => {
+                  const dateStr = formatLocalDate(btnProps.day.date);
+                  const reason = blockedReasonByDate.get(dateStr);
+                  const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
+                  const isPast = btnProps.day.date < startOfToday;
+                  const title = reason
+                    ? `Unavailable — ${reason}`
+                    : isPast
+                      ? "Past date — pick a future night"
+                      : undefined;
+                  return <CalendarDayButton {...btnProps} title={title} aria-label={title ?? undefined} />;
+                },
               }}
               className="pointer-events-auto p-0 [--cell-size:2.5rem] sm:[--cell-size:2.75rem]"
               classNames={{
