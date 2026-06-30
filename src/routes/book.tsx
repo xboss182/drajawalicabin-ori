@@ -580,10 +580,11 @@ function DetailsStep(props: {
               </span>
             </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-4 overflow-x-auto">
             <Calendar
               mode="range"
-              numberOfMonths={1}
+              numberOfMonths={2}
+              showOutsideDays={false}
               selected={
                 checkin && checkout && new Date(checkout) > new Date(checkin)
                   ? { from: parseLocalDate(checkin), to: new Date(parseLocalDate(checkout).getTime() - 86400000) }
@@ -602,12 +603,9 @@ function DetailsStep(props: {
                 booked:
                   "bg-red-100 text-red-700 line-through opacity-90 hover:bg-red-100",
               }}
-              className="pointer-events-auto p-0 w-full [--cell-size:2.75rem] sm:[--cell-size:3.25rem]"
+              className="pointer-events-auto p-0 [--cell-size:2.5rem] sm:[--cell-size:2.75rem]"
               classNames={{
                 today: "font-semibold text-forest underline underline-offset-4",
-                months: "w-full",
-                month: "w-full",
-                table: "w-full",
               }}
             />
           </div>
