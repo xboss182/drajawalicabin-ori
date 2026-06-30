@@ -379,12 +379,15 @@ function BookPage() {
             freeCabinsForType,
             submit, submitting, error,
             agreed, setAgreed,
+            paymentType, setPaymentType,
+            recommendations, pickRecommendation, isAnyCabin,
           }}
         />
       )}
       {step === "payment" && booking && (
         <PaymentStep
           booking={booking}
+          paymentType={paymentType}
           proofFile={proofFile}
           setProofFile={setProofFile}
           uploadProof={uploadProof}
