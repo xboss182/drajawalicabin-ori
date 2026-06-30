@@ -709,6 +709,31 @@ function DetailsStep(props: {
         )}
 
         <div className="mt-8 rounded-2xl border border-border bg-card p-5">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Payment option</p>
+          <h3 className="mt-2 font-display text-lg text-forest">How would you like to pay?</h3>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className={`cursor-pointer rounded-xl border p-4 transition ${paymentType === "deposit" ? "border-forest bg-forest/[0.04]" : "border-border bg-card hover:border-forest/40"}`}>
+              <div className="flex items-start gap-3">
+                <input type="radio" name="payment-type" checked={paymentType === "deposit"} onChange={() => setPaymentType("deposit")} className="mt-1 h-4 w-4 accent-forest" />
+                <div>
+                  <p className="font-medium text-forest">Reserve with RM 50 deposit</p>
+                  <p className="mt-1 text-xs text-stone">Pay RM 50 now to lock the dates. Balance due 7 days before check-in.</p>
+                </div>
+              </div>
+            </label>
+            <label className={`cursor-pointer rounded-xl border p-4 transition ${paymentType === "full" ? "border-forest bg-forest/[0.04]" : "border-border bg-card hover:border-forest/40"}`}>
+              <div className="flex items-start gap-3">
+                <input type="radio" name="payment-type" checked={paymentType === "full"} onChange={() => setPaymentType("full")} className="mt-1 h-4 w-4 accent-forest" />
+                <div>
+                  <p className="font-medium text-forest">Pay in full now{price ? ` (RM ${price.total.toFixed(2)})` : ""}</p>
+                  <p className="mt-1 text-xs text-stone">Settle everything upfront — locker code issued once we verify.</p>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-border bg-card p-5">
           <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.terms.eyebrow}</p>
           <h3 className="mt-2 font-display text-lg text-forest">{bt.terms.title}</h3>
           <p className="mt-2 text-sm text-foreground/75">{bt.terms.summary}</p>
