@@ -1,0 +1,2 @@
+ALTER TABLE public.booking_requests DROP CONSTRAINT IF EXISTS booking_requests_payment_reference_key;
+CREATE INDEX IF NOT EXISTS booking_requests_payment_reference_idx ON public.booking_requests(payment_reference);
