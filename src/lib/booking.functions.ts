@@ -594,26 +594,18 @@ export const requestManageLink = createServerFn({ method: "POST" })
         origin = "";
       }
       const manageUrl = `${origin}/manage-booking?id=${match.id}&token=${match.guest_token}`;
-      const subject = `Your booking link — ${match.payment_reference ?? match.id.slice(0, 8)} · Rajawali D'Cabin`;
-      const body = [
-        `Hi ${match.guest_name},`,
-        ``,
-        `Here is the link to manage your booking:`,
-        manageUrl,
-        ``,
-        `Booking number: ${match.payment_reference ?? match.id.slice(0, 8)}`,
-        `Cabin: ${match.room_type}`,
-        ``,
-        `If you didn't request this, you can safely ignore this email.`,
-        `— Rajawali D'Cabin Chalet`,
-      ].join("\n");
-      const { enqueueEmail } = await import("./email.server");
-      await enqueueEmail(supabaseAdmin, {
-        kind: "manage_link",
-        toEmail: match.email,
-        subject,
-        body,
-        bookingId: match.id,
+      const reference = match.payment_reference ?? match.id.slice(0, 8);
+      const { sendTransactionalEmail } = await import("./email/send.server");
+      await sendTransactionalEmail(supabaseAdmin, {
+        templateName: "manage-link",
+        recipientEmail: match.email,
+        idempotencyKey: `manage-link-${match.id}-${Date.now()}`,
+        templateData: {
+          guestName: match.guest_name,
+          reference,
+          roomType: match.room_type,
+          manageUrl,
+        },
       });
     }
 
