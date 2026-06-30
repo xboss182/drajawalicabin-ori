@@ -15,7 +15,7 @@ import cabinFamilyImg from "@/assets/cabin-family.jpg";
 import cabinTripleImg from "@/assets/cabin-triple.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Plus, Minus, X } from "lucide-react";
 
@@ -261,10 +261,14 @@ function BookPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // Date is blocked when ANY cart line can't be satisfied that night
-  const blockedDates = useMemo<string[]>(() => {
-    if (cart.length === 0) return [];
-    const blocked = new Set<string>();
+  // Date is blocked when ANY cart line can't be satisfied that night.
+  // We also return a per-date human-readable reason for tooltips.
+  const { blockedDates, blockedReasonByDate } = useMemo<{
+    blockedDates: string[];
+    blockedReasonByDate: Map<string, string>;
+  }>(() => {
+    if (cart.length === 0) return { blockedDates: [], blockedReasonByDate: new Map() };
+    const reasonByDate = new Map<string, string[]>();
     for (const it of cart) {
       const g = groupByType.get(it.cabinType);
       if (!g) continue;
@@ -276,10 +280,21 @@ function BookPage() {
       }
       const total = g.rooms.length;
       for (const [d, n] of counts) {
-        if (total - n < it.qty) blocked.add(d);
+        const free = total - n;
+        if (free < it.qty) {
+          const msg =
+            free === 0
+              ? `${g.label}: all ${total} rooms booked`
+              : `${g.label}: only ${free} of ${total} free (need ${it.qty})`;
+          const arr = reasonByDate.get(d) ?? [];
+          arr.push(msg);
+          reasonByDate.set(d, arr);
+        }
       }
     }
-    return Array.from(blocked);
+    const map = new Map<string, string>();
+    for (const [d, msgs] of reasonByDate) map.set(d, msgs.join(" · "));
+    return { blockedDates: Array.from(map.keys()), blockedReasonByDate: map };
   }, [cart, groupByType, takenByCabin]);
 
   function freeCabinsForType(type: string): Cabin[] {
@@ -384,7 +399,7 @@ function BookPage() {
             name, setName, email, setEmail, phone, setPhone,
             relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
             notes, setNotes,
-            price, previewCabin, blockedDates, totalRooms,
+            price, previewCabin, blockedDates, blockedReasonByDate, totalRooms,
             freeCabinsForType,
             submit, submitting, error,
             agreed, setAgreed,
@@ -444,6 +459,7 @@ function DetailsStep(props: {
   price: { nights: number; subtotal: number; comforter_total: number; total: number } | null;
   previewCabin?: Cabin;
   blockedDates: string[];
+  blockedReasonByDate: Map<string, string>;
   totalRooms: number;
   freeCabinsForType: (type: string) => Cabin[];
   submit: (e: React.FormEvent) => void;
@@ -470,7 +486,7 @@ function DetailsStep(props: {
     name, setName, email, setEmail, phone, setPhone,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
-    price, previewCabin, blockedDates, totalRooms, freeCabinsForType,
+    price, previewCabin, blockedDates, blockedReasonByDate, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
   } = props;
@@ -562,7 +578,7 @@ function DetailsStep(props: {
               <p className="mt-1 text-xs text-stone">
                 {blockedDates.length === 0
                   ? "All nights available in the next 90 days."
-                  : `${blockedDates.length} night${blockedDates.length === 1 ? "" : "s"} unavailable for this cart.`}
+                  : `${blockedDates.length} night${blockedDates.length === 1 ? "" : "s"} unavailable for this cart — hover a red date to see why.`}
               </p>
             </div>
             <div className="flex items-center gap-4 text-[11px] uppercase tracking-widest text-stone">
@@ -597,11 +613,25 @@ function DetailsStep(props: {
                 setCheckin(formatLocalDate(from));
                 setCheckout(formatLocalDate(new Date(to.getTime() + 86400000)));
               }}
-              disabled={[{ before: new Date(new Date().setHours(0, 0, 0, 0)) }, ...blockedDates.map((d) => new Date(d))]}
-              modifiers={{ booked: blockedDates.map((d) => new Date(d)) }}
+              disabled={[{ before: new Date(new Date().setHours(0, 0, 0, 0)) }, ...blockedDates.map((d) => parseLocalDate(d))]}
+              modifiers={{ booked: blockedDates.map((d) => parseLocalDate(d)) }}
               modifiersClassNames={{
                 booked:
-                  "bg-red-100 text-red-700 line-through opacity-90 hover:bg-red-100",
+                  "relative !bg-red-100 !text-red-700 cursor-not-allowed [&>*]:line-through aria-disabled:!opacity-100 hover:!bg-red-200 after:absolute after:inset-x-1 after:bottom-0.5 after:h-0.5 after:rounded-full after:bg-red-400",
+              }}
+              components={{
+                DayButton: (btnProps) => {
+                  const dateStr = formatLocalDate(btnProps.day.date);
+                  const reason = blockedReasonByDate.get(dateStr);
+                  const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
+                  const isPast = btnProps.day.date < startOfToday;
+                  const title = reason
+                    ? `Unavailable — ${reason}`
+                    : isPast
+                      ? "Past date — pick a future night"
+                      : undefined;
+                  return <CalendarDayButton {...btnProps} title={title} aria-label={title ?? undefined} />;
+                },
               }}
               className="pointer-events-auto p-0 [--cell-size:2.5rem] sm:[--cell-size:2.75rem]"
               classNames={{
