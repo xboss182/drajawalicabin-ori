@@ -52,6 +52,7 @@ type BookingRow = {
   balance_amount: number | null;
   payment_reference: string | null;
   locker_code: string | null;
+  payment_type?: string | null;
   rooms?: Array<{ name: string; nights: number | null; total: number }>;
 };
 
@@ -64,6 +65,7 @@ function balanceOf(b: BookingRow) {
 
 export function renderBookingSummaryEmail(b: BookingRow) {
   const { total, deposit, remaining } = balanceOf(b);
+  const isFull = b.payment_type === "full" || remaining <= 0;
   const subject = `Booking ${b.payment_reference ?? b.id.slice(0, 8)} received — Rajawali D'Cabin`;
   const roomsBlock =
     b.rooms && b.rooms.length > 1
@@ -73,6 +75,29 @@ export function renderBookingSummaryEmail(b: BookingRow) {
           ...b.rooms.map((r, i) => `  ${i + 1}. ${r.name} — ${money(r.total)}`),
         ]
       : [];
+  if (isFull) {
+    const body = [
+      `Hi ${b.guest_name},`,
+      ``,
+      `Thank you — we have received your full payment proof of ${money(total)}.`,
+      `Our team will verify the transfer shortly and confirm your booking.`,
+      ``,
+      `— Booking Summary —`,
+      `Booking number:   ${b.payment_reference ?? b.id.slice(0, 8)}`,
+      `Cabin:            ${b.rooms && b.rooms.length > 1 ? `${b.rooms.length} rooms` : b.room_type}`,
+      `Check-in:         ${fmtDate(b.check_in)} (3:00 PM)`,
+      `Check-out:        ${fmtDate(b.check_out)} (12:00 PM)`,
+      `Nights / guests:  ${b.nights ?? "—"} night(s) · ${b.guests} guest(s)`,
+      ...roomsBlock,
+      `Total paid:       ${money(total)}  ✓`,
+      `Balance:          RM 0.00 (paid in full)`,
+      ``,
+      `Once we verify the transfer we will share your key-locker check-in code.`,
+      `Questions? WhatsApp us at 011-5500 7204.`,
+      `— Rajawali D'Cabin Chalet`,
+    ].join("\n");
+    return { subject, body };
+  }
   const body = [
     `Hi ${b.guest_name},`,
     ``,
