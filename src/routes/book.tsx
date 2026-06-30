@@ -116,6 +116,7 @@ function BookPage() {
   const isAnyCabin = (search.room ?? "").toLowerCase().includes("any");
   const [recommendations, setRecommendations] = useState<Array<{
     cabinId: string; cabinType: string; name: string; capacity: number; nights: number; total: number;
+    combo?: Array<{ cabinType: string; name: string; capacity: number }>;
   }>>([]);
 
   // Load cabins
