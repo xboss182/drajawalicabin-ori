@@ -252,19 +252,41 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
     const leadRow = groupRows?.[0];
     const alreadySent = (groupRows ?? []).some((r) => r.confirmation_email_sent_at);
     if (leadRow && !alreadySent) {
-      const { renderBookingSummaryEmail, enqueueEmail } = await import("./email.server");
       const totalAmount = (groupRows ?? []).reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
-      const aggregate = {
-        ...leadRow,
-        total_amount: totalAmount,
-        rooms: (groupRows ?? []).map((r) => ({
-          name: r.room_type,
-          nights: r.nights,
-          total: Number(r.total_amount ?? 0),
-        })),
+      const deposit = Number(leadRow.deposit_amount ?? 50);
+      const remaining = Math.max(0, totalAmount - deposit);
+      const templateData = {
+        guestName: leadRow.guest_name,
+        reference: leadRow.payment_reference ?? leadRow.id.slice(0, 8),
+        roomType: leadRow.room_type,
+        checkIn: leadRow.check_in,
+        checkOut: leadRow.check_out,
+        nights: leadRow.nights,
+        guests: leadRow.guests,
+        total: totalAmount,
+        deposit,
+        remaining,
+        paymentType: (leadRow as any).payment_type ?? 'deposit',
+        rooms: (groupRows ?? []).map((r) => ({ name: r.room_type, total: Number(r.total_amount ?? 0) })),
       };
-      const { subject, body } = renderBookingSummaryEmail(aggregate as never);
-      await enqueueEmail(supabaseAdmin, { kind: "booking_summary", toEmail: leadRow.email, subject, body, bookingId: leadRow.id });
+      const { sendTransactionalEmail, getAdminRecipients } = await import("./email/send.server");
+      // Guest copy
+      await sendTransactionalEmail(supabaseAdmin, {
+        templateName: 'booking-summary',
+        recipientEmail: leadRow.email,
+        idempotencyKey: `booking-summary-${leadRow.id}-guest`,
+        templateData,
+      });
+      // Admin copies — one per opted-in recipient
+      const admins = await getAdminRecipients(supabaseAdmin, 'notify_payment_proof');
+      for (const adminEmail of admins) {
+        await sendTransactionalEmail(supabaseAdmin, {
+          templateName: 'booking-summary',
+          recipientEmail: adminEmail,
+          idempotencyKey: `booking-summary-${leadRow.id}-${adminEmail}`,
+          templateData,
+        });
+      }
       await supabaseAdmin
         .from("booking_requests")
         .update({ confirmation_email_sent_at: new Date().toISOString() })
