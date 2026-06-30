@@ -1,0 +1,16 @@
+# Rajawali D'Cabin Chalet
+
+> Muslim-friendly riverside chalet and homestay in Chendering, Kuala Terengganu, Malaysia. Eight private cabins for family staycations near the city.
+
+Rajawali D'Cabin Chalet offers eight private wooden cabins along the river in Chendering, a short drive from central Kuala Terengganu. The site supports online booking with a flexible RM50 deposit per room and provides guests a self-serve way to manage their reservations.
+
+## Pages
+
+- [Home](/): Overview of the chalet, amenities, nearby attractions, and FAQs.
+- [Book a Cabin](/book): Check availability and reserve a private cabin online.
+
+## Optional
+
+- [Find your booking](/find-booking): Recover a lost booking management link by email.
+
+_Note: owner sign-in, booking management, and unsubscribe pages are private utility routes and intentionally excluded._
