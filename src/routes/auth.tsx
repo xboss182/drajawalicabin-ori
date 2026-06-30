@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { claimAdminIfFirst, isAdminRecipient } from "@/lib/booking.functions";
 
@@ -23,6 +23,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const gateRan = useRef(false);
 
   async function gateAndGo() {
     try {
@@ -74,15 +75,17 @@ function AuthPage() {
     }
   }
 
-  // After Google redirect-back, if a session exists, run the gate.
-  if (typeof window !== "undefined") {
+  // After Google redirect-back (or arriving already signed in), run the gate once.
+  useEffect(() => {
+    if (gateRan.current) return;
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session && !busy) {
-        // fire-and-forget; gateAndGo handles errors
+      if (data.session && !gateRan.current) {
+        gateRan.current = true;
         void gateAndGo();
       }
     });
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <main className="min-h-[100svh] bg-background text-foreground">
