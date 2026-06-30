@@ -7,4 +7,4 @@ Disallow: /find-booking
 Disallow: /admin
 Disallow: /api/
 
-Sitemap: https://nature-stay-finder.lovable.app/sitemap.xml
+Sitemap: https://drajawalicabin.com/sitemap.xml
