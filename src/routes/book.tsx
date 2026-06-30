@@ -979,9 +979,6 @@ function PaymentStep({
     navigator.clipboard.writeText(text);
   }
   const cardEnabled = isPaymentsConfigured();
-  const cardHref =
-    `/checkout?id=${encodeURIComponent(booking.bookingId)}` +
-    `&token=${encodeURIComponent(booking.guestToken)}&kind=deposit`;
 
   return (
     <section className="mx-auto max-w-3xl px-6 py-16 lg:px-10 lg:py-20">
