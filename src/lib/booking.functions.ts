@@ -533,7 +533,11 @@ export const isCurrentUserAdmin = createServerFn({ method: "GET" })
 export const isAdminRecipient = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const email = String((context.claims as { email?: string }).email ?? "").trim().toLowerCase();
+    let email = String((context.claims as { email?: string }).email ?? "").trim().toLowerCase();
+    if (!email) {
+      const { data: u } = await context.supabase.auth.getUser();
+      email = String(u?.user?.email ?? "").trim().toLowerCase();
+    }
     if (!email) return { allowed: false };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
