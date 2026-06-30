@@ -401,6 +401,30 @@ export const confirmBooking = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const gid = await groupIdFor(supabaseAdmin, data.bookingId);
 
+    // Look up payment_type — full-payment bookings skip the balance step
+    const { data: typeRow } = await supabaseAdmin
+      .from("booking_requests")
+      .select("payment_type")
+      .eq("booking_group_id", gid)
+      .limit(1)
+      .maybeSingle();
+    const isFull = (typeRow as { payment_type?: string } | null)?.payment_type === "full";
+
+    if (isFull) {
+      const { error } = await supabaseAdmin
+        .from("booking_requests")
+        .update({
+          status: "confirmed",
+          confirmed_at: new Date().toISOString(),
+          confirmed_by: context.userId,
+          balance_paid_at: new Date().toISOString(),
+          balance_due_at: null,
+        })
+        .eq("booking_group_id", gid);
+      if (error) throw new Error(error.message);
+      return { ok: true, fullPayment: true };
+    }
+
     // Default balance_due_at = check_in - balance_due_days_before (if not already set)
     let dueDays = 7;
     try {
