@@ -68,6 +68,7 @@ function InvoicePage() {
 
   const depositPaid = inv.status !== "pending_payment";
   const balanceProofExists = !!inv.balanceProofUrl;
+  const isFullPayment = Number(inv.balance ?? 0) <= 0;
 
   return (
     <main className="min-h-[100svh] bg-background text-foreground">
@@ -177,7 +178,7 @@ function InvoicePage() {
               <tbody>
                 <tr className="border-b border-border/40">
                   <td className="py-2">1</td>
-                  <td className="py-2">Booking deposit</td>
+                  <td className="py-2">{isFullPayment ? "Full payment" : "Booking deposit"}</td>
                   <td className="py-2">on booking</td>
                   <td className="py-2">{depositPaid ? fmtDate(inv.created_at) : "—"}</td>
                   <td className="py-2 text-right">{money(inv.deposit)}</td>
@@ -196,6 +197,7 @@ function InvoicePage() {
                     )}
                   </td>
                 </tr>
+                {!isFullPayment && (
                 <tr>
                   <td className="py-2">2</td>
                   <td className="py-2">Balance</td>
@@ -243,6 +245,7 @@ function InvoicePage() {
                     )}
                   </td>
                 </tr>
+                )}
               </tbody>
             </table>
           </div>
