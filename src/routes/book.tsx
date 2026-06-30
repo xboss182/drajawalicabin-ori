@@ -193,7 +193,7 @@ function BookPage() {
       setPrice(null);
       return;
     }
-    if (new Date(checkout) <= new Date(checkin)) {
+    if (checkout <= checkin) {
       setPrice(null);
       return;
     }
@@ -254,7 +254,7 @@ function BookPage() {
       setRecommendations([]);
       return;
     }
-    if (!checkin || !checkout || new Date(checkout) <= new Date(checkin)) {
+    if (!checkin || !checkout || checkout <= checkin) {
       setRecommendations([]);
       return;
     }
@@ -343,7 +343,7 @@ function BookPage() {
     e.preventDefault();
     setError(null);
     if (cart.length === 0) return setError(bt.errors.pickCabin);
-    if (new Date(checkout) <= new Date(checkin)) return setError(bt.errors.dates);
+    if (checkout <= checkin) return setError(bt.errors.dates);
     if (datesOverlapTaken()) return setError(bt.errors.overlap);
     if (name.trim().length < 2) return setError(bt.errors.name);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError(bt.errors.email);
@@ -625,8 +625,8 @@ function DetailsStep(props: {
               numberOfMonths={2}
               showOutsideDays={false}
               selected={
-                checkin && checkout && new Date(checkout) > new Date(checkin)
-                  ? { from: parseLocalDate(checkin), to: new Date(parseLocalDate(checkout).getTime() - 86400000) }
+                checkin && checkout && checkout > checkin
+                  ? { from: parseLocalDate(checkin), to: parseLocalDate(addDaysISO(checkout, -1)) }
                   : undefined
               }
               onSelect={(r) => {
