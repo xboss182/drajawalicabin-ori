@@ -19,6 +19,9 @@ export const Route = createFileRoute("/manage-booking")({
     meta: [
       { title: "Manage your booking — Rajawali D'Cabin" },
       { name: "robots", content: "noindex" },
+      { name: "description", content: "View your Rajawali D'Cabin reservation, upload your balance payment proof, and review your cabin and stay details." },
+      { property: "og:title", content: "Manage your booking — Rajawali D'Cabin" },
+      { property: "og:description", content: "View your reservation, upload balance proof, and manage your Rajawali D'Cabin stay." },
     ],
   }),
   component: ManagePage,
