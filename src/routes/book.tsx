@@ -554,7 +554,7 @@ function DetailsStep(props: {
           <div className="mt-4 overflow-x-auto">
             <Calendar
               mode="range"
-              numberOfMonths={2}
+              numberOfMonths={1}
               selected={
                 checkin && checkout && new Date(checkout) > new Date(checkin)
                   ? { from: parseLocalDate(checkin), to: new Date(parseLocalDate(checkout).getTime() - 86400000) }
