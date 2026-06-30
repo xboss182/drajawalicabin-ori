@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/public/hooks/send-balance-reminders")
     handlers: {
       POST: async ({ request }) => {
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { renderBalanceReminderEmail, enqueueEmail } = await import("@/lib/email.server");
+        const { sendTransactionalEmail } = await import("@/lib/email/send.server");
 
         // Send reminder when balance_due_at is today or in the past, but check-in
         // hasn't happened yet and no reminder has gone out. Falls back to "7 days
@@ -52,8 +52,24 @@ export const Route = createFileRoute("/api/public/hooks/send-balance-reminders")
         let sent = 0;
         for (const r of rows) {
           const manageUrl = `${origin}/manage-booking?id=${r.id}&token=${r.guest_token}`;
-          const { subject, body } = renderBalanceReminderEmail(r as never, manageUrl);
-          await enqueueEmail(supabaseAdmin, { kind: "balance_reminder", toEmail: r.email, subject, body, bookingId: r.id });
+          const total = Number(r.total_amount ?? 0);
+          const deposit = Number(r.deposit_amount ?? 50);
+          const remaining = r.balance_amount != null ? Number(r.balance_amount) : Math.max(0, total - deposit);
+          await sendTransactionalEmail(supabaseAdmin, {
+            templateName: 'balance-reminder',
+            recipientEmail: r.email,
+            idempotencyKey: `balance-reminder-${r.id}`,
+            templateData: {
+              guestName: r.guest_name,
+              reference: r.payment_reference ?? r.id.slice(0, 8),
+              roomType: r.room_type,
+              checkIn: r.check_in,
+              total,
+              deposit,
+              remaining,
+              manageUrl,
+            },
+          });
           await supabaseAdmin
             .from("booking_requests")
             .update({ balance_reminder_sent_at: new Date().toISOString() })

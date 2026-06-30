@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ManageBookingRouteImport } from './routes/manage-booking'
 import { Route as FindBookingRouteImport } from './routes/find-booking'
@@ -16,17 +17,26 @@ import { Route as BookRouteImport } from './routes/book'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthenticatedAdminStatsRouteImport } from './routes/_authenticated/admin.stats'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminHolidaysRouteImport } from './routes/_authenticated/admin.holidays'
 import { Route as AuthenticatedAdminCalendarRouteImport } from './routes/_authenticated/admin.calendar'
 import { Route as AuthenticatedAdminCabinsRouteImport } from './routes/_authenticated/admin.cabins'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicHooksSendBalanceRemindersRouteImport } from './routes/api/public/hooks/send-balance-reminders'
 import { Route as AuthenticatedAdminInvoiceIdRouteImport } from './routes/_authenticated/admin.invoice.$id'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -61,6 +71,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -70,6 +85,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminStatsRoute = AuthenticatedAdminStatsRouteImport.update({
   id: '/stats',
@@ -100,6 +120,18 @@ const AuthenticatedAdminCabinsRoute =
     path: '/cabins',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -126,16 +158,21 @@ export interface FileRoutesByFullPath {
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
   '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -144,15 +181,20 @@ export interface FileRoutesByTo {
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
   '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -163,16 +205,21 @@ export interface FileRoutesById {
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/_authenticated/admin/calendar': typeof AuthenticatedAdminCalendarRoute
   '/_authenticated/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -183,16 +230,21 @@ export interface FileRouteTypes {
     | '/find-booking'
     | '/manage-booking'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/admin'
+    | '/email/unsubscribe'
     | '/admin/cabins'
     | '/admin/calendar'
     | '/admin/holidays'
     | '/admin/settings'
     | '/admin/stats'
+    | '/lovable/email/suppression'
     | '/admin/'
     | '/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -201,15 +253,20 @@ export interface FileRouteTypes {
     | '/find-booking'
     | '/manage-booking'
     | '/sitemap.xml'
+    | '/unsubscribe'
+    | '/email/unsubscribe'
     | '/admin/cabins'
     | '/admin/calendar'
     | '/admin/holidays'
     | '/admin/settings'
     | '/admin/stats'
+    | '/lovable/email/suppression'
     | '/admin'
     | '/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -219,16 +276,21 @@ export interface FileRouteTypes {
     | '/find-booking'
     | '/manage-booking'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/_authenticated/admin'
+    | '/email/unsubscribe'
     | '/_authenticated/admin/cabins'
     | '/_authenticated/admin/calendar'
     | '/_authenticated/admin/holidays'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/stats'
+    | '/lovable/email/suppression'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -239,12 +301,24 @@ export interface RootRouteChildren {
   FindBookingRoute: typeof FindBookingRoute
   ManageBookingRoute: typeof ManageBookingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksSendBalanceRemindersRoute: typeof ApiPublicHooksSendBalanceRemindersRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -294,6 +368,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -307,6 +388,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/stats': {
       id: '/_authenticated/admin/stats'
@@ -342,6 +430,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/cabins'
       preLoaderRoute: typeof AuthenticatedAdminCabinsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -409,9 +511,14 @@ const rootRouteChildren: RootRouteChildren = {
   FindBookingRoute: FindBookingRoute,
   ManageBookingRoute: ManageBookingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksSendBalanceRemindersRoute:
     ApiPublicHooksSendBalanceRemindersRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
