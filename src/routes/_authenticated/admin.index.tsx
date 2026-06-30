@@ -45,6 +45,7 @@ type Booking = {
   locker_code?: string | null;
   deposit_amount?: number | null;
   num_rooms?: number;
+  payment_method?: string | null;
   rooms?: Array<{ id: string; cabinId: string | null; name: string; nights: number | null; total: number }>;
 };
 
