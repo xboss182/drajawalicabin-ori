@@ -1,7 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getBookingForGuest, attachBalanceProof } from "@/lib/booking.functions";
+import {
+  getBookingForGuest,
+  attachBalanceProof,
+  getBookingByEmailAndReference,
+} from "@/lib/booking.functions";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 
 type Booking = Awaited<ReturnType<typeof getBookingForGuest>>;
@@ -22,18 +26,22 @@ export const Route = createFileRoute("/manage-booking")({
 
 function ManagePage() {
   const { id, token } = Route.useSearch();
+  const navigate = useNavigate();
   const [b, setB] = useState<Booking | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
+  const [lookupEmail, setLookupEmail] = useState("");
+  const [lookupRef, setLookupRef] = useState("");
+  const [lookingUp, setLookingUp] = useState(false);
 
   async function load() {
+    if (!id || !token) return;
     setLoading(true);
     setErr(null);
     try {
-      if (!id || !token) throw new Error("Missing booking link. Please use the secure link from your email.");
       const data = await getBookingForGuest({ data: { bookingId: id, guestToken: token } });
       setB(data);
     } catch (e: unknown) {
@@ -43,6 +51,22 @@ function ManagePage() {
     }
   }
   useEffect(() => { load(); }, [id, token]);
+
+  async function lookup(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setLookingUp(true);
+    try {
+      const { bookingId, guestToken } = await getBookingByEmailAndReference({
+        data: { email: lookupEmail.trim(), reference: lookupRef.trim() },
+      });
+      navigate({ to: "/manage-booking", search: { id: bookingId, token: guestToken } });
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Could not find booking");
+    } finally {
+      setLookingUp(false);
+    }
+  }
 
   async function upload() {
     if (!file || !b) return;
@@ -77,6 +101,57 @@ function ManagePage() {
 
       <section className="mx-auto max-w-3xl px-6 py-16 lg:px-10">
         {loading && <p className="text-stone">Loading your booking…</p>}
+
+        {!id || !token ? (
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Manage booking</p>
+            <h1 className="mt-2 font-display text-4xl text-forest">View your booking</h1>
+            <p className="mt-3 text-foreground/75">
+              Enter the email you booked with and your booking reference (e.g. RJW-1234).
+            </p>
+            <form onSubmit={lookup} className="mt-8 space-y-5 max-w-md">
+              <label className="block">
+                <span className="text-[11px] uppercase tracking-[0.25em] text-stone">Email</span>
+                <input
+                  type="email"
+                  required
+                  value={lookupEmail}
+                  onChange={(e) => setLookupEmail(e.target.value)}
+                  className="mt-2 w-full rounded-md border border-border bg-background px-4 py-3 text-sm focus:border-forest focus:outline-none"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                />
+              </label>
+              <label className="block">
+                <span className="text-[11px] uppercase tracking-[0.25em] text-stone">Booking reference</span>
+                <input
+                  type="text"
+                  required
+                  value={lookupRef}
+                  onChange={(e) => setLookupRef(e.target.value.toUpperCase())}
+                  className="mt-2 w-full rounded-md border border-border bg-background px-4 py-3 font-mono text-sm focus:border-forest focus:outline-none"
+                  placeholder="RJW-1234"
+                  maxLength={40}
+                />
+              </label>
+              {err && (
+                <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{err}</p>
+              )}
+              <button
+                type="submit"
+                disabled={lookingUp}
+                className="w-full rounded-full bg-forest px-7 py-3.5 text-sm font-medium text-coconut hover:bg-forest/90 disabled:opacity-60"
+              >
+                {lookingUp ? "Looking up…" : "View booking"}
+              </button>
+              <p className="text-xs text-stone">
+                Prefer a secure link by email?{" "}
+                <Link to="/find-booking" className="underline text-forest">Email me the manage link</Link>.
+              </p>
+            </form>
+          </div>
+        ) : null}
+
         {err && (
           <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{err}</p>
         )}
