@@ -84,6 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:site_name", content: "Rajawali D'Cabin Chalet" },
       { property: "og:locale", content: "en_MY" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "google-site-verification", content: "5m2DnvqsAhP8BQMopNpijpIn2scEyhEWL1J1o4ljNQU" },
     ],
     links: [
       {
