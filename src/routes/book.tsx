@@ -636,7 +636,7 @@ function DetailsStep(props: {
                 setCheckin(formatLocalDate(from));
                 setCheckout(formatLocalDate(new Date(to.getTime() + 86400000)));
               }}
-              disabled={[{ before: new Date(new Date().setHours(0, 0, 0, 0)) }, ...blockedDates.map((d) => parseLocalDate(d))]}
+              disabled={[{ before: parseLocalDate(todayStr) }, ...blockedDates.map((d) => parseLocalDate(d))]}
               modifiers={{ booked: blockedDates.map((d) => parseLocalDate(d)) }}
               modifiersClassNames={{
                 booked:
@@ -646,8 +646,7 @@ function DetailsStep(props: {
                 DayButton: (btnProps) => {
                   const dateStr = formatLocalDate(btnProps.day.date);
                   const reason = blockedReasonByDate.get(dateStr);
-                  const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
-                  const isPast = btnProps.day.date < startOfToday;
+                  const isPast = dateStr < todayStr;
                   const title = reason
                     ? `Unavailable — ${reason}`
                     : isPast
