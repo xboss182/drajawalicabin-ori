@@ -672,3 +672,558 @@ export const markFullyPaid = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+// ============== ADMIN: invoice / balance schedule ==============
+
+async function assertAdmin(context: { supabase: any; userId: string }) {
+  const { data } = await context.supabase.rpc("has_role", {
+    _user_id: context.userId,
+    _role: "admin",
+  });
+  if (!data) throw new Error("Forbidden");
+}
+
+export const getInvoice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ bookingId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+    const { data: rows, error } = await supabaseAdmin
+      .from("booking_requests")
+      .select("*")
+      .eq("booking_group_id", gid)
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    if (!rows || rows.length === 0) throw new Error("Booking not found");
+    const head: any = rows[0];
+    let depositProofUrl: string | null = null;
+    let balanceProofUrl: string | null = null;
+    if (head.payment_proof_path) {
+      const { data: signed } = await supabaseAdmin.storage
+        .from("payment-proofs")
+        .createSignedUrl(head.payment_proof_path, 60 * 60);
+      depositProofUrl = signed?.signedUrl ?? null;
+    }
+    if (head.balance_proof_path) {
+      const { data: signed } = await supabaseAdmin.storage
+        .from("payment-proofs")
+        .createSignedUrl(head.balance_proof_path, 60 * 60);
+      balanceProofUrl = signed?.signedUrl ?? null;
+    }
+    const total = rows.reduce((s, r: any) => s + Number(r.total_amount ?? 0), 0);
+    const subtotal = rows.reduce((s, r: any) => s + Number(r.subtotal ?? 0), 0);
+    const comforter_total = rows.reduce((s, r: any) => s + Number(r.comforter_total ?? 0), 0);
+    const deposit = Number(head.deposit_amount ?? 50);
+    return {
+      id: head.id,
+      groupId: gid,
+      reference: head.payment_reference,
+      status: head.status,
+      guest_name: head.guest_name,
+      email: head.email,
+      phone: head.phone,
+      check_in: head.check_in,
+      check_out: head.check_out,
+      nights: head.nights,
+      guests: head.guests,
+      comforter: head.comforter,
+      notes: head.notes,
+      created_at: head.created_at,
+      confirmed_at: head.confirmed_at,
+      balance_paid_at: head.balance_paid_at,
+      balance_due_at: head.balance_due_at,
+      locker_code: head.locker_code,
+      total,
+      subtotal,
+      comforter_total,
+      deposit,
+      balance: Math.max(0, total - deposit),
+      depositProofUrl,
+      balanceProofUrl,
+      rooms: rows.map((r: any) => ({
+        id: r.id,
+        cabinId: r.cabin_id,
+        name: r.room_type,
+        nights: r.nights,
+        subtotal: Number(r.subtotal ?? 0),
+        comforterTotal: Number(r.comforter_total ?? 0),
+        total: Number(r.total_amount ?? 0),
+      })),
+    };
+  });
+
+export const setBalanceDueAt = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ bookingId: z.string().uuid(), dueAt: z.string().min(8).max(40) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+    const iso = new Date(data.dueAt).toISOString();
+    const { error } = await supabaseAdmin
+      .from("booking_requests")
+      .update({ balance_due_at: iso })
+      .eq("booking_group_id", gid);
+    if (error) throw new Error(error.message);
+    return { ok: true, balance_due_at: iso };
+  });
+
+// ============== ADMIN: occupancy calendar ==============
+
+export const getOccupancy = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: cabins } = await supabaseAdmin
+      .from("cabins")
+      .select("id, name, cabin_type, is_active");
+    const totalsByType = new Map<string, number>();
+    for (const c of cabins ?? []) {
+      if (!c.is_active) continue;
+      totalsByType.set(c.cabin_type, (totalsByType.get(c.cabin_type) ?? 0) + 1);
+    }
+
+    const { data: bookings } = await supabaseAdmin
+      .from("booking_requests")
+      .select(
+        "id, booking_group_id, payment_reference, guest_name, status, check_in, check_out, cabin_id, room_type, hold_expires_at, total_amount",
+      )
+      .lt("check_in", data.to)
+      .gt("check_out", data.from)
+      .in("status", ["pending_payment", "awaiting_review", "confirmed", "fully_paid"]);
+
+    const cabinById = new Map<string, { name: string; cabin_type: string }>();
+    for (const c of cabins ?? []) cabinById.set(c.id, { name: c.name, cabin_type: c.cabin_type });
+
+    // Build per-date map
+    const days: Record<
+      string,
+      {
+        date: string;
+        byType: Record<
+          string,
+          {
+            booked: number;
+            total: number;
+            bookings: Array<{
+              id: string;
+              reference: string | null;
+              guest: string;
+              cabin: string;
+              status: string;
+              total: number;
+            }>;
+          }
+        >;
+      }
+    > = {};
+
+    const start = new Date(data.from + "T00:00:00Z");
+    const end = new Date(data.to + "T00:00:00Z");
+    for (let t = new Date(start); t < end; t.setUTCDate(t.getUTCDate() + 1)) {
+      const ds = t.toISOString().slice(0, 10);
+      const byType: any = {};
+      for (const [type, total] of totalsByType.entries()) {
+        byType[type] = { booked: 0, total, bookings: [] };
+      }
+      days[ds] = { date: ds, byType };
+    }
+
+    const now = Date.now();
+    for (const b of bookings ?? []) {
+      // pending_payment expired → skip
+      if (
+        b.status === "pending_payment" &&
+        b.hold_expires_at &&
+        new Date(b.hold_expires_at).getTime() <= now
+      ) {
+        continue;
+      }
+      const cabin = b.cabin_id ? cabinById.get(b.cabin_id) : null;
+      if (!cabin) continue;
+      const from = new Date(b.check_in + "T00:00:00Z");
+      const to = new Date(b.check_out + "T00:00:00Z");
+      for (let t = new Date(from); t < to; t.setUTCDate(t.getUTCDate() + 1)) {
+        const ds = t.toISOString().slice(0, 10);
+        const day = days[ds];
+        if (!day) continue;
+        const slot = day.byType[cabin.cabin_type];
+        if (!slot) continue;
+        slot.booked += 1;
+        slot.bookings.push({
+          id: b.id,
+          reference: b.payment_reference,
+          guest: b.guest_name,
+          cabin: cabin.name,
+          status: b.status,
+          total: Number(b.total_amount ?? 0),
+        });
+      }
+    }
+    return { days: Object.values(days) };
+  });
+
+// ============== ADMIN: recipients ==============
+
+export const listAdminRecipients = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase
+      .from("admin_email_recipients")
+      .select("*")
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { recipients: data ?? [] };
+  });
+
+export const upsertAdminRecipient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        email: z.string().trim().email().max(255),
+        label: z.string().trim().max(80).optional().nullable(),
+        notify_new_booking: z.boolean(),
+        notify_payment_proof: z.boolean(),
+        notify_fully_paid: z.boolean(),
+        is_active: z.boolean(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const payload = {
+      email: data.email.toLowerCase(),
+      label: data.label ?? null,
+      notify_new_booking: data.notify_new_booking,
+      notify_payment_proof: data.notify_payment_proof,
+      notify_fully_paid: data.notify_fully_paid,
+      is_active: data.is_active,
+    };
+    if (data.id) {
+      const { error } = await context.supabase
+        .from("admin_email_recipients")
+        .update(payload)
+        .eq("id", data.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await context.supabase
+        .from("admin_email_recipients")
+        .insert(payload);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+export const deleteAdminRecipient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase
+      .from("admin_email_recipients")
+      .delete()
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ============== ADMIN: app settings ==============
+
+export const getAppSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase
+      .from("app_settings")
+      .select("key, value");
+    if (error) throw new Error(error.message);
+    const map: Record<string, any> = {};
+    for (const r of data ?? []) map[r.key] = r.value;
+    return {
+      deposit_amount_default: Number(map.deposit_amount_default ?? 50),
+      balance_due_days_before: Number(map.balance_due_days_before ?? 7),
+    };
+  });
+
+export const updateAppSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        deposit_amount_default: z.number().min(0).max(10000),
+        balance_due_days_before: z.number().int().min(0).max(365),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const entries = [
+      { key: "deposit_amount_default", value: data.deposit_amount_default as any },
+      { key: "balance_due_days_before", value: data.balance_due_days_before as any },
+    ];
+    for (const e of entries) {
+      const { error } = await context.supabase
+        .from("app_settings")
+        .upsert({ key: e.key, value: e.value, updated_at: new Date().toISOString() });
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+// ============== ADMIN: cabin management ==============
+
+export const listCabinsAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("cabins")
+      .select("*")
+      .order("display_order", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { cabins: data ?? [] };
+  });
+
+const cabinSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().trim().min(1).max(100),
+  slug: z.string().trim().min(1).max(80),
+  cabin_type: z.string().trim().min(1).max(60),
+  capacity: z.number().int().min(1).max(19),
+  weekday_rate: z.number().min(0).max(100000),
+  weekend_rate: z.number().min(0).max(100000),
+  school_holiday_rate: z.number().min(0).max(100000),
+  description: z.string().max(2000).optional().nullable(),
+  display_order: z.number().int().min(0).max(1000),
+  is_active: z.boolean(),
+});
+
+export const upsertCabin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => cabinSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { id, ...rest } = data;
+    if (id) {
+      const { error } = await supabaseAdmin.from("cabins").update(rest).eq("id", id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabaseAdmin.from("cabins").insert(rest);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+export const setCabinActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), active: z.boolean() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("cabins")
+      .update({ is_active: data.active })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ============== ADMIN: school holidays ==============
+
+export const listHolidays = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { data, error } = await context.supabase
+      .from("school_holidays")
+      .select("*")
+      .order("starts_on", { ascending: true });
+    if (error) throw new Error(error.message);
+    return { holidays: data ?? [] };
+  });
+
+const holidaySchema = z.object({
+  id: z.string().uuid().optional(),
+  label: z.string().trim().min(1).max(120),
+  starts_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  ends_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export const upsertHoliday = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => holidaySchema.parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    if (data.ends_on < data.starts_on) throw new Error("End date must be after start date");
+    const { id, ...rest } = data;
+    if (id) {
+      const { error } = await context.supabase.from("school_holidays").update(rest).eq("id", id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await context.supabase.from("school_holidays").insert(rest);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+export const deleteHoliday = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { error } = await context.supabase.from("school_holidays").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ============== ADMIN: stats + email log ==============
+
+export const getBookingStats = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("booking_requests")
+      .select("booking_group_id, status, total_amount, deposit_amount, nights, room_type, cabin_id, created_at, check_in, check_out")
+      .gte("created_at", data.from)
+      .lte("created_at", data.to + "T23:59:59");
+    if (error) throw new Error(error.message);
+
+    const seenGroups = new Set<string>();
+    let reservations = 0;
+    let confirmedRevenue = 0;
+    let depositRevenue = 0;
+    let nightsSold = 0;
+    const byType = new Map<string, { reservations: number; nights: number; revenue: number }>();
+
+    const { data: cabins } = await supabaseAdmin.from("cabins").select("id, cabin_type, is_active");
+    const typeByCabin = new Map<string, string>();
+    let activeCabins = 0;
+    for (const c of cabins ?? []) {
+      typeByCabin.set(c.id, c.cabin_type);
+      if (c.is_active) activeCabins++;
+    }
+
+    for (const r of rows ?? []) {
+      const gid = (r.booking_group_id as string) ?? "";
+      if (!seenGroups.has(gid)) {
+        seenGroups.add(gid);
+        reservations++;
+      }
+      const active = ["confirmed", "fully_paid", "awaiting_review"].includes(r.status as string);
+      if (active) {
+        confirmedRevenue += Number(r.total_amount ?? 0);
+        depositRevenue += Number(r.deposit_amount ?? 0);
+        nightsSold += Number(r.nights ?? 0);
+        const type = (r.cabin_id ? typeByCabin.get(r.cabin_id) : null) ?? "Unknown";
+        const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0 };
+        slot.reservations += 1;
+        slot.nights += Number(r.nights ?? 0);
+        slot.revenue += Number(r.total_amount ?? 0);
+        byType.set(type, slot);
+      }
+    }
+
+    const dayCount =
+      Math.max(
+        1,
+        Math.ceil(
+          (new Date(data.to).getTime() - new Date(data.from).getTime()) / 86400000,
+        ) + 1,
+      );
+    const capacity = activeCabins * dayCount;
+    const occupancy = capacity > 0 ? nightsSold / capacity : 0;
+
+    return {
+      reservations,
+      confirmedRevenue,
+      depositRevenue,
+      nightsSold,
+      occupancy,
+      activeCabins,
+      dayCount,
+      byType: Array.from(byType, ([type, v]) => ({ type, ...v })),
+    };
+  });
+
+export const listEmailLog = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        kind: z.string().optional().nullable(),
+        status: z.string().optional().nullable(),
+        offset: z.number().int().min(0).max(100000).default(0),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin
+      .from("email_outbox")
+      .select("id, kind, to_email, subject, status, sent_at, error, created_at, booking_id", {
+        count: "exact",
+      })
+      .gte("created_at", data.from)
+      .lte("created_at", data.to + "T23:59:59")
+      .order("created_at", { ascending: false })
+      .range(data.offset, data.offset + 49);
+    if (data.kind) q = q.eq("kind", data.kind);
+    if (data.status) q = q.eq("status", data.status);
+    const { data: rows, count, error } = await q;
+    if (error) throw new Error(error.message);
+
+    const { data: allKinds } = await supabaseAdmin
+      .from("email_outbox")
+      .select("kind")
+      .order("kind");
+    const kinds = Array.from(new Set((allKinds ?? []).map((r) => r.kind)));
+
+    const { data: summaryRows } = await supabaseAdmin
+      .from("email_outbox")
+      .select("status")
+      .gte("created_at", data.from)
+      .lte("created_at", data.to + "T23:59:59");
+    const summary = { total: 0, sent: 0, failed: 0, pending: 0 };
+    for (const r of summaryRows ?? []) {
+      summary.total += 1;
+      if (r.status === "sent") summary.sent += 1;
+      else if (r.status === "failed" || r.status === "dlq") summary.failed += 1;
+      else summary.pending += 1;
+    }
+
+    return { rows: rows ?? [], totalCount: count ?? 0, kinds, summary };
+  });
