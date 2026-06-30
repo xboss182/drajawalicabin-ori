@@ -18,6 +18,7 @@ import { LanguageToggle, useLanguage } from "@/lib/i18n";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Plus, Minus, X } from "lucide-react";
+import { isPaymentsConfigured } from "@/lib/stripe";
 
 // All bookings are evaluated in the property's timezone (Kuala Terengganu, UTC+8)
 // so a guest in any timezone sees the same "today" and never selects a date
