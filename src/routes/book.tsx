@@ -253,6 +253,14 @@ function BookPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function pickComboRecommendation(types: string[]) {
+    // Group repeats into qty per type
+    const counts = new Map<string, number>();
+    for (const t of types) counts.set(t, (counts.get(t) ?? 0) + 1);
+    setCart(() => Array.from(counts.entries()).map(([cabinType, qty]) => ({ cabinType, qty })));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   // Date is blocked when ANY cart line can't be satisfied that night
   const blockedDates = useMemo<string[]>(() => {
     if (cart.length === 0) return [];
