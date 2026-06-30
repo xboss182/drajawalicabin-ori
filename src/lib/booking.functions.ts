@@ -743,14 +743,31 @@ export const markFullyPaid = createServerFn({ method: "POST" })
     const head = rows?.[0];
     if (head) {
       const total = (rows ?? []).reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
-      const aggregate = {
-        ...head,
-        total_amount: total,
-        rooms: (rows ?? []).map((r) => ({ name: r.room_type, nights: r.nights, total: Number(r.total_amount ?? 0) })),
+      const templateData = {
+        guestName: head.guest_name,
+        reference: head.payment_reference ?? head.id.slice(0, 8),
+        checkIn: head.check_in,
+        checkOut: head.check_out,
+        rooms: (rows ?? []).map((r) => r.room_type).join(', '),
+        lockerCode: head.locker_code,
       };
-      const { renderFullyPaidEmail, enqueueEmail } = await import("./email.server");
-      const { subject, body } = renderFullyPaidEmail(aggregate as never);
-      await enqueueEmail(supabaseAdmin, { kind: "fully_paid", toEmail: head.email, subject, body, bookingId: head.id });
+      void total;
+      const { sendTransactionalEmail, getAdminRecipients } = await import("./email/send.server");
+      await sendTransactionalEmail(supabaseAdmin, {
+        templateName: 'fully-paid',
+        recipientEmail: head.email,
+        idempotencyKey: `fully-paid-${head.id}-guest`,
+        templateData,
+      });
+      const admins = await getAdminRecipients(supabaseAdmin, 'notify_fully_paid');
+      for (const adminEmail of admins) {
+        await sendTransactionalEmail(supabaseAdmin, {
+          templateName: 'fully-paid',
+          recipientEmail: adminEmail,
+          idempotencyKey: `fully-paid-${head.id}-${adminEmail}`,
+          templateData,
+        });
+      }
     }
     return { ok: true };
   });
