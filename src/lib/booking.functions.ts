@@ -502,6 +502,103 @@ export const rejectBooking = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Hard-delete a booking (all rows in the group). Admin only.
+export const deleteBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => idSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+    const { error } = await supabaseAdmin
+      .from("booking_requests")
+      .delete()
+      .eq("booking_group_id", gid);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// Manually add a booking on behalf of guests booked outside the site.
+const adminCreateSchema = z.object({
+  cabinId: z.string().uuid(),
+  checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  guestName: z.string().trim().min(1).max(100),
+  phone: z.string().trim().max(30).optional().default(""),
+  email: z.string().trim().max(255).optional().default(""),
+  guests: z.number().int().min(1).max(12).default(1),
+  totalAmount: z.number().min(0).max(100000).default(0),
+  notes: z.string().trim().max(1000).optional().default(""),
+  status: z.enum(["confirmed", "fully_paid", "pending_payment"]).default("confirmed"),
+});
+
+export const adminCreateBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => adminCreateSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    if (new Date(data.checkOut) <= new Date(data.checkIn)) {
+      throw new Error("Check-out must be after check-in");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: cabin, error: cErr } = await supabaseAdmin
+      .from("cabins")
+      .select("id, name")
+      .eq("id", data.cabinId)
+      .maybeSingle();
+    if (cErr || !cabin) throw new Error("Cabin not found");
+
+    const reference = `RJW-M${Math.floor(1000 + Math.random() * 9000)}`;
+    const nights = Math.round(
+      (new Date(data.checkOut).getTime() - new Date(data.checkIn).getTime()) / 86400000,
+    );
+    const groupId = globalThis.crypto?.randomUUID?.();
+    const guestToken = globalThis.crypto?.randomUUID?.();
+    const row: Record<string, unknown> = {
+      guest_name: data.guestName,
+      email: data.email || "manual@admin.local",
+      phone: data.phone || "—",
+      check_in: data.checkIn,
+      check_out: data.checkOut,
+      guests: data.guests,
+      room_type: cabin.name,
+      cabin_id: cabin.id,
+      nights,
+      subtotal: data.totalAmount,
+      comforter: false,
+      comforter_total: 0,
+      total_amount: data.totalAmount,
+      deposit_amount: data.totalAmount,
+      balance_amount: 0,
+      payment_reference: reference,
+      status: data.status,
+      payment_type: "full",
+      num_rooms: 1,
+      notes: data.notes ? `[Manual entry] ${data.notes}` : "[Manual entry]",
+      confirmed_at: data.status !== "pending_payment" ? new Date().toISOString() : null,
+      confirmed_by: data.status !== "pending_payment" ? context.userId : null,
+      balance_paid_at: data.status === "fully_paid" ? new Date().toISOString() : null,
+    };
+    if (groupId) row.booking_group_id = groupId;
+    if (guestToken) row.guest_token = guestToken;
+
+    const { data: inserted, error } = await supabaseAdmin
+      .from("booking_requests")
+      .insert(row as any)
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { ok: true, bookingId: inserted.id };
+  });
+
 // Grant admin role to any signed-in user whose email is on the
 // active admin_email_recipients allowlist. Idempotent — safe to call on every sign-in.
 export const claimAdminIfFirst = createServerFn({ method: "POST" })
