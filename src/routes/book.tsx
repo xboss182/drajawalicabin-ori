@@ -950,7 +950,7 @@ function DetailsStep(props: {
 function PaymentStep({
   booking, paymentType, proofFile, setProofFile, uploadProof, uploading, error, name, cabinName, checkin, checkout,
 }: {
-  booking: { bookingId: string; reference: string; total: number; holdExpiresAt: string };
+  booking: { bookingId: string; reference: string; total: number; holdExpiresAt: string; guestToken: string };
   paymentType: "deposit" | "full";
   proofFile: File | null;
   setProofFile: (f: File | null) => void;
@@ -978,6 +978,10 @@ function PaymentStep({
   function copy(text: string) {
     navigator.clipboard.writeText(text);
   }
+  const cardEnabled = isPaymentsConfigured();
+  const cardHref =
+    `/checkout?id=${encodeURIComponent(booking.bookingId)}` +
+    `&token=${encodeURIComponent(booking.guestToken)}&kind=deposit`;
 
   return (
     <section className="mx-auto max-w-3xl px-6 py-16 lg:px-10 lg:py-20">
@@ -1025,6 +1029,31 @@ function PaymentStep({
           <p className="mt-1"><strong>{bt.info.bookingNum}</strong> {bt.info.bookingNumNote}</p>
         </div>
       </div>
+
+      {cardEnabled && (
+        <div className="mt-6 rounded-2xl border border-forest/30 bg-coconut p-6">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-forest">Fastest — auto-confirm</p>
+              <h2 className="mt-1 font-display text-xl text-forest">Pay by card</h2>
+              <p className="mt-1 text-sm text-foreground/75">
+                Card payment auto-confirms your booking — no proof upload, no waiting for approval.
+              </p>
+            </div>
+            <Link
+              to="/checkout"
+              search={{ id: booking.bookingId, token: booking.guestToken, kind: "deposit" }}
+              className="rounded-full bg-forest px-6 py-3 text-xs font-medium uppercase tracking-widest text-coconut hover:bg-forest/90"
+            >
+              Pay by card →
+            </Link>
+          </div>
+        </div>
+      )}
+
+      <p className="mt-8 text-[11px] uppercase tracking-[0.3em] text-stone">
+        Or — pay manually (admin approval required)
+      </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-6">
