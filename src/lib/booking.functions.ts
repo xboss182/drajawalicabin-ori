@@ -1310,17 +1310,15 @@ export const recommendCabins = createServerFn({ method: "POST" })
     co.setUTCDate(co.getUTCDate() - 1);
     const lastNightStr = co.toISOString().slice(0, 10);
 
-    // Fetch active cabins that fit the guest count
+    // Fetch all active cabins (we'll filter / combine below)
     const { data: cabins, error } = await supabaseAdmin
       .from("cabins")
       .select("id, name, cabin_type, capacity, weekday_rate, weekend_rate, school_holiday_rate")
       .eq("is_active", true)
-      .gte("capacity", data.guests)
       .order("capacity");
     if (error) throw new Error(error.message);
     if (!cabins || cabins.length === 0) return { picks: [] };
 
-    // For each cabin type group, pick one available representative (cheapest by display_order already)
     type Pick = {
       cabinId: string;
       cabinType: string;
@@ -1329,9 +1327,18 @@ export const recommendCabins = createServerFn({ method: "POST" })
       nights: number;
       total: number;
       score: number;
+      combo?: Array<{ cabinType: string; name: string; capacity: number }>;
     };
-    const byType = new Map<string, Pick>();
-
+    // Compute availability + price once per cabin
+    type Available = {
+      id: string;
+      cabinType: string;
+      name: string;
+      capacity: number;
+      nights: number;
+      total: number;
+    };
+    const available: Available[] = [];
     for (const c of cabins) {
       const { data: taken } = await supabaseAdmin.rpc("cabin_taken_dates", {
         _cabin_id: c.id,
@@ -1339,7 +1346,6 @@ export const recommendCabins = createServerFn({ method: "POST" })
         _to: lastNightStr,
       });
       if (taken && taken.length > 0) continue;
-
       const { data: priceRows } = await supabaseAdmin.rpc("compute_booking_price", {
         _cabin_id: c.id,
         _check_in: data.checkIn,
@@ -1348,25 +1354,92 @@ export const recommendCabins = createServerFn({ method: "POST" })
       });
       const price = Array.isArray(priceRows) ? priceRows[0] : priceRows;
       if (!price) continue;
-      const total = Number(price.total);
-      // Lower score wins: prefer just-right capacity (less excess), then cheaper
-      const score = (Number(c.capacity) - data.guests) * 1000 + total;
-      const existing = byType.get(c.cabin_type);
+      available.push({
+        id: c.id,
+        cabinType: c.cabin_type,
+        name: c.name.replace(/\s*\d+\s*$/, "").trim(),
+        capacity: Number(c.capacity),
+        nights: Number(price.nights),
+        total: Number(price.total),
+      });
+    }
+
+    // Single-cabin picks (capacity fits whole party), one best per type
+    const byType = new Map<string, Pick>();
+    for (const a of available) {
+      if (a.capacity < data.guests) continue;
+      const score = (a.capacity - data.guests) * 1000 + a.total;
+      const existing = byType.get(a.cabinType);
       if (!existing || score < existing.score) {
-        byType.set(c.cabin_type, {
-          cabinId: c.id,
-          cabinType: c.cabin_type,
-          name: c.name.replace(/\s*\d+\s*$/, "").trim(),
-          capacity: Number(c.capacity),
-          nights: Number(price.nights),
-          total,
+        byType.set(a.cabinType, {
+          cabinId: a.id,
+          cabinType: a.cabinType,
+          name: a.name,
+          capacity: a.capacity,
+          nights: a.nights,
+          total: a.total,
           score,
         });
       }
     }
-
-    const picks = Array.from(byType.values())
+    let picks = Array.from(byType.values())
       .sort((a, b) => a.score - b.score)
       .slice(0, 3);
+
+    // If nothing fits as a single room, suggest 2-room combos
+    if (picks.length === 0 && available.length >= 2) {
+      // One representative per cabin_type (cheapest first)
+      const reps = new Map<string, Available>();
+      for (const a of [...available].sort((x, y) => x.total - y.total)) {
+        if (!reps.has(a.cabinType)) reps.set(a.cabinType, a);
+      }
+      const repList = Array.from(reps.values());
+      const combos: Pick[] = [];
+      // Same-type pair (need >=2 free in that type)
+      const freeCountByType = new Map<string, number>();
+      for (const a of available) freeCountByType.set(a.cabinType, (freeCountByType.get(a.cabinType) ?? 0) + 1);
+      for (const r of repList) {
+        if ((freeCountByType.get(r.cabinType) ?? 0) < 2) continue;
+        const cap = r.capacity * 2;
+        if (cap < data.guests) continue;
+        combos.push({
+          cabinId: `${r.id}x2`,
+          cabinType: r.cabinType,
+          name: `${r.name} ×2`,
+          capacity: cap,
+          nights: r.nights,
+          total: r.total * 2,
+          score: (cap - data.guests) * 1000 + r.total * 2,
+          combo: [
+            { cabinType: r.cabinType, name: r.name, capacity: r.capacity },
+            { cabinType: r.cabinType, name: r.name, capacity: r.capacity },
+          ],
+        });
+      }
+      // Mixed-type pair
+      for (let i = 0; i < repList.length; i++) {
+        for (let j = i + 1; j < repList.length; j++) {
+          const a = repList[i];
+          const b = repList[j];
+          const cap = a.capacity + b.capacity;
+          if (cap < data.guests) continue;
+          combos.push({
+            cabinId: `${a.id}+${b.id}`,
+            cabinType: a.cabinType,
+            name: `${a.name} + ${b.name}`,
+            capacity: cap,
+            nights: a.nights,
+            total: a.total + b.total,
+            score: (cap - data.guests) * 1000 + (a.total + b.total),
+            combo: [
+              { cabinType: a.cabinType, name: a.name, capacity: a.capacity },
+              { cabinType: b.cabinType, name: b.name, capacity: b.capacity },
+            ],
+          });
+        }
+      }
+      picks = combos.sort((x, y) => x.score - y.score).slice(0, 3);
+    }
+
     return { picks };
   });
