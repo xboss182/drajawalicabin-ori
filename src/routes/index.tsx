@@ -222,6 +222,7 @@ function MorePagesMenu({ className }: { className?: string }) {
           </Link>
           <Link
             to="/manage-booking"
+            search={{ id: "", token: "" }}
             className="rounded-md px-3 py-2 text-sm font-medium text-forest hover:bg-forest/10"
           >
             Manage Booking
