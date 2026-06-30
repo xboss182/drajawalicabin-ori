@@ -27,6 +27,9 @@ export function getStripeEnvironment(): StripeEnv {
 }
 
 export function isPaymentsConfigured(): boolean {
+  // Stripe integration is paused — manual bank transfer / DuitNow only.
+  // Flip this back to the token check when card payments resume.
+  return false;
   return (
     typeof clientToken === "string" &&
     (clientToken.startsWith("pk_test_") || clientToken.startsWith("pk_live_"))
