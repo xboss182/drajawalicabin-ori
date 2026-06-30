@@ -36,15 +36,7 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
 
   if (kind === "deposit") {
     const isFull = head.payment_type === "full";
-    const update: Record<string, unknown> = {
-      status: isFull ? "fully_paid" : "confirmed",
-      payment_method: "stripe",
-      stripe_session_id: session.id,
-      confirmed_at: nowIso,
-      ...(isFull ? { balance_paid_at: nowIso, balance_due_at: null } : {}),
-      ...(paymentIntentId ? { stripe_payment_intent_id: paymentIntentId } : {}),
-    };
-    // Default balance_due_at = check_in - 7 days for deposit-only
+    let balanceDueAt: string | null = null;
     if (!isFull && head.check_in) {
       try {
         const { data: s } = await supabaseAdmin
@@ -55,12 +47,20 @@ async function handleCheckoutCompleted(session: any, env: StripeEnv) {
         const days = s?.value != null ? Number(s.value) : 7;
         const due = new Date(head.check_in as string);
         due.setUTCDate(due.getUTCDate() - days);
-        update.balance_due_at = due.toISOString();
+        balanceDueAt = due.toISOString();
       } catch {}
     }
     await supabaseAdmin
       .from("booking_requests")
-      .update(update)
+      .update({
+        status: isFull ? "fully_paid" : "confirmed",
+        payment_method: "stripe",
+        stripe_session_id: session.id,
+        confirmed_at: nowIso,
+        ...(isFull ? { balance_paid_at: nowIso, balance_due_at: null } : {}),
+        ...(balanceDueAt ? { balance_due_at: balanceDueAt } : {}),
+        ...(paymentIntentId ? { stripe_payment_intent_id: paymentIntentId } : {}),
+      })
       .eq("booking_group_id", groupId);
   } else {
     // Balance payment
