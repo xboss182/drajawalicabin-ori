@@ -19,9 +19,35 @@ import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Plus, Minus, X } from "lucide-react";
 
-const today = () => new Date().toISOString().slice(0, 10);
-const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+// All bookings are evaluated in the property's timezone (Kuala Terengganu, UTC+8)
+// so a guest in any timezone sees the same "today" and never selects a date
+// that's shifted by ±1 day from what the property sees.
+const PROPERTY_TZ = "Asia/Kuala_Lumpur";
 
+function propertyDateParts(d: Date): { y: number; m: number; day: number } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: PROPERTY_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value ?? "0");
+  return { y: get("year"), m: get("month"), day: get("day") };
+}
+
+/** YYYY-MM-DD string for a Date as seen in the property timezone. */
+function formatPropertyDate(d: Date): string {
+  const { y, m, day } = propertyDateParts(d);
+  return `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+/** Local Date whose year/month/day match the YYYY-MM-DD string — safe for calendar display. */
+function parseLocalDate(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}
+
+/** Convenience: emit a YYYY-MM-DD for the date the calendar component handed back. */
 function formatLocalDate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -29,13 +55,14 @@ function formatLocalDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function parseLocalDate(s: string): Date {
-  const [y, m, d] = s.split("-").map(Number);
-  return new Date(y, (m || 1) - 1, d || 1);
+function addDaysISO(iso: string, days: number): string {
+  const d = parseLocalDate(iso);
+  d.setDate(d.getDate() + days);
+  return formatLocalDate(d);
 }
 
-const todayStr = today();
-const tomorrowStr = tomorrow();
+const todayStr = formatPropertyDate(new Date());
+const tomorrowStr = addDaysISO(todayStr, 1);
 
 type Cabin = {
   id: string;
