@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CalendarIcon, Users, BedDouble, Search, Menu } from "lucide-react";
+import { CalendarIcon, Users, BedDouble, Search } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -175,11 +175,23 @@ function Nav() {
           <a href="#about" className="hover:text-coconut">{t.nav.about}</a>
           <a href="#nearby" className="hover:text-coconut">{t.nav.nearby}</a>
           <a href="#book" className="hover:text-coconut">{t.nav.book}</a>
-          <MorePagesMenu />
+          <Link
+            to="/manage-booking"
+            search={{ id: "", token: "" }}
+            className="hover:text-coconut"
+          >
+            Manage booking
+          </Link>
         </nav>
         <div className="flex items-center gap-3">
           <LanguageToggle />
-          <MorePagesMenu className="md:hidden" />
+          <Link
+            to="/manage-booking"
+            search={{ id: "", token: "" }}
+            className="text-xs uppercase tracking-widest text-coconut/90 hover:text-coconut md:hidden"
+          >
+            Manage booking
+          </Link>
           <a
             href={waHref(t.whatsappMessage)}
             target="_blank"
@@ -188,48 +200,16 @@ function Nav() {
           >
             {t.nav.whatsapp}
           </a>
+          <Link
+            to="/auth"
+            className="inline-flex items-center justify-center rounded-full border border-coconut/40 bg-coconut/10 p-2 text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest"
+            aria-label="Owner sign in"
+          >
+            <GoogleIcon />
+          </Link>
         </div>
       </div>
     </header>
-  );
-}
-
-function MorePagesMenu({ className }: { className?: string }) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label="More pages"
-          className={cn(
-            "inline-flex items-center justify-center rounded-full p-2 text-coconut/90 transition hover:bg-coconut/10 hover:text-coconut focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coconut/50",
-            className,
-          )}
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        className="w-48 border-coconut/10 bg-coconut p-2 text-forest shadow-xl"
-      >
-        <div className="flex flex-col gap-1">
-          <Link
-            to="/find-booking"
-            className="rounded-md px-3 py-2 text-sm font-medium text-forest hover:bg-forest/10"
-          >
-            Find Booking
-          </Link>
-          <Link
-            to="/manage-booking"
-            search={{ id: "", token: "" }}
-            className="rounded-md px-3 py-2 text-sm font-medium text-forest hover:bg-forest/10"
-          >
-            Manage Booking
-          </Link>
-        </div>
-      </PopoverContent>
-    </Popover>
   );
 }
 
