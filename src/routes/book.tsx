@@ -580,7 +580,7 @@ function DetailsStep(props: {
               </span>
             </div>
           </div>
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-4">
             <Calendar
               mode="range"
               numberOfMonths={1}
@@ -605,7 +605,13 @@ function DetailsStep(props: {
               classNames={{
                 today: "font-semibold text-forest underline underline-offset-4",
               }}
-              className="pointer-events-auto p-0"
+              className="pointer-events-auto p-0 w-full [--cell-size:2.75rem] sm:[--cell-size:3.25rem]"
+              classNames={{
+                today: "font-semibold text-forest underline underline-offset-4",
+                months: "w-full",
+                month: "w-full",
+                table: "w-full",
+              }}
             />
           </div>
         </div>
