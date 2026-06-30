@@ -7,6 +7,21 @@ export const Route = createFileRoute("/api/public/hooks/send-balance-reminders")
   server: {
     handlers: {
       POST: async ({ request }) => {
+        // Authorize: caller must present the service-role key as Bearer token.
+        // This route mutates booking state (balance_reminder_sent_at) and triggers
+        // emails, so it must not be callable anonymously.
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const authHeader = request.headers.get("Authorization") ?? "";
+        const presented = authHeader.startsWith("Bearer ")
+          ? authHeader.slice("Bearer ".length).trim()
+          : "";
+        if (!serviceKey || !presented || presented !== serviceKey) {
+          return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { sendTransactionalEmail } = await import("@/lib/email/send.server");
 
