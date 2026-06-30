@@ -774,7 +774,21 @@ function DetailsStep(props: {
         <div className="mt-8 rounded-2xl border border-border bg-card p-5">
           <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.terms.eyebrow}</p>
           <h3 className="mt-2 font-display text-lg text-forest">{bt.terms.title}</h3>
-          <p className="mt-2 text-sm text-foreground/75">{bt.terms.summary}</p>
+          {paymentType === "deposit" ? (
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-foreground/80">
+              <li>RM 50 deposit secures your dates once we verify the receipt.</li>
+              <li>Balance is due 7 days before check-in; we'll email a reminder.</li>
+              <li>Cancellations within 7 days of arrival are non-refundable.</li>
+              <li>Locker code is shared on the morning of check-in via WhatsApp.</li>
+            </ul>
+          ) : (
+            <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-foreground/80">
+              <li>Pay the full amount now — no balance step later.</li>
+              <li>Locker code is issued on WhatsApp once we verify your receipt.</li>
+              <li>Cancellations within 7 days of arrival are non-refundable.</li>
+              <li>Refunds for earlier cancellations are processed within 7 working days.</li>
+            </ul>
+          )}
           <label className="mt-4 flex items-start gap-3">
             <input
               type="checkbox"
@@ -782,7 +796,11 @@ function DetailsStep(props: {
               onChange={(e) => setAgreed(e.target.checked)}
               className="mt-1 h-4 w-4 accent-forest"
             />
-            <span className="text-sm leading-relaxed text-foreground/85">{bt.terms.agree}</span>
+            <span className="text-sm leading-relaxed text-foreground/85">
+              {paymentType === "deposit"
+                ? "I agree to the property rules (RM 50 deposit to secure dates, balance due 7 days before check-in, 7-day cancellation policy)."
+                : "I agree to the property rules (full payment now, locker code on verification, 7-day cancellation policy)."}
+            </span>
           </label>
         </div>
 
