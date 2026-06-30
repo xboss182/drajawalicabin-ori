@@ -9,7 +9,7 @@ import {
   markFullyPaid,
 } from "@/lib/booking.functions";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
     meta: [
       { title: "Owner dashboard — Rajawali D'Cabin" },
