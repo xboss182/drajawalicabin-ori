@@ -38,6 +38,7 @@ const createSchema = z.object({
   vehicleType: z.string().trim().max(100).optional(),
   vehicleNumber: z.string().trim().max(50).optional(),
   notes: z.string().trim().max(1000).optional(),
+  paymentType: z.enum(["deposit", "full"]).optional(),
 });
 
 export const createBooking = createServerFn({ method: "POST" })
@@ -166,6 +167,7 @@ export const createBooking = createServerFn({ method: "POST" })
       hold_expires_at: holdExpires,
       status: "pending_payment",
       num_rooms: 1,
+      payment_type: data.paymentType ?? "deposit",
     };
 
     const rows = assigned.map((a) => ({
@@ -191,6 +193,14 @@ export const createBooking = createServerFn({ method: "POST" })
     const lead = inserted[0];
     const total = inserted.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
 
+    // For full-payment bookings, set deposit_amount = total and balance_amount = 0 on the lead row
+    if ((data.paymentType ?? "deposit") === "full") {
+      await supabaseAdmin
+        .from("booking_requests")
+        .update({ deposit_amount: total, balance_amount: 0 })
+        .eq("id", lead.id);
+    }
+
     return {
       bookingId: lead.id as string,
       groupId: (lead.booking_group_id as string) ?? lead.id,
@@ -198,6 +208,7 @@ export const createBooking = createServerFn({ method: "POST" })
       total,
       holdExpiresAt: lead.hold_expires_at as string,
       guestToken: lead.guest_token as string,
+      paymentType: (data.paymentType ?? "deposit") as "deposit" | "full",
     };
   });
 
