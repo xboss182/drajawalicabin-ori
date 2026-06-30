@@ -20,6 +20,7 @@ type R = {
   notify_payment_proof: boolean;
   notify_fully_paid: boolean;
   is_active: boolean;
+  password?: string;
 };
 
 const emptyR: R = {
@@ -29,12 +30,14 @@ const emptyR: R = {
   notify_payment_proof: true,
   notify_fully_paid: true,
   is_active: true,
+  password: "",
 };
 
 function MembersPage() {
   const [recipients, setRecipients] = useState<R[]>([]);
   const [editing, setEditing] = useState<R | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [savedMsg, setSavedMsg] = useState<string | null>(null);
 
   async function load() {
     try {
@@ -50,8 +53,25 @@ function MembersPage() {
 
   async function saveR() {
     if (!editing) return;
+    // For a new member, password is required
+    if (!editing.id && (!editing.password || editing.password.length < 8)) {
+      alert("Initial password is required (min 8 characters).");
+      return;
+    }
+    if (editing.password && editing.password.length > 0 && editing.password.length < 8) {
+      alert("Password must be at least 8 characters.");
+      return;
+    }
     try {
-      await upsertAdminRecipient({ data: editing });
+      const payload: R = { ...editing };
+      if (!payload.password) delete payload.password;
+      await upsertAdminRecipient({ data: payload });
+      setSavedMsg(
+        editing.password
+          ? "Saved — member can sign in with email + password."
+          : "Saved.",
+      );
+      setTimeout(() => setSavedMsg(null), 4000);
       setEditing(null);
       load();
     } catch (e: any) {
@@ -86,6 +106,7 @@ function MembersPage() {
           Only <strong>active</strong> members can access the admin area. Members sign in via Google or email/password on the sign-in page using one of the listed emails.
         </p>
         {err && <p className="mt-3 text-sm text-red-700">{err}</p>}
+        {savedMsg && <p className="mt-3 text-sm text-forest">{savedMsg}</p>}
 
         <div className="mt-6 rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between">
@@ -149,6 +170,22 @@ function MembersPage() {
                 <label className="block">
                   <span className="block text-[10px] uppercase tracking-widest text-stone">Label (optional)</span>
                   <input value={editing.label ?? ""} onChange={(e) => setEditing({ ...editing, label: e.target.value })} className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                </label>
+                <label className="block sm:col-span-2">
+                  <span className="block text-[10px] uppercase tracking-widest text-stone">
+                    {editing.id ? "Reset password (leave blank to keep current)" : "Initial password (min 8 chars)"}
+                  </span>
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    value={editing.password ?? ""}
+                    onChange={(e) => setEditing({ ...editing, password: e.target.value })}
+                    placeholder={editing.id ? "Leave blank to keep current password" : "Min 8 characters"}
+                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
+                  <span className="mt-1 block text-[11px] text-stone">
+                    Used for email + password sign-in. Google sign-in works either way.
+                  </span>
                 </label>
               </div>
               <div className="mt-3 flex flex-wrap gap-4 text-sm">
