@@ -1253,6 +1253,7 @@ export const upsertAdminRecipient = createServerFn({ method: "POST" })
         notify_payment_proof: z.boolean(),
         notify_fully_paid: z.boolean(),
         is_active: z.boolean(),
+        password: z.string().min(8).max(128).optional(),
       })
       .parse(d),
   )
@@ -1278,6 +1279,40 @@ export const upsertAdminRecipient = createServerFn({ method: "POST" })
         .insert(payload);
       if (error) throw new Error(error.message);
     }
+
+    // If a password was provided, create or update the Supabase auth user
+    // for this email so they can sign in with email + password.
+    if (data.password) {
+      const email = data.email.toLowerCase();
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      // Find existing auth user by email (paginate defensively)
+      let existingId: string | null = null;
+      for (let page = 1; page <= 20 && !existingId; page++) {
+        const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
+          page,
+          perPage: 200,
+        });
+        if (listErr) throw new Error(listErr.message);
+        const found = list.users.find((u) => (u.email ?? "").toLowerCase() === email);
+        if (found) existingId = found.id;
+        if (list.users.length < 200) break;
+      }
+      if (existingId) {
+        const { error: updErr } = await supabaseAdmin.auth.admin.updateUserById(existingId, {
+          password: data.password,
+          email_confirm: true,
+        });
+        if (updErr) throw new Error(updErr.message);
+      } else {
+        const { error: createErr } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password: data.password,
+          email_confirm: true,
+        });
+        if (createErr) throw new Error(createErr.message);
+      }
+    }
+
     return { ok: true };
   });
 
