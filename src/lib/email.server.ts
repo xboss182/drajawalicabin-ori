@@ -3,7 +3,30 @@
 // can read `status='pending'` rows and send them.
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const TEAM_CC = ["awang.mfauzi@gmail.com", "salikin1305@gmail.com", "xboss182@gmail.com"];
+const FALLBACK_TEAM_CC = ["awang.mfauzi@gmail.com", "salikin1305@gmail.com", "xboss182@gmail.com"];
+
+// Which `notify_*` column to consult for each email kind sent to admins.
+const KIND_NOTIFY_COLUMN: Record<string, string | null> = {
+  booking_summary: "notify_payment_proof",
+  fully_paid: "notify_fully_paid",
+  new_booking: "notify_new_booking",
+};
+
+async function getAdminCcs(admin: SupabaseClient, kind: string): Promise<string[]> {
+  const col = KIND_NOTIFY_COLUMN[kind];
+  if (!col) return [];
+  try {
+    const { data, error } = await admin
+      .from("admin_email_recipients")
+      .select(`email, is_active, ${col}`)
+      .eq("is_active", true)
+      .eq(col, true);
+    if (error || !data || data.length === 0) return FALLBACK_TEAM_CC;
+    return data.map((r: any) => r.email).filter(Boolean);
+  } catch {
+    return FALLBACK_TEAM_CC;
+  }
+}
 
 function money(n: number | null | undefined) {
   return `RM ${Number(n ?? 0).toFixed(2)}`;
@@ -133,10 +156,11 @@ export async function enqueueEmail(
   admin: SupabaseClient,
   args: { kind: string; toEmail: string; subject: string; body: string; bookingId?: string },
 ) {
+  const ccs = await getAdminCcs(admin, args.kind);
   const { error } = await admin.from("email_outbox").insert({
     kind: args.kind,
     to_email: args.toEmail,
-    cc_emails: TEAM_CC,
+    cc_emails: ccs,
     subject: args.subject,
     body: args.body,
     booking_id: args.bookingId ?? null,
