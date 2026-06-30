@@ -8,7 +8,9 @@ export const Route = createFileRoute("/find-booking")({
     meta: [
       { title: "Find your booking — Rajawali D'Cabin" },
       { name: "robots", content: "noindex" },
-      { name: "description", content: "Recover your booking management link." },
+      { name: "description", content: "Lost your Rajawali D'Cabin booking link? Enter your email and reference number and we'll re-send the manage link to your inbox." },
+      { property: "og:title", content: "Find your booking — Rajawali D'Cabin" },
+      { property: "og:description", content: "Recover your Rajawali D'Cabin booking management link by email." },
     ],
   }),
   component: FindBookingPage,
