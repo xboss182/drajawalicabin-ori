@@ -279,12 +279,18 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
       });
       // Admin copies — one per opted-in recipient
       const admins = await getAdminRecipients(supabaseAdmin, 'notify_payment_proof');
+      const adminTemplateData = {
+        ...templateData,
+        guestEmail: leadRow.email,
+        guestPhone: (leadRow as any).phone,
+        bookingId: leadRow.id,
+      };
       for (const adminEmail of admins) {
         await sendTransactionalEmail(supabaseAdmin, {
-          templateName: 'booking-summary',
+          templateName: 'admin-booking-alert',
           recipientEmail: adminEmail,
-          idempotencyKey: `booking-summary-${leadRow.id}-${adminEmail}`,
-          templateData,
+          idempotencyKey: `admin-booking-alert-${leadRow.id}-${adminEmail}`,
+          templateData: adminTemplateData,
         });
       }
       await supabaseAdmin

@@ -200,13 +200,6 @@ function Nav() {
           >
             {t.nav.whatsapp}
           </a>
-          <Link
-            to="/auth"
-            className="inline-flex items-center justify-center rounded-full border border-coconut/40 bg-coconut/10 p-2 text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest"
-            aria-label="Owner sign in"
-          >
-            <GoogleIcon />
-          </Link>
         </div>
       </div>
     </header>
@@ -218,17 +211,6 @@ function Leaf() {
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M11 20A7 7 0 0 1 4 13c0-6 6-9 16-9 0 10-3 16-9 16Z" />
       <path d="M4 20c4-4 7-7 16-9" />
-    </svg>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
-      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.3 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6C12.3 13.1 17.6 9.5 24 9.5z"/>
-      <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.5 2.9-2.2 5.3-4.7 7l7.4 5.7c4.3-4 6.8-9.9 6.8-17.2z"/>
-      <path fill="#FBBC05" d="M10.4 28.7a14.6 14.6 0 0 1 0-9.4l-7.8-6A24 24 0 0 0 0 24c0 3.9.9 7.6 2.6 10.8l7.8-6.1z"/>
-      <path fill="#34A853" d="M24 48c6.2 0 11.5-2 15.3-5.6l-7.4-5.7c-2 1.4-4.7 2.3-7.9 2.3-6.4 0-11.7-3.6-13.6-9.3l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/>
     </svg>
   );
 }
