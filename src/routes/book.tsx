@@ -390,6 +390,7 @@ function BookPage() {
             agreed, setAgreed,
             paymentType, setPaymentType,
             recommendations, pickRecommendation, isAnyCabin,
+            pickComboRecommendation,
           }}
         />
       )}
