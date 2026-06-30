@@ -96,6 +96,7 @@ export type Database = {
           nights: number | null
           notes: string | null
           num_rooms: number | null
+          payment_method: string
           payment_proof_path: string | null
           payment_reference: string | null
           payment_type: string
@@ -103,6 +104,10 @@ export type Database = {
           relationship: string | null
           room_type: string
           status: Database["public"]["Enums"]["booking_status"]
+          stripe_balance_payment_intent_id: string | null
+          stripe_balance_session_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           subtotal: number | null
           total_amount: number | null
           vehicle_number: string | null
@@ -135,6 +140,7 @@ export type Database = {
           nights?: number | null
           notes?: string | null
           num_rooms?: number | null
+          payment_method?: string
           payment_proof_path?: string | null
           payment_reference?: string | null
           payment_type?: string
@@ -142,6 +148,10 @@ export type Database = {
           relationship?: string | null
           room_type: string
           status?: Database["public"]["Enums"]["booking_status"]
+          stripe_balance_payment_intent_id?: string | null
+          stripe_balance_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           subtotal?: number | null
           total_amount?: number | null
           vehicle_number?: string | null
@@ -174,6 +184,7 @@ export type Database = {
           nights?: number | null
           notes?: string | null
           num_rooms?: number | null
+          payment_method?: string
           payment_proof_path?: string | null
           payment_reference?: string | null
           payment_type?: string
@@ -181,6 +192,10 @@ export type Database = {
           relationship?: string | null
           room_type?: string
           status?: Database["public"]["Enums"]["booking_status"]
+          stripe_balance_payment_intent_id?: string | null
+          stripe_balance_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           subtotal?: number | null
           total_amount?: number | null
           vehicle_number?: string | null
