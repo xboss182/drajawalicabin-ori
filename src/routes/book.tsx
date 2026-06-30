@@ -6,6 +6,7 @@ import {
   previewPrice,
   attachPaymentProof,
   getTakenDates,
+  recommendCabins,
 } from "@/lib/booking.functions";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinQueenImg from "@/assets/cabin-queen.jpg";
@@ -109,6 +110,13 @@ function BookPage() {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [paymentType, setPaymentType] = useState<"deposit" | "full">("deposit");
+
+  // "Any cabin" recommendation
+  const isAnyCabin = (search.room ?? "").toLowerCase().includes("any");
+  const [recommendations, setRecommendations] = useState<Array<{
+    cabinId: string; cabinType: string; name: string; capacity: number; nights: number; total: number;
+  }>>([]);
 
   // Load cabins
   useEffect(() => {
@@ -212,6 +220,38 @@ function BookPage() {
     refreshAvailability();
   }, [refreshAvailability]);
 
+  // Pull "Any cabin" recommendations whenever dates or guests change
+  useEffect(() => {
+    if (!isAnyCabin) {
+      setRecommendations([]);
+      return;
+    }
+    if (!checkin || !checkout || new Date(checkout) <= new Date(checkin)) {
+      setRecommendations([]);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await recommendCabins({
+          data: {
+            checkIn: checkin,
+            checkOut: checkout,
+            guests: Number(guests.replace("+", "")) || 1,
+            comforter,
+          },
+        });
+        setRecommendations(res.picks);
+      } catch {
+        setRecommendations([]);
+      }
+    })();
+  }, [isAnyCabin, checkin, checkout, guests, comforter]);
+
+  function pickRecommendation(cabinType: string) {
+    setCart([{ cabinType, qty: 1 }]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   // Date is blocked when ANY cart line can't be satisfied that night
   const blockedDates = useMemo<string[]>(() => {
     if (cart.length === 0) return [];
@@ -279,6 +319,7 @@ function BookPage() {
           vehicleType: vehicleType.trim() || undefined,
           vehicleNumber: vehicleNumber.trim() || undefined,
           notes: notes.trim() || undefined,
+          paymentType,
         },
       });
       setBooking(res);
@@ -338,12 +379,15 @@ function BookPage() {
             freeCabinsForType,
             submit, submitting, error,
             agreed, setAgreed,
+            paymentType, setPaymentType,
+            recommendations, pickRecommendation, isAnyCabin,
           }}
         />
       )}
       {step === "payment" && booking && (
         <PaymentStep
           booking={booking}
+          paymentType={paymentType}
           proofFile={proofFile}
           setProofFile={setProofFile}
           uploadProof={uploadProof}
@@ -397,6 +441,11 @@ function DetailsStep(props: {
   error: string | null;
   agreed: boolean;
   setAgreed: (b: boolean) => void;
+  paymentType: "deposit" | "full";
+  setPaymentType: (p: "deposit" | "full") => void;
+  recommendations: Array<{ cabinId: string; cabinType: string; name: string; capacity: number; nights: number; total: number }>;
+  pickRecommendation: (type: string) => void;
+  isAnyCabin: boolean;
 }) {
   const { t } = useLanguage();
   const bt = t.book;
@@ -409,6 +458,7 @@ function DetailsStep(props: {
     notes, setNotes,
     price, previewCabin, blockedDates, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
+    paymentType, setPaymentType, recommendations, pickRecommendation, isAnyCabin,
   } = props;
 
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
@@ -438,6 +488,29 @@ function DetailsStep(props: {
       <form onSubmit={submit} className="order-2 lg:order-1">
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
+
+        {isAnyCabin && recommendations.length > 0 && (
+          <div className="mb-6 rounded-2xl border border-forest/30 bg-forest/[0.04] p-5">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-forest">Recommended for your party</p>
+            <p className="mt-1 text-xs text-stone">Based on {guests} guest{Number(guests.replace("+","")) > 1 ? "s" : ""} and your selected dates. Pick the best fit:</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {recommendations.map((r, i) => (
+                <button
+                  key={r.cabinId}
+                  type="button"
+                  onClick={() => pickRecommendation(r.cabinType)}
+                  className="rounded-xl border border-border bg-card p-4 text-left hover:border-forest hover:shadow-sm transition"
+                >
+                  {i === 0 && <span className="inline-block rounded-full bg-forest px-2 py-0.5 text-[9px] uppercase tracking-widest text-coconut">Best fit</span>}
+                  <p className="mt-2 font-display text-base text-forest">{r.name}</p>
+                  <p className="mt-0.5 text-xs text-stone">Sleeps {r.capacity} · {r.nights} night{r.nights > 1 ? "s" : ""}</p>
+                  <p className="mt-2 font-display text-lg text-forest">RM {r.total.toFixed(2)}</p>
+                  <p className="mt-2 text-[10px] uppercase tracking-widest text-forest underline">Select</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -636,6 +709,31 @@ function DetailsStep(props: {
         )}
 
         <div className="mt-8 rounded-2xl border border-border bg-card p-5">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Payment option</p>
+          <h3 className="mt-2 font-display text-lg text-forest">How would you like to pay?</h3>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className={`cursor-pointer rounded-xl border p-4 transition ${paymentType === "deposit" ? "border-forest bg-forest/[0.04]" : "border-border bg-card hover:border-forest/40"}`}>
+              <div className="flex items-start gap-3">
+                <input type="radio" name="payment-type" checked={paymentType === "deposit"} onChange={() => setPaymentType("deposit")} className="mt-1 h-4 w-4 accent-forest" />
+                <div>
+                  <p className="font-medium text-forest">Reserve with RM 50 deposit</p>
+                  <p className="mt-1 text-xs text-stone">Pay RM 50 now to lock the dates. Balance due 7 days before check-in.</p>
+                </div>
+              </div>
+            </label>
+            <label className={`cursor-pointer rounded-xl border p-4 transition ${paymentType === "full" ? "border-forest bg-forest/[0.04]" : "border-border bg-card hover:border-forest/40"}`}>
+              <div className="flex items-start gap-3">
+                <input type="radio" name="payment-type" checked={paymentType === "full"} onChange={() => setPaymentType("full")} className="mt-1 h-4 w-4 accent-forest" />
+                <div>
+                  <p className="font-medium text-forest">Pay in full now{price ? ` (RM ${price.total.toFixed(2)})` : ""}</p>
+                  <p className="mt-1 text-xs text-stone">Settle everything upfront — locker code issued once we verify.</p>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div className="mt-8 rounded-2xl border border-border bg-card p-5">
           <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.terms.eyebrow}</p>
           <h3 className="mt-2 font-display text-lg text-forest">{bt.terms.title}</h3>
           <p className="mt-2 text-sm text-foreground/75">{bt.terms.summary}</p>
@@ -732,9 +830,10 @@ function DetailsStep(props: {
 
 // ============ STEP 2: payment ============
 function PaymentStep({
-  booking, proofFile, setProofFile, uploadProof, uploading, error, name, cabinName, checkin, checkout,
+  booking, paymentType, proofFile, setProofFile, uploadProof, uploading, error, name, cabinName, checkin, checkout,
 }: {
   booking: { bookingId: string; reference: string; total: number; holdExpiresAt: string };
+  paymentType: "deposit" | "full";
   proofFile: File | null;
   setProofFile: (f: File | null) => void;
   uploadProof: () => void;
@@ -777,8 +876,22 @@ function PaymentStep({
       <div className="mt-8 rounded-2xl border border-border bg-card p-6">
         <div className="flex items-baseline justify-between">
           <div>
-            <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.amountDue}</p>
-            <p className="font-display text-4xl text-forest">RM {booking.total.toFixed(2)}</p>
+            <p className="text-xs uppercase tracking-widest text-stone">
+              {paymentType === "full" ? "Full payment due now" : "Deposit due now"}
+            </p>
+            <p className="font-display text-4xl text-forest">
+              RM {paymentType === "full" ? booking.total.toFixed(2) : "50.00"}
+            </p>
+            {paymentType === "deposit" && (
+              <p className="mt-1 text-xs text-stone">
+                of RM {booking.total.toFixed(2)} total — balance due 7 days before check-in
+              </p>
+            )}
+            {paymentType === "full" && (
+              <p className="mt-1 text-xs text-stone">
+                Paid in full — locker code on confirmation
+              </p>
+            )}
           </div>
           <div className="text-right">
             <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.reference}</p>

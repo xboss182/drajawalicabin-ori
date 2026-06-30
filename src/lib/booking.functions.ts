@@ -38,6 +38,7 @@ const createSchema = z.object({
   vehicleType: z.string().trim().max(100).optional(),
   vehicleNumber: z.string().trim().max(50).optional(),
   notes: z.string().trim().max(1000).optional(),
+  paymentType: z.enum(["deposit", "full"]).optional(),
 });
 
 export const createBooking = createServerFn({ method: "POST" })
@@ -166,6 +167,7 @@ export const createBooking = createServerFn({ method: "POST" })
       hold_expires_at: holdExpires,
       status: "pending_payment",
       num_rooms: 1,
+      payment_type: data.paymentType ?? "deposit",
     };
 
     const rows = assigned.map((a) => ({
@@ -191,6 +193,14 @@ export const createBooking = createServerFn({ method: "POST" })
     const lead = inserted[0];
     const total = inserted.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
 
+    // For full-payment bookings, set deposit_amount = total and balance_amount = 0 on the lead row
+    if ((data.paymentType ?? "deposit") === "full") {
+      await supabaseAdmin
+        .from("booking_requests")
+        .update({ deposit_amount: total, balance_amount: 0 })
+        .eq("id", lead.id);
+    }
+
     return {
       bookingId: lead.id as string,
       groupId: (lead.booking_group_id as string) ?? lead.id,
@@ -198,6 +208,7 @@ export const createBooking = createServerFn({ method: "POST" })
       total,
       holdExpiresAt: lead.hold_expires_at as string,
       guestToken: lead.guest_token as string,
+      paymentType: (data.paymentType ?? "deposit") as "deposit" | "full",
     };
   });
 
@@ -235,7 +246,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
     // Group rows for the summary email
     const { data: groupRows } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, cabin_id, subtotal, comforter, comforter_total, total_amount, deposit_amount, balance_amount, payment_reference, locker_code, confirmation_email_sent_at, created_at")
+      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, cabin_id, subtotal, comforter, comforter_total, total_amount, deposit_amount, balance_amount, payment_reference, payment_type, locker_code, confirmation_email_sent_at, created_at")
       .eq("booking_group_id", groupId)
       .order("created_at", { ascending: true });
     const leadRow = groupRows?.[0];
@@ -389,6 +400,30 @@ export const confirmBooking = createServerFn({ method: "POST" })
     if (!isAdmin.data) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+
+    // Look up payment_type — full-payment bookings skip the balance step
+    const { data: typeRow } = await supabaseAdmin
+      .from("booking_requests")
+      .select("payment_type")
+      .eq("booking_group_id", gid)
+      .limit(1)
+      .maybeSingle();
+    const isFull = (typeRow as { payment_type?: string } | null)?.payment_type === "full";
+
+    if (isFull) {
+      const { error } = await supabaseAdmin
+        .from("booking_requests")
+        .update({
+          status: "confirmed",
+          confirmed_at: new Date().toISOString(),
+          confirmed_by: context.userId,
+          balance_paid_at: new Date().toISOString(),
+          balance_due_at: null,
+        })
+        .eq("booking_group_id", gid);
+      if (error) throw new Error(error.message);
+      return { ok: true, fullPayment: true };
+    }
 
     // Default balance_due_at = check_in - balance_due_days_before (if not already set)
     let dueDays = 7;
@@ -1251,4 +1286,87 @@ export const listEmailLog = createServerFn({ method: "POST" })
     }
 
     return { rows: rows ?? [], totalCount: count ?? 0, kinds, summary };
+  });
+
+// ============== PUBLIC: recommend best-fit cabins for "Any cabin" ==============
+
+const recommendSchema = z.object({
+  checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  guests: z.number().int().min(1).max(12),
+  comforter: z.boolean().optional(),
+});
+
+export const recommendCabins = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => recommendSchema.parse(d))
+  .handler(async ({ data }) => {
+    if (new Date(data.checkOut) <= new Date(data.checkIn)) {
+      return { picks: [] };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Last booked night (checkout is exclusive)
+    const co = new Date(data.checkOut);
+    co.setUTCDate(co.getUTCDate() - 1);
+    const lastNightStr = co.toISOString().slice(0, 10);
+
+    // Fetch active cabins that fit the guest count
+    const { data: cabins, error } = await supabaseAdmin
+      .from("cabins")
+      .select("id, name, cabin_type, capacity, weekday_rate, weekend_rate, school_holiday_rate")
+      .eq("is_active", true)
+      .gte("capacity", data.guests)
+      .order("capacity");
+    if (error) throw new Error(error.message);
+    if (!cabins || cabins.length === 0) return { picks: [] };
+
+    // For each cabin type group, pick one available representative (cheapest by display_order already)
+    type Pick = {
+      cabinId: string;
+      cabinType: string;
+      name: string;
+      capacity: number;
+      nights: number;
+      total: number;
+      score: number;
+    };
+    const byType = new Map<string, Pick>();
+
+    for (const c of cabins) {
+      const { data: taken } = await supabaseAdmin.rpc("cabin_taken_dates", {
+        _cabin_id: c.id,
+        _from: data.checkIn,
+        _to: lastNightStr,
+      });
+      if (taken && taken.length > 0) continue;
+
+      const { data: priceRows } = await supabaseAdmin.rpc("compute_booking_price", {
+        _cabin_id: c.id,
+        _check_in: data.checkIn,
+        _check_out: data.checkOut,
+        _comforter: data.comforter ?? false,
+      });
+      const price = Array.isArray(priceRows) ? priceRows[0] : priceRows;
+      if (!price) continue;
+      const total = Number(price.total);
+      // Lower score wins: prefer just-right capacity (less excess), then cheaper
+      const score = (Number(c.capacity) - data.guests) * 1000 + total;
+      const existing = byType.get(c.cabin_type);
+      if (!existing || score < existing.score) {
+        byType.set(c.cabin_type, {
+          cabinId: c.id,
+          cabinType: c.cabin_type,
+          name: c.name.replace(/\s*\d+\s*$/, "").trim(),
+          capacity: Number(c.capacity),
+          nights: Number(price.nights),
+          total,
+          score,
+        });
+      }
+    }
+
+    const picks = Array.from(byType.values())
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 3);
+    return { picks };
   });

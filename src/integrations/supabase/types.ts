@@ -98,6 +98,7 @@ export type Database = {
           num_rooms: number | null
           payment_proof_path: string | null
           payment_reference: string | null
+          payment_type: string
           phone: string
           relationship: string | null
           room_type: string
@@ -136,6 +137,7 @@ export type Database = {
           num_rooms?: number | null
           payment_proof_path?: string | null
           payment_reference?: string | null
+          payment_type?: string
           phone: string
           relationship?: string | null
           room_type: string
@@ -174,6 +176,7 @@ export type Database = {
           num_rooms?: number | null
           payment_proof_path?: string | null
           payment_reference?: string | null
+          payment_type?: string
           phone?: string
           relationship?: string | null
           room_type?: string
