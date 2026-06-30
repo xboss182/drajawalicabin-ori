@@ -193,25 +193,25 @@ function AdminPage() {
           <>
             <Section title={`Awaiting your confirmation (${filtered("awaiting_review").length})`} highlight>
               {filtered("awaiting_review").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} />
+                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} />
               ))}
               {filtered("awaiting_review").length === 0 && <Empty />}
             </Section>
             <Section title={`Holding for payment (${filtered("pending_payment").length})`}>
               {filtered("pending_payment").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} />
+                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} />
               ))}
               {filtered("pending_payment").length === 0 && <Empty />}
             </Section>
             <Section title={`Confirmed (${filtered("confirmed").length})`}>
               {filtered("confirmed").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onMarkPaid={onMarkPaid} onDelete={onDelete} />
+                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onMarkPaid={onMarkPaid} onDelete={onDelete} onCancelRefund={onCancelRefund} />
               ))}
               {filtered("confirmed").length === 0 && <Empty />}
             </Section>
             <Section title={`Fully paid (${filtered("fully_paid").length})`}>
               {filtered("fully_paid").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} />
+                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} />
               ))}
               {filtered("fully_paid").length === 0 && <Empty />}
             </Section>
@@ -245,13 +245,14 @@ function Empty() {
 }
 
 function Card({
-  b, onConfirm, onReject, onMarkPaid, onDelete,
+  b, onConfirm, onReject, onMarkPaid, onDelete, onCancelRefund,
 }: {
   b: Booking;
   onConfirm: (id: string) => void;
   onReject: (id: string) => void;
   onMarkPaid?: (b: Booking) => void;
   onDelete?: (id: string) => void;
+  onCancelRefund?: (b: Booking) => void;
 }) {
   return (
     <article className="rounded-xl border border-border bg-card p-5">
@@ -371,6 +372,17 @@ function Card({
       )}
       {onDelete && (
         <div className="mt-4 border-t border-border/60 pt-3">
+          {onCancelRefund &&
+            b.payment_method === "stripe" &&
+            b.status !== "cancelled" &&
+            b.status !== "expired" && (
+              <button
+                onClick={() => onCancelRefund(b)}
+                className="mr-4 text-[11px] uppercase tracking-widest text-amber-700 underline hover:no-underline"
+              >
+                Cancel + refund card
+              </button>
+            )}
           <button
             onClick={() => onDelete(b.id)}
             className="text-[11px] uppercase tracking-widest text-red-700 underline hover:no-underline"
