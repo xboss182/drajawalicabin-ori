@@ -502,6 +502,71 @@ export const rejectBooking = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Cancel a Stripe-paid booking and refund any captured payment intents
+// (deposit and/or balance). Admin only.
+const cancelRefundSchema = z.object({
+  bookingId: z.string().uuid(),
+  environment: z.enum(["sandbox", "live"]),
+});
+export const cancelAndRefundBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => cancelRefundSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+
+    const { data: rows } = await supabaseAdmin
+      .from("booking_requests")
+      .select("id, stripe_payment_intent_id, stripe_balance_payment_intent_id, payment_method")
+      .eq("booking_group_id", gid)
+      .order("created_at", { ascending: true });
+    const head = rows?.[0];
+    if (!head) throw new Error("Booking not found");
+
+    const refunds: Array<{ kind: string; amount: number; id: string }> = [];
+    const errors: string[] = [];
+    if (head.payment_method === "stripe") {
+      const { createStripeClient, getStripeErrorMessage } = await import(
+        "@/lib/stripe.server"
+      );
+      const stripe = createStripeClient(data.environment);
+      const intents: Array<{ kind: string; id: string | null }> = [
+        { kind: "deposit", id: (head.stripe_payment_intent_id as string | null) ?? null },
+        {
+          kind: "balance",
+          id: (head.stripe_balance_payment_intent_id as string | null) ?? null,
+        },
+      ];
+      for (const intent of intents) {
+        if (!intent.id) continue;
+        try {
+          const refund = await stripe.refunds.create({ payment_intent: intent.id });
+          refunds.push({
+            kind: intent.kind,
+            amount: (refund.amount ?? 0) / 100,
+            id: refund.id,
+          });
+        } catch (e) {
+          errors.push(`${intent.kind}: ${getStripeErrorMessage(e)}`);
+        }
+      }
+    }
+
+    const { error } = await supabaseAdmin
+      .from("booking_requests")
+      .update({ status: "cancelled" })
+      .eq("booking_group_id", gid);
+    if (error) throw new Error(error.message);
+
+    return { ok: true, refunds, errors };
+  });
+
 // Hard-delete a booking (all rows in the group). Admin only.
 export const deleteBooking = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
