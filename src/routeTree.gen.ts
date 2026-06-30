@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ManageBookingRouteImport } from './routes/manage-booking'
 import { Route as FindBookingRouteImport } from './routes/find-booking'
@@ -31,6 +32,11 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as ApiPublicHooksSendBalanceRemindersRouteImport } from './routes/api/public/hooks/send-balance-reminders'
 import { Route as AuthenticatedAdminInvoiceIdRouteImport } from './routes/_authenticated/admin.invoice.$id'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/find-booking': typeof FindBookingRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/admin/cabins': typeof AuthenticatedAdminCabinsRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/find-booking'
     | '/manage-booking'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/admin'
     | '/email/unsubscribe'
     | '/admin/cabins'
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
     | '/find-booking'
     | '/manage-booking'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/email/unsubscribe'
     | '/admin/cabins'
     | '/admin/calendar'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/find-booking'
     | '/manage-booking'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/_authenticated/admin'
     | '/email/unsubscribe'
     | '/_authenticated/admin/cabins'
@@ -289,6 +301,7 @@ export interface RootRouteChildren {
   FindBookingRoute: typeof FindBookingRoute
   ManageBookingRoute: typeof ManageBookingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksSendBalanceRemindersRoute: typeof ApiPublicHooksSendBalanceRemindersRoute
@@ -299,6 +312,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -491,6 +511,7 @@ const rootRouteChildren: RootRouteChildren = {
   FindBookingRoute: FindBookingRoute,
   ManageBookingRoute: ManageBookingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksSendBalanceRemindersRoute:
