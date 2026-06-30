@@ -446,14 +446,14 @@ function DetailsStep(props: {
               numberOfMonths={2}
               selected={
                 checkin && checkout && new Date(checkout) > new Date(checkin)
-                  ? { from: new Date(checkin), to: new Date(new Date(checkout).getTime() - 86400000) }
+                  ? { from: parseLocalDate(checkin), to: new Date(parseLocalDate(checkout).getTime() - 86400000) }
                   : undefined
               }
               onSelect={(r) => {
-                if (r?.from) setCheckin(r.from.toISOString().slice(0, 10));
+                if (r?.from) setCheckin(formatLocalDate(r.from));
                 if (r?.to) {
                   const co = new Date(r.to.getTime() + 86400000);
-                  setCheckout(co.toISOString().slice(0, 10));
+                  setCheckout(formatLocalDate(co));
                 }
               }}
               disabled={[{ before: new Date() }, ...blockedDates.map((d) => new Date(d))]}
