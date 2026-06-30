@@ -876,8 +876,22 @@ function PaymentStep({
       <div className="mt-8 rounded-2xl border border-border bg-card p-6">
         <div className="flex items-baseline justify-between">
           <div>
-            <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.amountDue}</p>
-            <p className="font-display text-4xl text-forest">RM {booking.total.toFixed(2)}</p>
+            <p className="text-xs uppercase tracking-widest text-stone">
+              {paymentType === "full" ? "Full payment due now" : "Deposit due now"}
+            </p>
+            <p className="font-display text-4xl text-forest">
+              RM {paymentType === "full" ? booking.total.toFixed(2) : "50.00"}
+            </p>
+            {paymentType === "deposit" && (
+              <p className="mt-1 text-xs text-stone">
+                of RM {booking.total.toFixed(2)} total — balance due 7 days before check-in
+              </p>
+            )}
+            {paymentType === "full" && (
+              <p className="mt-1 text-xs text-stone">
+                Paid in full — locker code on confirmation
+              </p>
+            )}
           </div>
           <div className="text-right">
             <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.reference}</p>
