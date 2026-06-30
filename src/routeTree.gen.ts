@@ -32,6 +32,7 @@ import { Route as AuthenticatedAdminCabinsRouteImport } from './routes/_authenti
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiPublicTestAdminEmailRouteImport } from './routes/api/public/test/admin-email'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksSendBalanceRemindersRouteImport } from './routes/api/public/hooks/send-balance-reminders'
 import { Route as AuthenticatedAdminInvoiceIdRouteImport } from './routes/_authenticated/admin.invoice.$id'
@@ -158,6 +159,11 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicTestAdminEmailRoute = ApiPublicTestAdminEmailRouteImport.update({
+  id: '/api/public/test/admin-email',
+  path: '/api/public/test/admin-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -200,6 +206,7 @@ export interface FileRoutesByFullPath {
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/test/admin-email': typeof ApiPublicTestAdminEmailRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/test/admin-email': typeof ApiPublicTestAdminEmailRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
+  '/api/public/test/admin-email': typeof ApiPublicTestAdminEmailRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
+    | '/api/public/test/admin-email'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -310,6 +320,7 @@ export interface FileRouteTypes {
     | '/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
+    | '/api/public/test/admin-email'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -338,6 +349,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/invoice/$id'
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
+    | '/api/public/test/admin-email'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -357,6 +369,7 @@ export interface RootRouteChildren {
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksSendBalanceRemindersRoute: typeof ApiPublicHooksSendBalanceRemindersRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
+  ApiPublicTestAdminEmailRoute: typeof ApiPublicTestAdminEmailRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -525,6 +538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/test/admin-email': {
+      id: '/api/public/test/admin-email'
+      path: '/api/public/test/admin-email'
+      fullPath: '/api/public/test/admin-email'
+      preLoaderRoute: typeof ApiPublicTestAdminEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -612,6 +632,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksSendBalanceRemindersRoute:
     ApiPublicHooksSendBalanceRemindersRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
+  ApiPublicTestAdminEmailRoute: ApiPublicTestAdminEmailRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
@@ -619,13 +640,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
