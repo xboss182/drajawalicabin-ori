@@ -502,21 +502,53 @@ export const rejectBooking = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// First signup becomes admin automatically (one-time bootstrap)
+// Grant admin role to any signed-in user whose email is on the
+// active admin_email_recipients allowlist. Idempotent — safe to call on every sign-in.
 export const claimAdminIfFirst = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { count, error: cErr } = await supabaseAdmin
+    let email = String((context.claims as { email?: string }).email ?? "").trim().toLowerCase();
+    if (!email) {
+      const { data: u } = await context.supabase.auth.getUser();
+      email = String(u?.user?.email ?? "").trim().toLowerCase();
+    }
+
+    // Bootstrap: if no admins exist yet, first signed-in user becomes admin.
+    const { count } = await supabaseAdmin
       .from("user_roles")
       .select("id", { count: "exact", head: true })
       .eq("role", "admin");
-    if (cErr) throw new Error(cErr.message);
     if ((count ?? 0) === 0) {
-      await supabaseAdmin.from("user_roles").insert({ user_id: context.userId, role: "admin" });
+      await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id: context.userId, role: "admin" });
       return { granted: true };
     }
-    return { granted: false };
+
+    if (!email) return { granted: false };
+
+    // Allowlist sync: grant admin to anyone on the active recipients list.
+    const { data: recipient } = await supabaseAdmin
+      .from("admin_email_recipients")
+      .select("id")
+      .eq("is_active", true)
+      .ilike("email", email)
+      .maybeSingle();
+    if (!recipient) return { granted: false };
+
+    const { data: existing } = await supabaseAdmin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (existing) return { granted: false };
+
+    await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: context.userId, role: "admin" });
+    return { granted: true };
   });
 
 export const isCurrentUserAdmin = createServerFn({ method: "GET" })
