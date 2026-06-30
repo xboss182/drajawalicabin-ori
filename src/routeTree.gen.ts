@@ -23,6 +23,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthenticatedAdminStatsRouteImport } from './routes/_authenticated/admin.stats'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminMembersRouteImport } from './routes/_authenticated/admin.members'
 import { Route as AuthenticatedAdminHolidaysRouteImport } from './routes/_authenticated/admin.holidays'
 import { Route as AuthenticatedAdminCalendarRouteImport } from './routes/_authenticated/admin.calendar'
 import { Route as AuthenticatedAdminCabinsRouteImport } from './routes/_authenticated/admin.cabins'
@@ -102,6 +103,12 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminMembersRoute =
+  AuthenticatedAdminMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminHolidaysRoute =
   AuthenticatedAdminHolidaysRouteImport.update({
     id: '/holidays',
@@ -164,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
   '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
+  '/admin/members': typeof AuthenticatedAdminMembersRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -186,6 +194,7 @@ export interface FileRoutesByTo {
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
   '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
+  '/admin/members': typeof AuthenticatedAdminMembersRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -211,6 +220,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/_authenticated/admin/calendar': typeof AuthenticatedAdminCalendarRoute
   '/_authenticated/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
+  '/_authenticated/admin/members': typeof AuthenticatedAdminMembersRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/admin/cabins'
     | '/admin/calendar'
     | '/admin/holidays'
+    | '/admin/members'
     | '/admin/settings'
     | '/admin/stats'
     | '/lovable/email/suppression'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/admin/cabins'
     | '/admin/calendar'
     | '/admin/holidays'
+    | '/admin/members'
     | '/admin/settings'
     | '/admin/stats'
     | '/lovable/email/suppression'
@@ -282,6 +294,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/cabins'
     | '/_authenticated/admin/calendar'
     | '/_authenticated/admin/holidays'
+    | '/_authenticated/admin/members'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/stats'
     | '/lovable/email/suppression'
@@ -410,6 +423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/members': {
+      id: '/_authenticated/admin/members'
+      path: '/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AuthenticatedAdminMembersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/holidays': {
       id: '/_authenticated/admin/holidays'
       path: '/holidays'
@@ -473,6 +493,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCabinsRoute: typeof AuthenticatedAdminCabinsRoute
   AuthenticatedAdminCalendarRoute: typeof AuthenticatedAdminCalendarRoute
   AuthenticatedAdminHolidaysRoute: typeof AuthenticatedAdminHolidaysRoute
+  AuthenticatedAdminMembersRoute: typeof AuthenticatedAdminMembersRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStatsRoute: typeof AuthenticatedAdminStatsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -483,6 +504,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCabinsRoute: AuthenticatedAdminCabinsRoute,
   AuthenticatedAdminCalendarRoute: AuthenticatedAdminCalendarRoute,
   AuthenticatedAdminHolidaysRoute: AuthenticatedAdminHolidaysRoute,
+  AuthenticatedAdminMembersRoute: AuthenticatedAdminMembersRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminStatsRoute: AuthenticatedAdminStatsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
