@@ -21,6 +21,18 @@ import { Plus, Minus, X } from "lucide-react";
 const today = () => new Date().toISOString().slice(0, 10);
 const tomorrow = () => new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
+function formatLocalDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function parseLocalDate(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+}
+
 const todayStr = today();
 const tomorrowStr = tomorrow();
 
