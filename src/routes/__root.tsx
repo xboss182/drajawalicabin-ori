@@ -111,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "@context": "https://schema.org",
           "@type": "WebSite",
           name: "Rajawali D'Cabin Chalet",
-          url: "https://nature-stay-finder.lovable.app/",
+          url: "https://drajawalicabin.com/",
           inLanguage: ["en-MY", "ms-MY"],
         }),
       },
