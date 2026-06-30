@@ -36,7 +36,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Rajawali D'Cabin Chalet — Chalet & Homestay in Chendering, KT" },
       { property: "og:description", content: "Muslim-friendly riverside chalet in Chendering, Kuala Terengganu. 8 private family-friendly cabins for a peaceful Terengganu staycation." },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://nature-stay-finder.lovable.app/" },
+      { property: "og:url", content: "https://drajawalicabin.com/" },
       { property: "og:site_name", content: "Rajawali D'Cabin Chalet" },
       { property: "og:locale", content: "en_MY" },
       { property: "og:image", content: heroRiverside },
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/")({
       { name: "geo.placename", content: "Chendering, Kuala Terengganu" },
     ],
     links: [
-      { rel: "canonical", href: "https://nature-stay-finder.lovable.app/" },
+      { rel: "canonical", href: "https://drajawalicabin.com/" },
       { rel: "preload", as: "image", href: heroRiverside, fetchpriority: "high" } as unknown as Record<string, string>,
     ],
     scripts: [
@@ -60,8 +60,8 @@ export const Route = createFileRoute("/")({
           "@type": "LodgingBusiness",
           name: "Rajawali D'Cabin Chalet",
           description: "Muslim-friendly riverside chalet and homestay in Chendering, Kuala Terengganu, Terengganu, Malaysia. 8 private cabins for family staycations.",
-          url: "https://nature-stay-finder.lovable.app/",
-          image: `https://nature-stay-finder.lovable.app${heroRiverside}`,
+          url: "https://drajawalicabin.com/",
+          image: `https://drajawalicabin.com${heroRiverside}`,
           telephone: "+60 11-5500 7204",
           priceRange: "RM",
           address: {
@@ -92,7 +92,7 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
           itemListElement: [
-            { "@type": "ListItem", position: 1, name: "Home", item: "https://nature-stay-finder.lovable.app/" },
+            { "@type": "ListItem", position: 1, name: "Home", item: "https://drajawalicabin.com/" },
           ],
         }),
       },

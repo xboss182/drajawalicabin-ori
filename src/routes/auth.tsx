@@ -12,6 +12,9 @@ export const Route = createFileRoute("/auth")({
     meta: [
       { title: "Owner sign in — Rajawali D'Cabin" },
       { name: "robots", content: "noindex" },
+      { name: "description", content: "Owner and staff sign-in for the Rajawali D'Cabin Chalet management console." },
+      { property: "og:title", content: "Owner sign in — Rajawali D'Cabin" },
+      { property: "og:description", content: "Restricted sign-in for Rajawali D'Cabin staff and owners." },
     ],
   }),
   component: AuthPage,

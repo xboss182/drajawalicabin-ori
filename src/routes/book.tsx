@@ -99,6 +99,8 @@ export const Route = createFileRoute("/book")({
       { title: "Book a Cabin | Rajawali D'Cabin Chalet, Kuala Terengganu" },
       { name: "description", content: "Reserve a private cabin at Rajawali D'Cabin Chalet in Chendering, Kuala Terengganu. Easy online booking with flexible RM50 deposit per room." },
       { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Book a Cabin — Rajawali D'Cabin Chalet, Kuala Terengganu" },
+      { property: "og:description", content: "Reserve a private riverside cabin in Chendering, Kuala Terengganu. Flexible RM50 deposit per room." },
     ],
   }),
   component: BookPage,
