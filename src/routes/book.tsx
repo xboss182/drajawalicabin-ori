@@ -6,6 +6,7 @@ import {
   previewPrice,
   attachPaymentProof,
   getTakenDates,
+  recommendCabins,
 } from "@/lib/booking.functions";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinQueenImg from "@/assets/cabin-queen.jpg";
@@ -109,6 +110,13 @@ function BookPage() {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [paymentType, setPaymentType] = useState<"deposit" | "full">("deposit");
+
+  // "Any cabin" recommendation
+  const isAnyCabin = (search.room ?? "").toLowerCase().includes("any");
+  const [recommendations, setRecommendations] = useState<Array<{
+    cabinId: string; cabinType: string; name: string; capacity: number; nights: number; total: number;
+  }>>([]);
 
   // Load cabins
   useEffect(() => {
@@ -212,6 +220,38 @@ function BookPage() {
     refreshAvailability();
   }, [refreshAvailability]);
 
+  // Pull "Any cabin" recommendations whenever dates or guests change
+  useEffect(() => {
+    if (!isAnyCabin) {
+      setRecommendations([]);
+      return;
+    }
+    if (!checkin || !checkout || new Date(checkout) <= new Date(checkin)) {
+      setRecommendations([]);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await recommendCabins({
+          data: {
+            checkIn: checkin,
+            checkOut: checkout,
+            guests: Number(guests.replace("+", "")) || 1,
+            comforter,
+          },
+        });
+        setRecommendations(res.picks);
+      } catch {
+        setRecommendations([]);
+      }
+    })();
+  }, [isAnyCabin, checkin, checkout, guests, comforter]);
+
+  function pickRecommendation(cabinType: string) {
+    setCart([{ cabinType, qty: 1 }]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   // Date is blocked when ANY cart line can't be satisfied that night
   const blockedDates = useMemo<string[]>(() => {
     if (cart.length === 0) return [];
@@ -279,6 +319,7 @@ function BookPage() {
           vehicleType: vehicleType.trim() || undefined,
           vehicleNumber: vehicleNumber.trim() || undefined,
           notes: notes.trim() || undefined,
+          paymentType,
         },
       });
       setBooking(res);
