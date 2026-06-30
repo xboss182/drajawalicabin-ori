@@ -407,19 +407,20 @@ export const confirmBooking = createServerFn({ method: "POST" })
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
-    const update: Record<string, unknown> = {
-      status: "confirmed",
-      confirmed_at: new Date().toISOString(),
-      confirmed_by: context.userId,
-    };
+    let balanceDueIso: string | null = null;
     if (lead && !lead.balance_due_at) {
       const due = new Date(lead.check_in as string);
       due.setUTCDate(due.getUTCDate() - dueDays);
-      update.balance_due_at = due.toISOString();
+      balanceDueIso = due.toISOString();
     }
     const { error } = await supabaseAdmin
       .from("booking_requests")
-      .update(update)
+      .update({
+        status: "confirmed",
+        confirmed_at: new Date().toISOString(),
+        confirmed_by: context.userId,
+        ...(balanceDueIso ? { balance_due_at: balanceDueIso } : {}),
+      })
       .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
     return { ok: true };
