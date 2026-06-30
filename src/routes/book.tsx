@@ -634,7 +634,7 @@ function DetailsStep(props: {
                 const from = r.from;
                 const to = r.to && r.to.getTime() !== from.getTime() ? r.to : from;
                 setCheckin(formatLocalDate(from));
-                setCheckout(formatLocalDate(new Date(to.getTime() + 86400000)));
+                setCheckout(addDaysISO(formatLocalDate(to), 1));
               }}
               disabled={[{ before: parseLocalDate(todayStr) }, ...blockedDates.map((d) => parseLocalDate(d))]}
               modifiers={{ booked: blockedDates.map((d) => parseLocalDate(d)) }}
