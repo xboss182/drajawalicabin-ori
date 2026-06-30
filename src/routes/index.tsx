@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CalendarIcon, Users, BedDouble, Search, MoreHorizontal } from "lucide-react";
+import { CalendarIcon, Users, BedDouble, Search, Menu } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -206,7 +206,7 @@ function MorePagesMenu({ className }: { className?: string }) {
             className,
           )}
         >
-          <MoreHorizontal className="h-5 w-5" />
+          <Menu className="h-5 w-5" />
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -226,12 +226,6 @@ function MorePagesMenu({ className }: { className?: string }) {
             className="rounded-md px-3 py-2 text-sm font-medium text-forest hover:bg-forest/10"
           >
             Manage Booking
-          </Link>
-          <Link
-            to="/admin"
-            className="rounded-md px-3 py-2 text-sm font-medium text-forest hover:bg-forest/10"
-          >
-            Admin
           </Link>
         </div>
       </PopoverContent>
