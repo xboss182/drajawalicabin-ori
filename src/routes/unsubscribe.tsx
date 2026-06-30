@@ -2,7 +2,15 @@ import { createFileRoute, useSearch } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
 export const Route = createFileRoute('/unsubscribe')({
-  head: () => ({ meta: [{ title: 'Unsubscribe — Rajawali D\'Cabin' }, { name: 'robots', content: 'noindex' }] }),
+  head: () => ({
+    meta: [
+      { title: 'Unsubscribe — Rajawali D\'Cabin' },
+      { name: 'robots', content: 'noindex' },
+      { name: 'description', content: 'Update your email preferences and unsubscribe from Rajawali D\'Cabin booking and marketing emails.' },
+      { property: 'og:title', content: 'Unsubscribe — Rajawali D\'Cabin' },
+      { property: 'og:description', content: 'Manage your email preferences for Rajawali D\'Cabin Chalet.' },
+    ],
+  }),
   validateSearch: (s: Record<string, unknown>) => ({ token: typeof s.token === 'string' ? s.token : '' }),
   component: UnsubscribePage,
 })
