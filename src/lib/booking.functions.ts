@@ -246,7 +246,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
     // Group rows for the summary email
     const { data: groupRows } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, cabin_id, subtotal, comforter, comforter_total, total_amount, deposit_amount, balance_amount, payment_reference, locker_code, confirmation_email_sent_at, created_at")
+      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, cabin_id, subtotal, comforter, comforter_total, total_amount, deposit_amount, balance_amount, payment_reference, payment_type, locker_code, confirmation_email_sent_at, created_at")
       .eq("booking_group_id", groupId)
       .order("created_at", { ascending: true });
     const leadRow = groupRows?.[0];
