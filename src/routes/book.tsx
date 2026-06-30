@@ -342,7 +342,16 @@ function BookPage() {
           uploading={uploading}
           error={error}
           name={name}
-          cabinName={previewCabin?.name ?? ""}
+          cabinName={
+            cart.length === 0
+              ? previewCabin?.name ?? ""
+              : cart
+                  .map((it) => {
+                    const g = groupByType.get(it.cabinType);
+                    return `${it.qty}× ${g?.label ?? it.cabinType}`;
+                  })
+                  .join(", ")
+          }
           checkin={checkin}
           checkout={checkout}
         />
