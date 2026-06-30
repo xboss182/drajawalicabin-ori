@@ -327,19 +327,15 @@ function BookPage() {
   function freeCabinsForType(type: string): Cabin[] {
     const g = groupByType.get(type);
     if (!g || !checkin || !checkout) return [];
-    const start = new Date(checkin);
-    const end = new Date(checkout);
     return g.rooms.filter((c) => {
       const tk = takenByCabin[c.id] ?? [];
-      return !tk.some((d) => {
-        const dd = new Date(d);
-        return dd >= start && dd < end;
-      });
+      // Strings are in YYYY-MM-DD format and compare lexicographically.
+      return !tk.some((d) => d >= checkin && d < checkout);
     });
   }
 
   function datesOverlapTaken() {
-    if (!checkin || !checkout) return false;
+    if (!checkin || !checkout || checkout <= checkin) return false;
     return cart.some((it) => freeCabinsForType(it.cabinType).length < it.qty);
   }
 
