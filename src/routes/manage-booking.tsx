@@ -184,9 +184,9 @@ function ManagePage() {
                 <dt className="text-stone">Check-in</dt><dd>{b.checkIn} (3:00 PM)</dd>
                 <dt className="text-stone">Check-out</dt><dd>{b.checkOut} (12:00 PM)</dd>
                 <dt className="text-stone">Guests</dt><dd>{b.guests} · {b.nights ?? "—"} night(s)</dd>
-                <dt className="text-stone">Total</dt><dd>RM {b.total.toFixed(2)}</dd>
-                <dt className="text-stone">Deposit paid</dt><dd>RM {b.deposit.toFixed(2)} ✓</dd>
-                <dt className="text-stone font-medium">Balance due</dt>
+                <dt className="text-stone">Room rate</dt><dd>RM {b.total.toFixed(2)}</dd>
+                <dt className="text-stone">Security deposit paid</dt><dd>RM {b.securityDeposit.toFixed(2)} ✓</dd>
+                <dt className="text-stone font-medium">Room balance due</dt>
                 <dd className="font-medium text-forest">RM {b.remaining.toFixed(2)}</dd>
               </dl>
             </div>
