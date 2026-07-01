@@ -273,7 +273,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
       const templateData = {
         guestName: leadRow.guest_name,
         reference: leadRow.payment_reference ?? leadRow.id.slice(0, 8),
-        roomType: leadRow.room_type,
+        roomType: cleanRoomType(leadRow.room_type),
         checkIn: leadRow.check_in,
         checkOut: leadRow.check_out,
         nights: leadRow.nights,
@@ -282,7 +282,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
         securityDeposit,
         remaining,
         paymentType: (leadRow as any).payment_type ?? 'deposit',
-        rooms: (groupRows ?? []).map((r) => ({ name: r.room_type, total: Number(r.total_amount ?? 0) })),
+        rooms: (groupRows ?? []).map((r) => ({ name: cleanRoomType(r.room_type), total: Number(r.total_amount ?? 0) })),
       };
       const { sendTransactionalEmail, getAdminRecipients } = await import("./email/send.server");
       // Guest copy
