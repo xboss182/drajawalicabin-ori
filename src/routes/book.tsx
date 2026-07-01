@@ -996,19 +996,19 @@ function PaymentStep({
         <div className="flex items-baseline justify-between">
           <div>
             <p className="text-xs uppercase tracking-widest text-stone">
-              {paymentType === "full" ? "Full payment due now" : "Deposit due now"}
+              {paymentType === "full" ? "Room rate + security deposit due now" : "Security deposit due now"}
             </p>
             <p className="font-display text-4xl text-forest">
-              RM {paymentType === "full" ? booking.total.toFixed(2) : "50.00"}
+              RM {paymentType === "full" ? (booking.total + booking.securityDeposit).toFixed(2) : booking.securityDeposit.toFixed(2)}
             </p>
             {paymentType === "deposit" && (
               <p className="mt-1 text-xs text-stone">
-                of RM {booking.total.toFixed(2)} total — balance due 7 days before check-in
+                Room rate balance of RM {booking.total.toFixed(2)} is due 7 days before check-in
               </p>
             )}
             {paymentType === "full" && (
               <p className="mt-1 text-xs text-stone">
-                Paid in full — locker code on confirmation
+                Includes refundable RM {booking.securityDeposit.toFixed(2)} security deposit — locker code on confirmation
               </p>
             )}
           </div>
