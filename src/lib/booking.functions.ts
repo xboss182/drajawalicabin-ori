@@ -970,7 +970,7 @@ export const attachBalanceProof = createServerFn({ method: "POST" })
     const gid = (b.booking_group_id as string) ?? b.id;
     const { error } = await supabaseAdmin
       .from("booking_requests")
-      .update({ balance_proof_path: data.path, balance_paid_at: new Date().toISOString() })
+      .update({ balance_proof_path: data.path, balance_paid_at: new Date().toISOString(), balance_amount: 0 })
       .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
     return { ok: true };
