@@ -133,7 +133,7 @@ export const translations = {
         roomNum: "Room number:",
         roomNumNote: "Will be confirmed after booking is verified",
         bookingNum: "Booking number:",
-        bookingNumNote: "Will be confirmed after deposit payment",
+        bookingNumNote: "Will be confirmed after security deposit payment",
       },
       submitting: "Holding your dates…",
       submit: "Continue to payment",
