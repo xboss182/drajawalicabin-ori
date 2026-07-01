@@ -182,7 +182,7 @@ export const createBooking = createServerFn({ method: "POST" })
     const rows = assigned.map((a) => ({
       ...sharedBase,
       cabin_id: a.cabinId,
-      room_type: assigned.length > 1 ? `${a.cabinName} (part of ${roomTypeSummary})` : a.cabinName,
+      room_type: assigned.length > 1 ? `${a.cabinName} (${roomTypeSummary})` : a.cabinName,
       nights: a.nights,
       subtotal: a.subtotal,
       comforter_total: a.comforterTotal,
