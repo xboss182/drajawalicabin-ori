@@ -59,6 +59,12 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "LodgingBusiness",
           name: "Rajawali D'Cabin Chalet",
+          alternateName: [
+            "Rajawali DCabin Chalet",
+            "Rajawali D Cabin Chalet",
+            "D'Cabin Chalet",
+            "Chalet Rajawali Chendering",
+          ],
           description: "Muslim-friendly riverside chalet and homestay in Chendering, Kuala Terengganu, Terengganu, Malaysia. 8 private cabins for family staycations.",
           url: "https://drajawalicabin.com/",
           image: `https://drajawalicabin.com${heroRiverside}`,
