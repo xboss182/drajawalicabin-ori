@@ -950,7 +950,7 @@ function DetailsStep(props: {
 function PaymentStep({
   booking, paymentType, proofFile, setProofFile, uploadProof, uploading, error, name, cabinName, checkin, checkout,
 }: {
-  booking: { bookingId: string; reference: string; total: number; holdExpiresAt: string; guestToken: string };
+  booking: { bookingId: string; reference: string; total: number; securityDeposit: number; holdExpiresAt: string; guestToken: string };
   paymentType: "deposit" | "full";
   proofFile: File | null;
   setProofFile: (f: File | null) => void;
