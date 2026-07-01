@@ -12,7 +12,7 @@ interface Props {
   nights?: number
   guests?: number
   total?: number
-  deposit?: number
+  securityDeposit?: number
   remaining?: number
   paymentType?: 'deposit' | 'full'
   rooms?: { name: string; total: number }[]
