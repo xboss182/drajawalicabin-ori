@@ -363,8 +363,10 @@ export const translations = {
         rooms: "Bil bilik",
         roomSubtotal: "Jumlah bilik",
         comforterLabel: "Comforter",
+        securityDeposit: "Deposit keselamatan boleh dikembalikan",
         total: "Jumlah",
-        priceNote: "Harga berbeza mengikut hari biasa, hujung minggu & cuti sekolah.",
+        totalPayable: "Jumlah perlu bayar",
+        priceNote: "Harga berbeza mengikut hari biasa, hujung minggu & cuti sekolah. Deposit keselamatan bukan sebahagian daripada kadar bilik dan akan dikembalikan selepas check-out.",
       },
       errors: {
         pickCabin: "Sila pilih bilik",
