@@ -149,8 +149,10 @@ export const translations = {
         rooms: "Number of rooms",
         roomSubtotal: "Room subtotal",
         comforterLabel: "Comforter",
+        securityDeposit: "Refundable security deposit",
         total: "Total",
-        priceNote: "Rates vary by weekday, weekend & school holidays.",
+        totalPayable: "Total payable",
+        priceNote: "Rates vary by weekday, weekend & school holidays. Security deposit is not part of the room rate and is refunded after check-out.",
       },
       errors: {
         pickCabin: "Please select a cabin",
