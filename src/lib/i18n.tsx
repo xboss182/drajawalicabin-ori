@@ -168,16 +168,17 @@ export const translations = {
       terms: {
         eyebrow: "Property rules",
         title: "Quick summary before you continue.",
-        summary: "RM50 deposit required to secure your dates. Full payment is due before check-in. Cancellations within 7 days of arrival are non-refundable.",
-        agree: "I agree to the property rules (RM50 deposit required to secure dates, full payment before check-in, and 7-day cancellation policy).",
+        summary: "A refundable RM50/room security deposit is required to secure your dates. The security deposit is not part of the room rate. Full room rate plus the security deposit must be settled before check-in. Cancellations within 7 days of check-in are strictly non-refundable.",
+        agree: "I agree to the property rules (RM50/room refundable security deposit to secure dates, full room rate + security deposit before check-in, and 7-day cancellation policy).",
       },
       houseRules: {
         title: "Your house rules & terms",
         intro: "Please read through before your arrival — it keeps every stay smooth for everyone.",
         items: [
-          "Full payment and deposit must be cleared before entry.",
-          "Deposit is refunded after check-out if there is no damage or loss.",
-          "Strict non-refundable deposit policy if cancelled within 7 days of arrival.",
+          "A refundable RM50 security deposit per room is required to secure your booking; it is not part of the room rate.",
+          "Full room rate plus the refundable security deposit must be cleared before check-in.",
+          "The security deposit is fully refunded after check-out, subject to a room inspection ensuring no damage or loss has occurred.",
+          "Cancellations made within 7 days of your check-in date are strictly non-refundable.",
           "Self check-in: locker code and instructions will be shared via WhatsApp on arrival day. Please lock the locker again after retrieving the key.",
           "Guests are responsible for cleanliness, safety, conserving electricity & water, and safekeeping of the room key during their stay.",
         ],
