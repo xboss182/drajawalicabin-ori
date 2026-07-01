@@ -157,6 +157,9 @@ export const createBooking = createServerFn({ method: "POST" })
       .map((t) => (t.count > 1 ? `${t.label} × ${t.count}` : t.label))
       .join(" + ");
 
+    const isFull = (data.paymentType ?? "deposit") === "full";
+    const securityDeposit = securityDepositForRooms(totalRooms);
+
     const sharedBase = {
       guest_name: data.guestName,
       email: data.email,
@@ -184,6 +187,8 @@ export const createBooking = createServerFn({ method: "POST" })
       subtotal: a.subtotal,
       comforter_total: a.comforterTotal,
       total_amount: a.total,
+      deposit_amount: SECURITY_DEPOSIT_PER_ROOM,
+      balance_amount: isFull ? 0 : a.total,
       ...(groupId ? { booking_group_id: groupId } : {}),
       ...(guestToken ? { guest_token: guestToken } : {}),
     }));
