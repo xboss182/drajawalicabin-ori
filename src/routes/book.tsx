@@ -844,6 +844,7 @@ function DetailsStep(props: {
               <li>The full room rate is due 7 days before check-in; we'll email a reminder.</li>
               <li>Cancellations within 7 days of check-in are strictly non-refundable.</li>
               <li>Locker code is shared on the morning of check-in via WhatsApp.</li>
+              <li>Refunds for earlier cancellations are processed within 7 working days.</li>
             </ul>
           ) : (
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-foreground/80">
