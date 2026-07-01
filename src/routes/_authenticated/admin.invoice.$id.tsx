@@ -212,7 +212,7 @@ function InvoicePage() {
                 {!isFullPayment && (
                 <tr>
                   <td className="py-2">2</td>
-                  <td className="py-2">Balance</td>
+                  <td className="py-2">Room rate balance</td>
                   <td className="py-2">
                     {editingDue ? (
                       <span className="flex items-center gap-1">
