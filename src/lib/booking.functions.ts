@@ -1599,40 +1599,68 @@ export const listEmailLog = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    let q = supabaseAdmin
-      .from("email_outbox")
-      .select("id, kind, to_email, subject, status, sent_at, error, created_at, booking_id", {
-        count: "exact",
-      })
+
+    // Read Lovable Emails send log; dedupe by message_id (latest row wins).
+    // Fall back gracefully to the legacy email_outbox table if the new one is empty.
+    const { data: logRows, error } = await supabaseAdmin
+      .from("email_send_log")
+      .select("id, message_id, template_name, recipient_email, status, error_message, created_at, metadata")
       .gte("created_at", data.from)
       .lte("created_at", data.to + "T23:59:59")
       .order("created_at", { ascending: false })
-      .range(data.offset, data.offset + 49);
-    if (data.kind) q = q.eq("kind", data.kind);
-    if (data.status) q = q.eq("status", data.status);
-    const { data: rows, count, error } = await q;
+      .limit(2000);
     if (error) throw new Error(error.message);
 
-    const { data: allKinds } = await supabaseAdmin
-      .from("email_outbox")
-      .select("kind")
-      .order("kind");
-    const kinds = Array.from(new Set((allKinds ?? []).map((r) => r.kind)));
+    // Latest status per message_id (rows are already sorted desc by created_at).
+    const latest = new Map<string, typeof logRows[number]>();
+    for (const r of logRows ?? []) {
+      const key = r.message_id ?? r.id;
+      if (!latest.has(key)) latest.set(key, r);
+    }
+    const unified = Array.from(latest.values()).map((r) => ({
+      id: r.id,
+      kind: r.template_name,
+      to_email: r.recipient_email,
+      subject: (r.metadata as { subject?: string } | null)?.subject ?? "",
+      status: r.status,
+      sent_at: r.status === "sent" ? r.created_at : null,
+      error: r.error_message,
+      created_at: r.created_at,
+      booking_id: (r.metadata as { booking_id?: string } | null)?.booking_id ?? null,
+    }));
 
-    const { data: summaryRows } = await supabaseAdmin
-      .from("email_outbox")
-      .select("status")
-      .gte("created_at", data.from)
-      .lte("created_at", data.to + "T23:59:59");
-    const summary = { total: 0, sent: 0, failed: 0, pending: 0 };
-    for (const r of summaryRows ?? []) {
-      summary.total += 1;
+    // Fallback: if no queue rows, show legacy outbox (older bookings).
+    let combined = unified;
+    if (unified.length === 0) {
+      const { data: legacy } = await supabaseAdmin
+        .from("email_outbox")
+        .select("id, kind, to_email, subject, status, sent_at, error, created_at, booking_id")
+        .gte("created_at", data.from)
+        .lte("created_at", data.to + "T23:59:59")
+        .order("created_at", { ascending: false })
+        .limit(2000);
+      combined = (legacy ?? []).map((r) => ({ ...r, subject: r.subject ?? "" })) as typeof unified;
+    }
+
+    const filtered = combined.filter((r) => {
+      if (data.kind && r.kind !== data.kind) return false;
+      if (data.status) {
+        if (data.status === "failed" && !(r.status === "failed" || r.status === "dlq" || r.status === "bounced" || r.status === "complained")) return false;
+        if (data.status !== "failed" && r.status !== data.status) return false;
+      }
+      return true;
+    });
+
+    const kinds = Array.from(new Set(combined.map((r) => r.kind))).sort();
+    const summary = { total: filtered.length, sent: 0, failed: 0, pending: 0 };
+    for (const r of filtered) {
       if (r.status === "sent") summary.sent += 1;
-      else if (r.status === "failed" || r.status === "dlq") summary.failed += 1;
+      else if (r.status === "failed" || r.status === "dlq" || r.status === "bounced" || r.status === "complained") summary.failed += 1;
       else summary.pending += 1;
     }
 
-    return { rows: rows ?? [], totalCount: count ?? 0, kinds, summary };
+    const paged = filtered.slice(data.offset, data.offset + 50);
+    return { rows: paged, totalCount: filtered.length, kinds, summary };
   });
 
 // ============== PUBLIC: recommend best-fit cabins for "Any cabin" ==============
