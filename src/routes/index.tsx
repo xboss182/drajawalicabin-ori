@@ -29,11 +29,11 @@ import { LanguageToggle, useLanguage } from "@/lib/i18n";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Rajawali D'Cabin Chalet | Homestay & Chalet Chendering, KT" },
-      { name: "description", content: "Rajawali D'Cabin Chalet — Muslim-friendly riverside chalet & homestay in Chendering, Kuala Terengganu. 8 private cabins for family staycations near the city." },
-      { name: "keywords", content: "Rajawali D'Cabin Chalet, Chalet Chendering, Homestay Chendering, Chalet Kuala Terengganu, Homestay Kuala Terengganu, Accommodation Kuala Terengganu, Staycation Kuala Terengganu, Family Chalet Terengganu, Muslim-friendly Chalet Kuala Terengganu" },
+      { title: "Rajawali D'Cabin Chalet | Roomstay & Chalet Chendering, KT" },
+      { name: "description", content: "Rajawali D'Cabin Chalet — Muslim-friendly riverside chalet & roomstay in Chendering, Kuala Terengganu. 8 private cabins for family staycations near the city." },
+      { name: "keywords", content: "Rajawali D'Cabin Chalet, Chalet Chendering, Roomstay Chendering, Chalet Kuala Terengganu, Roomstay Kuala Terengganu, Accommodation Kuala Terengganu, Staycation Kuala Terengganu, Family Chalet Terengganu, Muslim-friendly Chalet Kuala Terengganu" },
       { name: "robots", content: "index, follow" },
-      { property: "og:title", content: "Rajawali D'Cabin Chalet — Chalet & Homestay in Chendering, KT" },
+      { property: "og:title", content: "Rajawali D'Cabin Chalet — Chalet & Roomstay in Chendering, KT" },
       { property: "og:description", content: "Muslim-friendly riverside chalet in Chendering, Kuala Terengganu. 8 private family-friendly cabins for a peaceful Terengganu staycation." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://drajawalicabin.com/" },
@@ -43,7 +43,7 @@ export const Route = createFileRoute("/")({
       { property: "og:image:alt", content: "Riverside wooden cabins at Rajawali D'Cabin Chalet, Chendering" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Rajawali D'Cabin Chalet — Chalet Chendering, Kuala Terengganu" },
-      { name: "twitter:description", content: "Muslim-friendly riverside chalet & homestay in Chendering, KT. 8 private cabins for a quiet family staycation." },
+      { name: "twitter:description", content: "Muslim-friendly riverside chalet & roomstay in Chendering, KT. 8 private cabins for a quiet family staycation." },
       { name: "twitter:image", content: heroRiverside },
       { name: "geo.region", content: "MY-11" },
       { name: "geo.placename", content: "Chendering, Kuala Terengganu" },
@@ -65,7 +65,7 @@ export const Route = createFileRoute("/")({
             "D'Cabin Chalet",
             "Chalet Rajawali Chendering",
           ],
-          description: "Muslim-friendly riverside chalet and homestay in Chendering, Kuala Terengganu, Terengganu, Malaysia. 8 private cabins for family staycations.",
+          description: "Muslim-friendly riverside chalet and roomstay in Chendering, Kuala Terengganu, Terengganu, Malaysia. 8 private cabins for family staycations.",
           url: "https://drajawalicabin.com/",
           image: `https://drajawalicabin.com${heroRiverside}`,
           telephone: "+60 11-5500 7204",
