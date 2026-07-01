@@ -154,9 +154,21 @@ function InvoicePage() {
               <tfoot>
                 <tr>
                   <td colSpan={4} className="pt-3 text-right text-xs uppercase tracking-widest text-stone">
-                    Grand total
+                    Room rate
                   </td>
                   <td className="pt-3 text-right font-display text-xl text-forest">{money(inv.total)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={4} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
+                    Refundable security deposit
+                  </td>
+                  <td className="pt-1 text-right font-display text-lg text-forest">{money(inv.securityDeposit)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={4} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
+                    Total payable
+                  </td>
+                  <td className="pt-1 text-right font-display text-xl text-forest">{money(inv.total + inv.securityDeposit)}</td>
                 </tr>
               </tfoot>
             </table>
