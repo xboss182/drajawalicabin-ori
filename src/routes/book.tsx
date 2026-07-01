@@ -839,16 +839,18 @@ function DetailsStep(props: {
           <h3 className="mt-2 font-display text-lg text-forest">{bt.terms.title}</h3>
           {paymentType === "deposit" ? (
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-foreground/80">
-              <li>RM 50 deposit secures your dates once we verify the receipt.</li>
-              <li>Balance is due 7 days before check-in; we'll email a reminder.</li>
-              <li>Cancellations within 7 days of arrival are non-refundable.</li>
+              <li>RM {SECURITY_DEPOSIT_PER_ROOM} per room is a refundable booking/security deposit to secure your dates.</li>
+              <li>This deposit is not part of the room rate and will be refunded after check-out, subject to room inspection.</li>
+              <li>The full room rate is due 7 days before check-in; we'll email a reminder.</li>
+              <li>Cancellations within 7 days of check-in are strictly non-refundable.</li>
               <li>Locker code is shared on the morning of check-in via WhatsApp.</li>
             </ul>
           ) : (
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-foreground/80">
-              <li>Pay the full amount now — no balance step later.</li>
+              <li>Pay the full room rate plus a refundable RM {SECURITY_DEPOSIT_PER_ROOM}/room security deposit now.</li>
+              <li>The security deposit is not part of the room rate and will be refunded after check-out, subject to room inspection.</li>
               <li>Locker code is issued on WhatsApp once we verify your receipt.</li>
-              <li>Cancellations within 7 days of arrival are non-refundable.</li>
+              <li>Cancellations within 7 days of check-in are strictly non-refundable.</li>
               <li>Refunds for earlier cancellations are processed within 7 working days.</li>
             </ul>
           )}
