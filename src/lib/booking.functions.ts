@@ -419,7 +419,7 @@ export const listBookings = createServerFn({ method: "GET" })
           rooms: rows.map((r) => ({
             id: r.id,
             cabinId: r.cabin_id,
-            name: r.room_type,
+            name: cleanRoomType(r.room_type),
             nights: r.nights,
             total: Number(r.total_amount ?? 0),
           })),
@@ -883,7 +883,7 @@ export const requestManageLink = createServerFn({ method: "POST" })
         templateData: {
           guestName: match.guest_name,
           reference,
-          roomType: match.room_type,
+          roomType: cleanRoomType(match.room_type),
           manageUrl,
         },
       });
@@ -940,8 +940,8 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
       checkOut: head.check_out,
       guests: head.guests,
       nights: head.nights,
-      roomType: rows.map((r) => r.room_type).join(", "),
-      rooms: rows.map((r) => ({ id: r.id, name: r.room_type, nights: r.nights, total: Number(r.total_amount ?? 0) })),
+      roomType: rows.map((r) => cleanRoomType(r.room_type)).join(", "),
+      rooms: rows.map((r) => ({ id: r.id, name: cleanRoomType(r.room_type), nights: r.nights, total: Number(r.total_amount ?? 0) })),
       total,
       securityDeposit,
       remaining,
@@ -1021,7 +1021,7 @@ export const markFullyPaid = createServerFn({ method: "POST" })
         reference: head.payment_reference ?? head.id.slice(0, 8),
         checkIn: head.check_in,
         checkOut: head.check_out,
-        rooms: (rows ?? []).map((r) => r.room_type).join(', '),
+        rooms: (rows ?? []).map((r) => cleanRoomType(r.room_type)).join(', '),
         lockerCode: head.locker_code,
       };
       void total;
@@ -1123,7 +1123,7 @@ export const getInvoice = createServerFn({ method: "POST" })
       rooms: rows.map((r: any) => ({
         id: r.id,
         cabinId: r.cabin_id,
-        name: r.room_type,
+        name: cleanRoomType(r.room_type),
         nights: r.nights,
         subtotal: Number(r.subtotal ?? 0),
         comforterTotal: Number(r.comforter_total ?? 0),
