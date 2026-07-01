@@ -15,7 +15,7 @@ interface Props {
 }
 
 const Email = (p: Props) => (
-  <EmailLayout preview={`Balance due in 7 days — ${p.reference ?? ''}`}>
+  <EmailLayout preview={`Room rate balance due in 7 days — ${p.reference ?? ''}`}>
     <Heading as="h2" style={styles.h2}>Room rate balance due in 7 days</Heading>
     <Text style={styles.p}>
       Hi {p.guestName ?? 'guest'}, your stay on {p.checkIn ? fmtDate(p.checkIn) : 'your check-in date'} is coming up.
