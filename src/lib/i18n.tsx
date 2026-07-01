@@ -383,16 +383,17 @@ export const translations = {
       terms: {
         eyebrow: "Peraturan penginapan",
         title: "Ringkasan sebelum anda meneruskan.",
-        summary: "Deposit RM50 diperlukan untuk mengesahkan tarikh anda. Bayaran penuh perlu dijelaskan sebelum check-in. Pembatalan dalam tempoh 7 hari sebelum ketibaan tidak akan dikembalikan.",
-        agree: "Saya bersetuju dengan peraturan penginapan (deposit RM50 untuk mengesahkan tarikh, bayaran penuh sebelum check-in, dan polisi pembatalan 7 hari).",
+        summary: "Deposit keselamatan RM50/bilik yang boleh dikembalikan diperlukan untuk mengesahkan tarikh anda. Deposit keselamatan bukan sebahagian daripada kadar bilik. Kadar bilik penuh berserta deposit keselamatan mesti dijelaskan sebelum check-in. Pembatalan dalam tempoh 7 hari sebelum check-in tidak akan dikembalikan.",
+        agree: "Saya bersetuju dengan peraturan penginapan (deposit keselamatan RM50/bilik yang boleh dikembalikan untuk mengesahkan tarikh, kadar bilik penuh + deposit keselamatan sebelum check-in, dan polisi pembatalan 7 hari).",
       },
       houseRules: {
         title: "Peraturan & syarat penginapan anda",
         intro: "Sila baca sebelum tiba — supaya setiap penginapan berjalan lancar.",
         items: [
-          "Bayaran penuh dan deposit perlu dijelaskan sebelum masuk.",
-          "Deposit akan dikembalikan selepas check-out jika tiada kerosakan atau kehilangan.",
-          "Polisi deposit tidak akan dikembalikan jika dibatalkan dalam tempoh 7 hari sebelum ketibaan.",
+          "Deposit keselamatan RM50/bilik yang boleh dikembalikan diperlukan untuk mengesahkan tempahan; ia bukan sebahagian daripada kadar bilik.",
+          "Kadar bilik penuh berserta deposit keselamatan yang boleh dikembalikan mesti dijelaskan sebelum check-in.",
+          "Deposit keselamatan akan dikembalikan sepenuhnya selepas check-out, tertakluk kepada pemeriksaan bilik yang memastikan tiada kerosakan atau kehilangan.",
+          "Pembatalan yang dibuat dalam tempoh 7 hari sebelum tarikh check-in adalah tidak boleh dikembalikan.",
           "Self check-in: kod locker dan arahan akan dikongsi melalui WhatsApp pada hari ketibaan. Sila kunci semula locker selepas mengambil kunci.",
           "Tetamu bertanggungjawab terhadap kebersihan, keselamatan, penjimatan elektrik & air, serta menjaga kunci bilik sepanjang penginapan.",
         ],
