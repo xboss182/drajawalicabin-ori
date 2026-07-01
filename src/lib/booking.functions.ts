@@ -257,8 +257,13 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
     const alreadySent = (groupRows ?? []).some((r) => r.confirmation_email_sent_at);
     if (leadRow && !alreadySent) {
       const totalAmount = (groupRows ?? []).reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
-      const deposit = Number(leadRow.deposit_amount ?? 50);
-      const remaining = Math.max(0, totalAmount - deposit);
+      const hasOldBalance = (groupRows ?? []).some((r) => r.balance_amount == null);
+      const securityDeposit = hasOldBalance
+        ? Number(leadRow.deposit_amount ?? 50)
+        : (groupRows ?? []).reduce((s, r) => s + Number(r.deposit_amount ?? 0), 0);
+      const remaining = hasOldBalance
+        ? Math.max(0, totalAmount - securityDeposit)
+        : (groupRows ?? []).reduce((s, r) => s + Number(r.balance_amount ?? 0), 0);
       const templateData = {
         guestName: leadRow.guest_name,
         reference: leadRow.payment_reference ?? leadRow.id.slice(0, 8),
@@ -268,7 +273,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
         nights: leadRow.nights,
         guests: leadRow.guests,
         total: totalAmount,
-        deposit,
+        securityDeposit,
         remaining,
         paymentType: (leadRow as any).payment_type ?? 'deposit',
         rooms: (groupRows ?? []).map((r) => ({ name: r.room_type, total: Number(r.total_amount ?? 0) })),
