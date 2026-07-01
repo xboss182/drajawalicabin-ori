@@ -356,7 +356,7 @@ function Card({
         <div className="mt-5 flex flex-wrap gap-2">
           {b.balance_paid_at && (
             <span className="rounded-full bg-coconut px-4 py-2 text-[11px] uppercase tracking-widest text-forest">
-              Balance proof uploaded {new Date(b.balance_paid_at).toLocaleDateString()}
+              Room rate balance proof uploaded {new Date(b.balance_paid_at).toLocaleDateString()}
             </span>
           )}
           <button
