@@ -9,7 +9,7 @@ interface Props {
   roomType?: string
   checkIn?: string
   total?: number
-  deposit?: number
+  securityDeposit?: number
   remaining?: number
   manageUrl?: string
 }
