@@ -14,6 +14,12 @@ function generateRef() {
   return `RJW-${n}`;
 }
 
+// Strip legacy summary suffix like " (Twin room + Triple room)" from stored room_type.
+function cleanRoomType(name: string | null | undefined): string {
+  if (!name) return name ?? "";
+  return name.replace(/\s*\([^()]*(?:\s\+\s|\s×\s)[^()]*\)\s*$/, "").trim();
+}
+
 async function groupIdFor(admin: any, bookingId: string): Promise<string> {
   const { data } = await admin
     .from("booking_requests")
@@ -182,7 +188,7 @@ export const createBooking = createServerFn({ method: "POST" })
     const rows = assigned.map((a) => ({
       ...sharedBase,
       cabin_id: a.cabinId,
-      room_type: assigned.length > 1 ? `${a.cabinName} (${roomTypeSummary})` : a.cabinName,
+      room_type: a.cabinName,
       nights: a.nights,
       subtotal: a.subtotal,
       comforter_total: a.comforterTotal,
