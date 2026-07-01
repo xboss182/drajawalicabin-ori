@@ -304,7 +304,7 @@ export const translations = {
       title: "Sebelum anda menempah.",
       items: [
         { title: "Check-in & check-out", body: "Check-in dari jam 3:00 petang. Check-out sebelum jam 12:00 tengah hari." },
-        { title: "Deposit fleksibel", body: "Tempahan diamankan dengan deposit fleksibel RM50 setiap bilik, dan bayaran penuh mesti diselesaikan sekurang-kurangnya 7 hari sebelum check-in." },
+        { title: "Deposit fleksibel", body: "Tempahan diamankan dengan deposit keselamatan RM50 setiap bilik yang boleh dikembalikan. Deposit keselamatan bukan sebahagian daripada kadar bilik dan akan dikembalikan selepas check-out, tertakluk kepada pemeriksaan bilik. Kadar bilik penuh perlu diselesaikan 7 hari sebelum check-in." },
         { title: "Self check-in", body: "Self check-in mudah melalui key locker berkunci — tiba mengikut masa anda sendiri." },
       ],
     },
