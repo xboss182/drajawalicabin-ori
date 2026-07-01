@@ -1081,7 +1081,13 @@ export const getInvoice = createServerFn({ method: "POST" })
     const total = rows.reduce((s, r: any) => s + Number(r.total_amount ?? 0), 0);
     const subtotal = rows.reduce((s, r: any) => s + Number(r.subtotal ?? 0), 0);
     const comforter_total = rows.reduce((s, r: any) => s + Number(r.comforter_total ?? 0), 0);
-    const deposit = Number(head.deposit_amount ?? 50);
+    const hasOldBalance = rows.some((r: any) => r.balance_amount == null);
+    const securityDeposit = hasOldBalance
+      ? Number(head.deposit_amount ?? 50)
+      : rows.reduce((s, r: any) => s + Number(r.deposit_amount ?? 0), 0);
+    const balance = hasOldBalance
+      ? Math.max(0, total - securityDeposit)
+      : rows.reduce((s, r: any) => s + Number(r.balance_amount ?? 0), 0);
     return {
       id: head.id,
       groupId: gid,
@@ -1104,8 +1110,8 @@ export const getInvoice = createServerFn({ method: "POST" })
       total,
       subtotal,
       comforter_total,
-      deposit,
-      balance: Math.max(0, total - deposit),
+      securityDeposit,
+      balance,
       depositProofUrl,
       balanceProofUrl,
       rooms: rows.map((r: any) => ({
