@@ -22,7 +22,7 @@ const Email = (p: Props) => {
   const isFull = p.paymentType === 'full' || (p.remaining ?? 0) <= 0
   const ref = p.reference ?? '—'
   return (
-    <EmailLayout preview={`Booking ${ref} received — ${isFull ? 'paid in full' : 'deposit confirmed'}`}>
+    <EmailLayout preview={`Booking ${ref} received — ${isFull ? 'paid in full' : 'security deposit confirmed'}`}>
       <Heading as="h2" style={styles.h2}>Thank you, {p.guestName ?? 'guest'}</Heading>
       <Text style={styles.p}>
         {isFull
