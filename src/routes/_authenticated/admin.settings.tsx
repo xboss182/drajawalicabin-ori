@@ -64,7 +64,7 @@ function SettingsPage() {
           <h2 className="font-display text-lg text-forest">Payment settings</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="block text-[10px] uppercase tracking-widest text-stone">Default deposit (RM)</span>
+              <span className="block text-[10px] uppercase tracking-widest text-stone">Default security deposit per room (RM)</span>
               <input type="number" value={settings.deposit_amount_default}
                 onChange={(e) => setSettings({ ...settings, deposit_amount_default: Number(e.target.value) || 0 })}
                 className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
