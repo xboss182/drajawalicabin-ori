@@ -187,7 +187,7 @@ export const translations = {
         eyebrow: "Step 2 — Payment",
         title: "Pay directly to the owner.",
         holdPrefix: "Your booking is held for",
-        holdSuffix: ". Transfer the full amount and upload your receipt below — we'll confirm via email.",
+        holdSuffix: ". Transfer the amount due and upload your receipt below — we'll confirm via email. The security deposit is separate from the room rate and is refundable after check-out.",
         amountDue: "Amount due",
         reference: "Reference no.",
         refNote: "Please include reference",
