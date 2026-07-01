@@ -43,22 +43,22 @@ export const createBookingCheckout = createServerFn({ method: "POST" })
       .select("total_amount, deposit_amount, balance_amount")
       .eq("booking_group_id", groupId);
     const total = (rows ?? []).reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
-    const deposit = Number(head.deposit_amount ?? 50);
-    const balance = Math.max(0, total - deposit);
+    const deposit = (rows ?? []).reduce((s, r) => s + Number(r.deposit_amount ?? 0), 0);
+    const balance = (rows ?? []).reduce((s, r) => s + Number(r.balance_amount ?? 0), 0);
 
     let amountRM = 0;
     let description = "";
     if (data.kind === "deposit") {
-      // Deposit OR full payment (full uses deposit step with total as amount)
-      amountRM = (head.payment_type === "full") ? total : deposit;
+      // Deposit step: security deposit only, or full amount (room rate + security deposit) for full payment.
+      amountRM = (head.payment_type === "full") ? total + deposit : deposit;
       description =
         head.payment_type === "full"
           ? `Rajawali D'Cabin — Full payment (${head.payment_reference ?? head.id.slice(0, 8)})`
-          : `Rajawali D'Cabin — Booking deposit (${head.payment_reference ?? head.id.slice(0, 8)})`;
+          : `Rajawali D'Cabin — Booking/security deposit (${head.payment_reference ?? head.id.slice(0, 8)})`;
     } else {
       if (balance <= 0) return { error: "No balance due." };
       amountRM = balance;
-      description = `Rajawali D'Cabin — Balance payment (${head.payment_reference ?? head.id.slice(0, 8)})`;
+      description = `Rajawali D'Cabin — Room rate balance (${head.payment_reference ?? head.id.slice(0, 8)})`;
     }
     if (amountRM <= 0) return { error: "Nothing to charge." };
 
