@@ -402,7 +402,7 @@ export const translations = {
         eyebrow: "Langkah 2 — Pembayaran",
         title: "Bayar terus ke pemilik.",
         holdPrefix: "Tempahan anda dipegang selama",
-        holdSuffix: ". Pindahkan jumlah penuh dan muat naik resit di bawah — kami akan sahkan melalui emel.",
+        holdSuffix: ". Pindahkan jumlah yang perlu dibayar dan muat naik resit di bawah — kami akan sahkan melalui emel. Deposit keselamatan adalah berasingan daripada kadar bilik dan boleh dikembalikan selepas check-out.",
         amountDue: "Jumlah perlu bayar",
         reference: "No Rujukan",
         refNote: "Sila sertakan rujukan",
