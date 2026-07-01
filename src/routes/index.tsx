@@ -116,7 +116,7 @@ export const Route = createFileRoute("/")({
             {
               "@type": "Question",
               name: "How do I book a cabin?",
-              acceptedAnswer: { "@type": "Answer", text: "Check available dates on our website and complete the booking online. Bookings are secured with a flexible RM50 deposit per room; full payment must be completed at least 7 days before check-in." },
+              acceptedAnswer: { "@type": "Answer", text: "Check available dates on our website and complete the booking online. Bookings are secured with a refundable RM50 security deposit per room (not part of the room rate, refunded after check-out subject to room inspection). The full room rate must be settled at least 7 days before check-in. Cancellations within 7 days of check-in are strictly non-refundable." },
             },
             {
               "@type": "Question",
