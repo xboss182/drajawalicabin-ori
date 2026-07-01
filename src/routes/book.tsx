@@ -816,8 +816,8 @@ function DetailsStep(props: {
               <div className="flex items-start gap-3">
                 <input type="radio" name="payment-type" checked={paymentType === "deposit"} onChange={() => setPaymentType("deposit")} className="mt-1 h-4 w-4 accent-forest" />
                 <div>
-                  <p className="font-medium text-forest">Reserve with RM 50 deposit</p>
-                  <p className="mt-1 text-xs text-stone">Pay RM 50 now to lock the dates. Balance due 7 days before check-in.</p>
+                  <p className="font-medium text-forest">Reserve with RM{SECURITY_DEPOSIT_PER_ROOM} security deposit/room</p>
+                  <p className="mt-1 text-xs text-stone">RM{SECURITY_DEPOSIT_PER_ROOM} per room secures your dates. This is a refundable security deposit, not part of the room rate. Full room rate is due 7 days before check-in.</p>
                 </div>
               </div>
             </label>
