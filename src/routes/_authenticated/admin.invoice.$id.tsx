@@ -190,10 +190,10 @@ function InvoicePage() {
               <tbody>
                 <tr className="border-b border-border/40">
                   <td className="py-2">1</td>
-                  <td className="py-2">{isFullPayment ? "Full payment" : "Booking deposit"}</td>
+                  <td className="py-2">{isFullPayment ? "Full payment (room rate + security deposit)" : "Booking/security deposit"}</td>
                   <td className="py-2">on booking</td>
                   <td className="py-2">{depositPaid ? fmtDate(inv.confirmed_at ?? inv.created_at) : "—"}</td>
-                  <td className="py-2 text-right">{money(inv.deposit)}</td>
+                  <td className="py-2 text-right">{money(inv.securityDeposit)}</td>
                   <td className="py-2">
                     {inv.depositProofUrl ? (
                       <a
