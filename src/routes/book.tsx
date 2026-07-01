@@ -863,8 +863,8 @@ function DetailsStep(props: {
             />
             <span className="text-sm leading-relaxed text-foreground/85">
               {paymentType === "deposit"
-                ? "I agree to the property rules (RM 50 deposit to secure dates, balance due 7 days before check-in, 7-day cancellation policy)."
-                : "I agree to the property rules (full payment now, locker code on verification, 7-day cancellation policy)."}
+                ? "I agree to the property rules (RM " + SECURITY_DEPOSIT_PER_ROOM + "/room refundable security deposit to secure dates, full room rate due 7 days before check-in, 7-day cancellation policy)."
+                : "I agree to the property rules (full room rate + refundable RM " + SECURITY_DEPOSIT_PER_ROOM + "/room security deposit now, locker code on verification, 7-day cancellation policy)."}
             </span>
           </label>
         </div>
