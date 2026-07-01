@@ -3,6 +3,12 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+const SECURITY_DEPOSIT_PER_ROOM = 50;
+
+function securityDepositForRooms(numRooms: number) {
+  return SECURITY_DEPOSIT_PER_ROOM * numRooms;
+}
+
 function generateRef() {
   const n = Math.floor(1000 + Math.random() * 9000);
   return `RJW-${n}`;
