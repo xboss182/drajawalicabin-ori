@@ -348,7 +348,7 @@ export const translations = {
         roomNum: "No Bilik:",
         roomNumNote: "Akan dimaklumkan selepas pengesahan tempahan",
         bookingNum: "No Tempahan:",
-        bookingNumNote: "Akan dimaklumkan selepas bayaran deposit",
+        bookingNumNote: "Akan dimaklumkan selepas bayaran deposit keselamatan",
       },
       submitting: "Memegang tarikh anda…",
       submit: "Teruskan ke pembayaran",
