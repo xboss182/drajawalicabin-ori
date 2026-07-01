@@ -997,6 +997,7 @@ export const markFullyPaid = createServerFn({ method: "POST" })
         status: "fully_paid",
         locker_code: data.lockerCode,
         balance_paid_at: new Date().toISOString(),
+        balance_amount: 0,
       })
       .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
