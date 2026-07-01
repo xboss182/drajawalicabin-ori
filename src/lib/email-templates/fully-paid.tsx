@@ -31,7 +31,7 @@ const Email = (p: Props) => (
       </p>
     </div>
     <Text style={styles.p}>
-      Please return keys to the locker on check-out and keep the code confidential. The RM50 deposit is refunded after check-out if no damage/loss is recorded.
+      Please return keys to the locker on check-out and keep the code confidential. The refundable RM50/room security deposit is refunded after check-out, subject to a room inspection ensuring no damage or loss has occurred.
     </Text>
     <Text style={styles.p}>Drive safe — see you at Chendering!</Text>
   </EmailLayout>
