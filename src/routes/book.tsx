@@ -24,6 +24,7 @@ import { isPaymentsConfigured } from "@/lib/stripe";
 // so a guest in any timezone sees the same "today" and never selects a date
 // that's shifted by ±1 day from what the property sees.
 const PROPERTY_TZ = "Asia/Kuala_Lumpur";
+const SECURITY_DEPOSIT_PER_ROOM = 50;
 
 function propertyDateParts(d: Date): { y: number; m: number; day: number } {
   const parts = new Intl.DateTimeFormat("en-CA", {
