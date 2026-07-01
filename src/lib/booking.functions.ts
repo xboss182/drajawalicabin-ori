@@ -204,19 +204,12 @@ export const createBooking = createServerFn({ method: "POST" })
     const lead = inserted[0];
     const total = inserted.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
 
-    // For full-payment bookings, set deposit_amount = total and balance_amount = 0 on the lead row
-    if ((data.paymentType ?? "deposit") === "full") {
-      await supabaseAdmin
-        .from("booking_requests")
-        .update({ deposit_amount: total, balance_amount: 0 })
-        .eq("id", lead.id);
-    }
-
     return {
       bookingId: lead.id as string,
       groupId: (lead.booking_group_id as string) ?? lead.id,
       reference: lead.payment_reference as string,
       total,
+      securityDeposit,
       holdExpiresAt: lead.hold_expires_at as string,
       guestToken: lead.guest_token as string,
       paymentType: (data.paymentType ?? "deposit") as "deposit" | "full",
