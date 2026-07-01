@@ -77,10 +77,12 @@ function CheckoutPage() {
       <section className="mx-auto max-w-3xl px-6 py-10 lg:px-10">
         <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Pay by card</p>
         <h1 className="mt-2 font-display text-3xl text-forest">
-          {kind === "balance" ? "Pay your balance" : "Pay your deposit"}
+          {kind === "balance" ? "Pay your room rate balance" : "Pay your security deposit"}
         </h1>
         <p className="mt-2 text-sm text-stone">
-          Payments are processed securely. Your booking is auto-confirmed on success.
+          {kind === "balance"
+            ? "This payment covers the remaining room rate. The security deposit is separate and refundable after check-out."
+            : "Payments are processed securely. Your booking is auto-confirmed on success. The security deposit is refundable after check-out, subject to room inspection."}
         </p>
 
         {error && (

@@ -24,6 +24,7 @@ import { isPaymentsConfigured } from "@/lib/stripe";
 // so a guest in any timezone sees the same "today" and never selects a date
 // that's shifted by ±1 day from what the property sees.
 const PROPERTY_TZ = "Asia/Kuala_Lumpur";
+const SECURITY_DEPOSIT_PER_ROOM = 50;
 
 function propertyDateParts(d: Date): { y: number; m: number; day: number } {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -98,10 +99,10 @@ export const Route = createFileRoute("/book")({
   head: () => ({
     meta: [
       { title: "Book a Cabin | Rajawali D'Cabin Chalet, Kuala Terengganu" },
-      { name: "description", content: "Reserve a private cabin at Rajawali D'Cabin Chalet in Chendering, Kuala Terengganu. Easy online booking with flexible RM50 deposit per room." },
+      { name: "description", content: "Reserve a private cabin at Rajawali D'Cabin Chalet in Chendering, Kuala Terengganu. Easy online booking with a refundable RM50 security deposit per room." },
       { name: "robots", content: "noindex" },
       { property: "og:title", content: "Book a Cabin — Rajawali D'Cabin Chalet, Kuala Terengganu" },
-      { property: "og:description", content: "Reserve a private riverside cabin in Chendering, Kuala Terengganu. Flexible RM50 deposit per room." },
+      { property: "og:description", content: "Reserve a private riverside cabin in Chendering, Kuala Terengganu. Refundable RM50 security deposit per room." },
     ],
   }),
   component: BookPage,
@@ -136,7 +137,7 @@ function BookPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [booking, setBooking] = useState<{ bookingId: string; reference: string; total: number; holdExpiresAt: string; guestToken: string } | null>(null);
+  const [booking, setBooking] = useState<{ bookingId: string; reference: string; total: number; securityDeposit: number; holdExpiresAt: string; guestToken: string } | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -816,8 +817,8 @@ function DetailsStep(props: {
               <div className="flex items-start gap-3">
                 <input type="radio" name="payment-type" checked={paymentType === "deposit"} onChange={() => setPaymentType("deposit")} className="mt-1 h-4 w-4 accent-forest" />
                 <div>
-                  <p className="font-medium text-forest">Reserve with RM 50 deposit</p>
-                  <p className="mt-1 text-xs text-stone">Pay RM 50 now to lock the dates. Balance due 7 days before check-in.</p>
+                  <p className="font-medium text-forest">Reserve with RM{SECURITY_DEPOSIT_PER_ROOM} security deposit/room</p>
+                  <p className="mt-1 text-xs text-stone">RM{SECURITY_DEPOSIT_PER_ROOM} per room secures your dates. This is a refundable security deposit, not part of the room rate. Full room rate is due 7 days before check-in.</p>
                 </div>
               </div>
             </label>
@@ -825,8 +826,8 @@ function DetailsStep(props: {
               <div className="flex items-start gap-3">
                 <input type="radio" name="payment-type" checked={paymentType === "full"} onChange={() => setPaymentType("full")} className="mt-1 h-4 w-4 accent-forest" />
                 <div>
-                  <p className="font-medium text-forest">Pay in full now{price ? ` (RM ${price.total.toFixed(2)})` : ""}</p>
-                  <p className="mt-1 text-xs text-stone">Settle everything upfront — locker code issued once we verify.</p>
+                  <p className="font-medium text-forest">Pay in full now{price ? ` (RM ${(price.total + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)})` : ""}</p>
+                  <p className="mt-1 text-xs text-stone">Settle the full room rate plus a refundable RM{SECURITY_DEPOSIT_PER_ROOM}/room security deposit upfront.</p>
                 </div>
               </div>
             </label>
@@ -838,16 +839,18 @@ function DetailsStep(props: {
           <h3 className="mt-2 font-display text-lg text-forest">{bt.terms.title}</h3>
           {paymentType === "deposit" ? (
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-foreground/80">
-              <li>RM 50 deposit secures your dates once we verify the receipt.</li>
-              <li>Balance is due 7 days before check-in; we'll email a reminder.</li>
-              <li>Cancellations within 7 days of arrival are non-refundable.</li>
+              <li>RM {SECURITY_DEPOSIT_PER_ROOM} per room is a refundable booking/security deposit to secure your dates.</li>
+              <li>This deposit is not part of the room rate and will be refunded after check-out, subject to room inspection.</li>
+              <li>The full room rate is due 7 days before check-in; we'll email a reminder.</li>
+              <li>Cancellations within 7 days of check-in are strictly non-refundable.</li>
               <li>Locker code is shared on the morning of check-in via WhatsApp.</li>
             </ul>
           ) : (
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-foreground/80">
-              <li>Pay the full amount now — no balance step later.</li>
+              <li>Pay the full room rate plus a refundable RM {SECURITY_DEPOSIT_PER_ROOM}/room security deposit now.</li>
+              <li>The security deposit is not part of the room rate and will be refunded after check-out, subject to room inspection.</li>
               <li>Locker code is issued on WhatsApp once we verify your receipt.</li>
-              <li>Cancellations within 7 days of arrival are non-refundable.</li>
+              <li>Cancellations within 7 days of check-in are strictly non-refundable.</li>
               <li>Refunds for earlier cancellations are processed within 7 working days.</li>
             </ul>
           )}
@@ -860,8 +863,8 @@ function DetailsStep(props: {
             />
             <span className="text-sm leading-relaxed text-foreground/85">
               {paymentType === "deposit"
-                ? "I agree to the property rules (RM 50 deposit to secure dates, balance due 7 days before check-in, 7-day cancellation policy)."
-                : "I agree to the property rules (full payment now, locker code on verification, 7-day cancellation policy)."}
+                ? "I agree to the property rules (RM " + SECURITY_DEPOSIT_PER_ROOM + "/room refundable security deposit to secure dates, full room rate due 7 days before check-in, 7-day cancellation policy)."
+                : "I agree to the property rules (full room rate + refundable RM " + SECURITY_DEPOSIT_PER_ROOM + "/room security deposit now, locker code on verification, 7-day cancellation policy)."}
             </span>
           </label>
         </div>
@@ -929,13 +932,14 @@ function DetailsStep(props: {
                   {price.comforter_total > 0 && (
                     <Row label={bt.summary.comforterLabel} value={`RM ${price.comforter_total.toFixed(2)}`} />
                   )}
+                  <Row label={bt.summary.securityDeposit} value={`RM ${(totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}`} />
                 </>
               )}
             </dl>
             {price && (
               <div className="mt-4 flex items-baseline justify-between rounded-xl bg-coconut px-4 py-3">
-                <span className="text-xs uppercase tracking-widest text-stone">{bt.summary.total}</span>
-                <span className="font-display text-2xl text-forest">RM {price.total.toFixed(2)}</span>
+                <span className="text-xs uppercase tracking-widest text-stone">{bt.summary.totalPayable}</span>
+                <span className="font-display text-2xl text-forest">RM {(price.total + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}</span>
               </div>
             )}
             <p className="mt-4 text-xs text-stone">{bt.summary.priceNote}</p>
@@ -950,7 +954,7 @@ function DetailsStep(props: {
 function PaymentStep({
   booking, paymentType, proofFile, setProofFile, uploadProof, uploading, error, name, cabinName, checkin, checkout,
 }: {
-  booking: { bookingId: string; reference: string; total: number; holdExpiresAt: string; guestToken: string };
+  booking: { bookingId: string; reference: string; total: number; securityDeposit: number; holdExpiresAt: string; guestToken: string };
   paymentType: "deposit" | "full";
   proofFile: File | null;
   setProofFile: (f: File | null) => void;
@@ -996,19 +1000,19 @@ function PaymentStep({
         <div className="flex items-baseline justify-between">
           <div>
             <p className="text-xs uppercase tracking-widest text-stone">
-              {paymentType === "full" ? "Full payment due now" : "Deposit due now"}
+              {paymentType === "full" ? "Room rate + security deposit due now" : "Security deposit due now"}
             </p>
             <p className="font-display text-4xl text-forest">
-              RM {paymentType === "full" ? booking.total.toFixed(2) : "50.00"}
+              RM {paymentType === "full" ? (booking.total + booking.securityDeposit).toFixed(2) : booking.securityDeposit.toFixed(2)}
             </p>
             {paymentType === "deposit" && (
               <p className="mt-1 text-xs text-stone">
-                of RM {booking.total.toFixed(2)} total — balance due 7 days before check-in
+                Room rate balance of RM {booking.total.toFixed(2)} is due 7 days before check-in
               </p>
             )}
             {paymentType === "full" && (
               <p className="mt-1 text-xs text-stone">
-                Paid in full — locker code on confirmation
+                Includes refundable RM {booking.securityDeposit.toFixed(2)} security deposit — locker code on confirmation
               </p>
             )}
           </div>

@@ -3,6 +3,12 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+const SECURITY_DEPOSIT_PER_ROOM = 50;
+
+function securityDepositForRooms(numRooms: number) {
+  return SECURITY_DEPOSIT_PER_ROOM * numRooms;
+}
+
 function generateRef() {
   const n = Math.floor(1000 + Math.random() * 9000);
   return `RJW-${n}`;
@@ -151,6 +157,9 @@ export const createBooking = createServerFn({ method: "POST" })
       .map((t) => (t.count > 1 ? `${t.label} × ${t.count}` : t.label))
       .join(" + ");
 
+    const isFull = (data.paymentType ?? "deposit") === "full";
+    const securityDeposit = securityDepositForRooms(totalRooms);
+
     const sharedBase = {
       guest_name: data.guestName,
       email: data.email,
@@ -178,6 +187,8 @@ export const createBooking = createServerFn({ method: "POST" })
       subtotal: a.subtotal,
       comforter_total: a.comforterTotal,
       total_amount: a.total,
+      deposit_amount: SECURITY_DEPOSIT_PER_ROOM,
+      balance_amount: isFull ? 0 : a.total,
       ...(groupId ? { booking_group_id: groupId } : {}),
       ...(guestToken ? { guest_token: guestToken } : {}),
     }));
@@ -193,19 +204,12 @@ export const createBooking = createServerFn({ method: "POST" })
     const lead = inserted[0];
     const total = inserted.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
 
-    // For full-payment bookings, set deposit_amount = total and balance_amount = 0 on the lead row
-    if ((data.paymentType ?? "deposit") === "full") {
-      await supabaseAdmin
-        .from("booking_requests")
-        .update({ deposit_amount: total, balance_amount: 0 })
-        .eq("id", lead.id);
-    }
-
     return {
       bookingId: lead.id as string,
       groupId: (lead.booking_group_id as string) ?? lead.id,
       reference: lead.payment_reference as string,
       total,
+      securityDeposit,
       holdExpiresAt: lead.hold_expires_at as string,
       guestToken: lead.guest_token as string,
       paymentType: (data.paymentType ?? "deposit") as "deposit" | "full",
@@ -253,8 +257,13 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
     const alreadySent = (groupRows ?? []).some((r) => r.confirmation_email_sent_at);
     if (leadRow && !alreadySent) {
       const totalAmount = (groupRows ?? []).reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
-      const deposit = Number(leadRow.deposit_amount ?? 50);
-      const remaining = Math.max(0, totalAmount - deposit);
+      const hasOldBalance = (groupRows ?? []).some((r) => r.balance_amount == null);
+      const securityDeposit = hasOldBalance
+        ? Number(leadRow.deposit_amount ?? 50)
+        : (groupRows ?? []).reduce((s, r) => s + Number(r.deposit_amount ?? 0), 0);
+      const remaining = hasOldBalance
+        ? Math.max(0, totalAmount - securityDeposit)
+        : (groupRows ?? []).reduce((s, r) => s + Number(r.balance_amount ?? 0), 0);
       const templateData = {
         guestName: leadRow.guest_name,
         reference: leadRow.payment_reference ?? leadRow.id.slice(0, 8),
@@ -264,7 +273,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
         nights: leadRow.nights,
         guests: leadRow.guests,
         total: totalAmount,
-        deposit,
+        securityDeposit,
         remaining,
         paymentType: (leadRow as any).payment_type ?? 'deposit',
         rooms: (groupRows ?? []).map((r) => ({ name: r.room_type, total: Number(r.total_amount ?? 0) })),
@@ -647,8 +656,8 @@ export const adminCreateBooking = createServerFn({ method: "POST" })
       comforter: false,
       comforter_total: 0,
       total_amount: data.totalAmount,
-      deposit_amount: data.totalAmount,
-      balance_amount: 0,
+      deposit_amount: SECURITY_DEPOSIT_PER_ROOM,
+      balance_amount: data.status === "fully_paid" ? 0 : data.totalAmount,
       payment_reference: reference,
       status: data.status,
       payment_type: "full",
@@ -909,13 +918,13 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
     if (!rows || rows.length === 0) throw new Error("Booking not found");
     const head = rows[0];
     const total = rows.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
-    // Deposit is a flat RM50 per reservation (not per room)
-    const deposit = Number(head.deposit_amount ?? 50);
-    const remainingExplicit = rows.reduce(
-      (s, r) => s + (r.balance_amount != null ? Number(r.balance_amount) : 0),
-      0,
-    );
-    const remaining = remainingExplicit > 0 ? remainingExplicit : Math.max(0, total - deposit);
+    const hasOldBalance = rows.some((r) => r.balance_amount == null);
+    const securityDeposit = hasOldBalance
+      ? Number(head.deposit_amount ?? 50)
+      : rows.reduce((s, r) => s + Number(r.deposit_amount ?? 0), 0);
+    const remaining = hasOldBalance
+      ? Math.max(0, total - securityDeposit)
+      : rows.reduce((s, r) => s + Number(r.balance_amount ?? 0), 0);
     return {
       id: head.id,
       reference: head.payment_reference,
@@ -928,7 +937,7 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
       roomType: rows.map((r) => r.room_type).join(", "),
       rooms: rows.map((r) => ({ id: r.id, name: r.room_type, nights: r.nights, total: Number(r.total_amount ?? 0) })),
       total,
-      deposit,
+      securityDeposit,
       remaining,
       status: head.status,
       lockerCode: head.locker_code,
@@ -961,7 +970,7 @@ export const attachBalanceProof = createServerFn({ method: "POST" })
     const gid = (b.booking_group_id as string) ?? b.id;
     const { error } = await supabaseAdmin
       .from("booking_requests")
-      .update({ balance_proof_path: data.path, balance_paid_at: new Date().toISOString() })
+      .update({ balance_proof_path: data.path, balance_paid_at: new Date().toISOString(), balance_amount: 0 })
       .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -988,6 +997,7 @@ export const markFullyPaid = createServerFn({ method: "POST" })
         status: "fully_paid",
         locker_code: data.lockerCode,
         balance_paid_at: new Date().toISOString(),
+        balance_amount: 0,
       })
       .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
@@ -1071,7 +1081,13 @@ export const getInvoice = createServerFn({ method: "POST" })
     const total = rows.reduce((s, r: any) => s + Number(r.total_amount ?? 0), 0);
     const subtotal = rows.reduce((s, r: any) => s + Number(r.subtotal ?? 0), 0);
     const comforter_total = rows.reduce((s, r: any) => s + Number(r.comforter_total ?? 0), 0);
-    const deposit = Number(head.deposit_amount ?? 50);
+    const hasOldBalance = rows.some((r: any) => r.balance_amount == null);
+    const securityDeposit = hasOldBalance
+      ? Number(head.deposit_amount ?? 50)
+      : rows.reduce((s, r: any) => s + Number(r.deposit_amount ?? 0), 0);
+    const balance = hasOldBalance
+      ? Math.max(0, total - securityDeposit)
+      : rows.reduce((s, r: any) => s + Number(r.balance_amount ?? 0), 0);
     return {
       id: head.id,
       groupId: gid,
@@ -1094,8 +1110,8 @@ export const getInvoice = createServerFn({ method: "POST" })
       total,
       subtotal,
       comforter_total,
-      deposit,
-      balance: Math.max(0, total - deposit),
+      securityDeposit,
+      balance,
       depositProofUrl,
       balanceProofUrl,
       rooms: rows.map((r: any) => ({

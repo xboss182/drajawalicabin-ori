@@ -68,8 +68,8 @@ export const Route = createFileRoute("/api/public/hooks/send-balance-reminders")
         for (const r of rows) {
           const manageUrl = `${origin}/manage-booking?id=${r.id}&token=${r.guest_token}`;
           const total = Number(r.total_amount ?? 0);
-          const deposit = Number(r.deposit_amount ?? 50);
-          const remaining = r.balance_amount != null ? Number(r.balance_amount) : Math.max(0, total - deposit);
+          const securityDeposit = r.deposit_amount != null ? Number(r.deposit_amount) : 50;
+          const remaining = r.balance_amount != null ? Number(r.balance_amount) : Math.max(0, total - securityDeposit);
           await sendTransactionalEmail(supabaseAdmin, {
             templateName: 'balance-reminder',
             recipientEmail: r.email,
@@ -80,7 +80,7 @@ export const Route = createFileRoute("/api/public/hooks/send-balance-reminders")
               roomType: r.room_type,
               checkIn: r.check_in,
               total,
-              deposit,
+              securityDeposit,
               remaining,
               manageUrl,
             },

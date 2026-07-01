@@ -154,9 +154,21 @@ function InvoicePage() {
               <tfoot>
                 <tr>
                   <td colSpan={4} className="pt-3 text-right text-xs uppercase tracking-widest text-stone">
-                    Grand total
+                    Room rate
                   </td>
                   <td className="pt-3 text-right font-display text-xl text-forest">{money(inv.total)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={4} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
+                    Refundable security deposit
+                  </td>
+                  <td className="pt-1 text-right font-display text-lg text-forest">{money(inv.securityDeposit)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={4} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
+                    Total payable
+                  </td>
+                  <td className="pt-1 text-right font-display text-xl text-forest">{money(inv.total + inv.securityDeposit)}</td>
                 </tr>
               </tfoot>
             </table>
@@ -178,10 +190,10 @@ function InvoicePage() {
               <tbody>
                 <tr className="border-b border-border/40">
                   <td className="py-2">1</td>
-                  <td className="py-2">{isFullPayment ? "Full payment" : "Booking deposit"}</td>
+                  <td className="py-2">{isFullPayment ? "Full payment (room rate + security deposit)" : "Booking/security deposit"}</td>
                   <td className="py-2">on booking</td>
                   <td className="py-2">{depositPaid ? fmtDate(inv.confirmed_at ?? inv.created_at) : "—"}</td>
-                  <td className="py-2 text-right">{money(inv.deposit)}</td>
+                  <td className="py-2 text-right">{money(inv.securityDeposit)}</td>
                   <td className="py-2">
                     {inv.depositProofUrl ? (
                       <a
@@ -200,7 +212,7 @@ function InvoicePage() {
                 {!isFullPayment && (
                 <tr>
                   <td className="py-2">2</td>
-                  <td className="py-2">Balance</td>
+                  <td className="py-2">Room rate balance</td>
                   <td className="py-2">
                     {editingDue ? (
                       <span className="flex items-center gap-1">
