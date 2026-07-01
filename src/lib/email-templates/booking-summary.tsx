@@ -64,5 +64,5 @@ export const template = {
   component: Email,
   subject: (d: Record<string, any>) => `Booking ${d.reference ?? ''} received — Rajawali D'Cabin`.trim(),
   displayName: 'Booking received',
-  previewData: { guestName: 'Ahmad', reference: 'RJW-1234', roomType: '2 PAX Family Suite', checkIn: '2026-07-10', checkOut: '2026-07-12', nights: 2, guests: 2, total: 480, deposit: 50, remaining: 430, paymentType: 'deposit' } as Props,
+  previewData: { guestName: 'Ahmad', reference: 'RJW-1234', roomType: '2 PAX Family Suite', checkIn: '2026-07-10', checkOut: '2026-07-12', nights: 2, guests: 2, total: 480, securityDeposit: 50, remaining: 480, paymentType: 'deposit' } as Props,
 } satisfies TemplateEntry
