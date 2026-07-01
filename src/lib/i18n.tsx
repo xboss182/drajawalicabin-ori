@@ -41,10 +41,10 @@ export const translations = {
       intro: "Every cabin is air-conditioned, fully private, and styled for a slow stay. Pick the one that fits your group — we'll keep it ready.",
       cta: "Check availability →",
       cabins: [
-        { name: "Queen Room (Sleeps 2)", sleeps: "Sleeps 2", features: ["1 Queen bed", "Air conditioning", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
-        { name: "Twin Room (Sleeps 2)", sleeps: "Sleeps 2", features: ["2 Single beds", "Air conditioning", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
-        { name: "Family Room (Sleeps 4)", sleeps: "Sleeps 4", features: ["1 Queen + 2 Single beds", "Air conditioning", "Spacious layout", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
-        { name: "Triple Room (Sleeps 3)", sleeps: "Sleeps 3", features: ["1 Queen + 1 Single bed", "Air conditioning", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
+        { name: "Queen Room", sleeps: "Sleeps 2", features: ["1 Queen bed", "Air conditioning", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
+        { name: "Twin Room", sleeps: "Sleeps 2", features: ["2 Single beds", "Air conditioning", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
+        { name: "Family Room", sleeps: "Sleeps 4", features: ["1 Queen + 2 Single beds", "Air conditioning", "Spacious layout", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
+        { name: "Triple Room", sleeps: "Sleeps 3", features: ["1 Queen + 1 Single bed", "Air conditioning", "Private bathroom", "TV", "USB charger", "Free WiFi", "Electric kettle"] },
       ],
     },
     why: {
@@ -253,10 +253,10 @@ export const translations = {
       intro: "Setiap kabin dilengkapi penghawa dingin, privasi penuh, dan suasana yang tenang. Pilih yang paling sesuai untuk kumpulan anda — kami akan sediakan segalanya.",
       cta: "Semak kekosongan →",
       cabins: [
-        { name: "Bilik Queen (Muat 2 orang)", sleeps: "Muat 2 orang", features: ["1 katil Queen", "Penghawa dingin", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
-        { name: "Bilik Twin (Muat 2 orang)", sleeps: "Muat 2 orang", features: ["2 katil Single", "Penghawa dingin", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
-        { name: "Bilik Family (Muat 4 orang)", sleeps: "Muat 4 orang", features: ["1 katil Queen + 2 katil Single", "Penghawa dingin", "Ruang yang luas", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
-        { name: "Bilik Triple (Muat 3 orang)", sleeps: "Muat 3 orang", features: ["1 katil Queen + 1 katil Single", "Penghawa dingin", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
+        { name: "Bilik Queen", sleeps: "Muat 2 orang", features: ["1 katil Queen", "Penghawa dingin", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
+        { name: "Bilik Twin", sleeps: "Muat 2 orang", features: ["2 katil Single", "Penghawa dingin", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
+        { name: "Bilik Family", sleeps: "Muat 4 orang", features: ["1 katil Queen + 2 katil Single", "Penghawa dingin", "Ruang yang luas", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
+        { name: "Bilik Triple", sleeps: "Muat 3 orang", features: ["1 katil Queen + 1 katil Single", "Penghawa dingin", "Bilik air peribadi", "TV", "Pengecas USB", "WiFi percuma", "Cerek elektrik"] },
       ],
     },
     why: {
