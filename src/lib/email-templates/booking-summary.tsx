@@ -26,8 +26,8 @@ const Email = (p: Props) => {
       <Heading as="h2" style={styles.h2}>Thank you, {p.guestName ?? 'guest'}</Heading>
       <Text style={styles.p}>
         {isFull
-          ? `We have received your full payment proof of ${money(p.total)}. Our team will verify the transfer shortly.`
-          : `We have received your booking and your RM${(p.deposit ?? 50).toFixed(2)} deposit proof. Your dates are now reserved.`}
+          ? `We have received your full payment proof covering the room rate and refundable security deposit. Our team will verify the transfer shortly.`
+          : `We have received your booking and your ${money(p.securityDeposit)} refundable security deposit proof. Your dates are now reserved. The security deposit is not part of the room rate and will be refunded after check-out, subject to room inspection.`}
       </Text>
       <div style={styles.panel}>
         <p style={styles.row}><span style={styles.label}>Booking</span><span style={styles.value}>{ref}</span></p>
@@ -38,20 +38,23 @@ const Email = (p: Props) => {
         {p.rooms && p.rooms.length > 1 && p.rooms.map((r, i) => (
           <p key={i} style={styles.row}><span style={styles.label}>{i === 0 ? 'Rooms' : ''}</span><span style={styles.value}>{r.name} — {money(r.total)}</span></p>
         ))}
-        <p style={{ ...styles.row, marginTop: '8px' }}><span style={styles.label}>Total</span><span style={styles.value}>{money(p.total)}</span></p>
+        <p style={{ ...styles.row, marginTop: '8px' }}><span style={styles.label}>Room rate</span><span style={styles.value}>{money(p.total)}</span></p>
         {isFull ? (
-          <p style={styles.row}><span style={styles.label}>Paid</span><span style={styles.value}>{money(p.total)} ✓ (in full)</span></p>
+          <>
+            <p style={styles.row}><span style={styles.label}>Security deposit</span><span style={styles.value}>{money(p.securityDeposit)} (refundable after check-out)</span></p>
+            <p style={styles.row}><span style={styles.label}>Paid</span><span style={styles.value}>{money((p.total ?? 0) + (p.securityDeposit ?? 0))} ✓ (in full)</span></p>
+          </>
         ) : (
           <>
-            <p style={styles.row}><span style={styles.label}>Deposit paid</span><span style={styles.value}>{money(p.deposit)} ✓</span></p>
-            <p style={styles.row}><span style={styles.label}>Balance</span><span style={styles.value}>{money(p.remaining)} · due 7 days before check-in</span></p>
+            <p style={styles.row}><span style={styles.label}>Security deposit paid</span><span style={styles.value}>{money(p.securityDeposit)} ✓ (refundable after check-out)</span></p>
+            <p style={styles.row}><span style={styles.label}>Room rate balance</span><span style={styles.value}>{money(p.remaining)} · due 7 days before check-in</span></p>
           </>
         )}
       </div>
       <Text style={styles.p}>
         {isFull
           ? 'Once we verify the transfer we will share your key-locker check-in code.'
-          : 'We will send a balance-payment reminder 7 days before check-in with a secure link to settle the remainder.'}
+          : 'We will send a room-rate balance reminder 7 days before check-in with a secure link to settle the remainder.'}
       </Text>
     </EmailLayout>
   )
