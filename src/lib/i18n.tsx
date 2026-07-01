@@ -89,7 +89,7 @@ export const translations = {
       title: "Before you book.",
       items: [
         { title: "Check-in & check-out", body: "Check-in from 3:00 PM. Check-out by 12:00 PM." },
-        { title: "Flexible deposit", body: "Bookings are secured with a flexible RM50 deposit per room, and full payment must be completed at least 7 days before check-in." },
+        { title: "Flexible deposit", body: "Bookings are secured with a refundable RM50 security deposit per room. The security deposit is not part of the room rate and is refunded after check-out, subject to room inspection. Full room rate is due 7 days before check-in." },
         { title: "Self check-in", body: "Convenient self check-in via secure key lockers — arrive on your own schedule." },
       ],
     },
