@@ -14,6 +14,12 @@ function generateRef() {
   return `RJW-${n}`;
 }
 
+// Strip legacy summary suffix like " (Twin room + Triple room)" from stored room_type.
+function cleanRoomType(name: string | null | undefined): string {
+  if (!name) return name ?? "";
+  return name.replace(/\s*\([^()]*(?:\s\+\s|\s×\s)[^()]*\)\s*$/, "").trim();
+}
+
 async function groupIdFor(admin: any, bookingId: string): Promise<string> {
   const { data } = await admin
     .from("booking_requests")
@@ -182,7 +188,7 @@ export const createBooking = createServerFn({ method: "POST" })
     const rows = assigned.map((a) => ({
       ...sharedBase,
       cabin_id: a.cabinId,
-      room_type: assigned.length > 1 ? `${a.cabinName} (${roomTypeSummary})` : a.cabinName,
+      room_type: a.cabinName,
       nights: a.nights,
       subtotal: a.subtotal,
       comforter_total: a.comforterTotal,
@@ -267,7 +273,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
       const templateData = {
         guestName: leadRow.guest_name,
         reference: leadRow.payment_reference ?? leadRow.id.slice(0, 8),
-        roomType: leadRow.room_type,
+        roomType: cleanRoomType(leadRow.room_type),
         checkIn: leadRow.check_in,
         checkOut: leadRow.check_out,
         nights: leadRow.nights,
@@ -276,7 +282,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
         securityDeposit,
         remaining,
         paymentType: (leadRow as any).payment_type ?? 'deposit',
-        rooms: (groupRows ?? []).map((r) => ({ name: r.room_type, total: Number(r.total_amount ?? 0) })),
+        rooms: (groupRows ?? []).map((r) => ({ name: cleanRoomType(r.room_type), total: Number(r.total_amount ?? 0) })),
       };
       const { sendTransactionalEmail, getAdminRecipients } = await import("./email/send.server");
       // Guest copy
@@ -413,7 +419,7 @@ export const listBookings = createServerFn({ method: "GET" })
           rooms: rows.map((r) => ({
             id: r.id,
             cabinId: r.cabin_id,
-            name: r.room_type,
+            name: cleanRoomType(r.room_type),
             nights: r.nights,
             total: Number(r.total_amount ?? 0),
           })),
@@ -877,7 +883,7 @@ export const requestManageLink = createServerFn({ method: "POST" })
         templateData: {
           guestName: match.guest_name,
           reference,
-          roomType: match.room_type,
+          roomType: cleanRoomType(match.room_type),
           manageUrl,
         },
       });
@@ -934,8 +940,8 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
       checkOut: head.check_out,
       guests: head.guests,
       nights: head.nights,
-      roomType: rows.map((r) => r.room_type).join(", "),
-      rooms: rows.map((r) => ({ id: r.id, name: r.room_type, nights: r.nights, total: Number(r.total_amount ?? 0) })),
+      roomType: rows.map((r) => cleanRoomType(r.room_type)).join(", "),
+      rooms: rows.map((r) => ({ id: r.id, name: cleanRoomType(r.room_type), nights: r.nights, total: Number(r.total_amount ?? 0) })),
       total,
       securityDeposit,
       remaining,
@@ -1015,7 +1021,7 @@ export const markFullyPaid = createServerFn({ method: "POST" })
         reference: head.payment_reference ?? head.id.slice(0, 8),
         checkIn: head.check_in,
         checkOut: head.check_out,
-        rooms: (rows ?? []).map((r) => r.room_type).join(', '),
+        rooms: (rows ?? []).map((r) => cleanRoomType(r.room_type)).join(', '),
         lockerCode: head.locker_code,
       };
       void total;
@@ -1117,7 +1123,7 @@ export const getInvoice = createServerFn({ method: "POST" })
       rooms: rows.map((r: any) => ({
         id: r.id,
         cabinId: r.cabin_id,
-        name: r.room_type,
+        name: cleanRoomType(r.room_type),
         nights: r.nights,
         subtotal: Number(r.subtotal ?? 0),
         comforterTotal: Number(r.comforter_total ?? 0),
