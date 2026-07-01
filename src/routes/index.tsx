@@ -430,8 +430,14 @@ function AvailabilitySearch() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {[t.search.anyCabin, "Deluxe Queen", "Deluxe Twin", "Family Suite", "Triple Suite"].map((o) => (
-                  <SelectItem key={o} value={o}>{o}</SelectItem>
+                {[
+                  { value: t.search.anyCabin, label: t.search.anyCabin },
+                  { value: "Deluxe Queen", label: "Queen Room" },
+                  { value: "Deluxe Twin", label: "Twin Room" },
+                  { value: "Family Suite", label: "Family Room" },
+                  { value: "Triple Suite", label: "Triple Room" },
+                ].map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
