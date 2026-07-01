@@ -918,13 +918,13 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
     if (!rows || rows.length === 0) throw new Error("Booking not found");
     const head = rows[0];
     const total = rows.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
-    // Deposit is a flat RM50 per reservation (not per room)
-    const deposit = Number(head.deposit_amount ?? 50);
-    const remainingExplicit = rows.reduce(
-      (s, r) => s + (r.balance_amount != null ? Number(r.balance_amount) : 0),
-      0,
-    );
-    const remaining = remainingExplicit > 0 ? remainingExplicit : Math.max(0, total - deposit);
+    const hasOldBalance = rows.some((r) => r.balance_amount == null);
+    const securityDeposit = hasOldBalance
+      ? Number(head.deposit_amount ?? 50)
+      : rows.reduce((s, r) => s + Number(r.deposit_amount ?? 0), 0);
+    const remaining = hasOldBalance
+      ? Math.max(0, total - securityDeposit)
+      : rows.reduce((s, r) => s + Number(r.balance_amount ?? 0), 0);
     return {
       id: head.id,
       reference: head.payment_reference,
@@ -937,7 +937,7 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
       roomType: rows.map((r) => r.room_type).join(", "),
       rooms: rows.map((r) => ({ id: r.id, name: r.room_type, nights: r.nights, total: Number(r.total_amount ?? 0) })),
       total,
-      deposit,
+      securityDeposit,
       remaining,
       status: head.status,
       lockerCode: head.locker_code,
