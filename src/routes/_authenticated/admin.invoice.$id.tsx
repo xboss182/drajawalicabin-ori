@@ -270,7 +270,7 @@ function InvoicePage() {
           {inv.notes && <p className="mt-4 text-sm text-stone">Notes: {inv.notes}</p>}
 
           <p className="mt-8 text-[11px] text-stone">
-            WhatsApp 011-5500 7204 · rajawalidcabin.com
+            WhatsApp 011-5500 7204 · drajawalicabin.com
           </p>
         </div>
       </section>
