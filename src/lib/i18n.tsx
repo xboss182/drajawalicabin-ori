@@ -90,6 +90,7 @@ export const translations = {
       items: [
         { title: "Check-in & check-out", body: "Check-in from 3:00 PM. Check-out by 12:00 PM." },
         { title: "Flexible deposit", body: "Bookings are secured with a refundable RM50 security deposit per room. The security deposit is not part of the room rate and is refunded after check-out, subject to room inspection. Full room rate is due 7 days before check-in." },
+        { title: "Children stay free", body: "Up to 2 children under 12 years old stay free per room, sharing existing bedding." },
         { title: "Self check-in", body: "Convenient self check-in via secure key lockers — arrive on your own schedule." },
       ],
     },
@@ -178,6 +179,7 @@ export const translations = {
           "A refundable RM50 security deposit per room is required to secure your booking; it is not part of the room rate.",
           "Full room rate plus the refundable security deposit must be cleared before check-in.",
           "The security deposit is fully refunded after check-out, subject to a room inspection ensuring no damage or loss has occurred.",
+          "Up to 2 children under 12 years old stay free per room, sharing the existing bedding.",
           "Cancellations made within 7 days of your check-in date are strictly non-refundable.",
           "Self check-in: locker code and instructions will be shared via WhatsApp on arrival day. Please lock the locker again after retrieving the key.",
           "Guests are responsible for cleanliness, safety, conserving electricity & water, and safekeeping of the room key during their stay.",
@@ -305,6 +307,7 @@ export const translations = {
       items: [
         { title: "Check-in & check-out", body: "Check-in dari jam 3:00 petang. Check-out sebelum jam 12:00 tengah hari." },
         { title: "Deposit fleksibel", body: "Tempahan diamankan dengan deposit keselamatan RM50 setiap bilik yang boleh dikembalikan. Deposit keselamatan bukan sebahagian daripada kadar bilik dan akan dikembalikan selepas check-out, tertakluk kepada pemeriksaan bilik. Kadar bilik penuh perlu diselesaikan 7 hari sebelum check-in." },
+        { title: "Kanak-kanak menginap percuma", body: "Sehingga 2 kanak-kanak bawah 12 tahun menginap percuma setiap bilik, berkongsi katil sedia ada." },
         { title: "Self check-in", body: "Self check-in mudah melalui key locker berkunci — tiba mengikut masa anda sendiri." },
       ],
     },
@@ -393,6 +396,7 @@ export const translations = {
           "Deposit keselamatan RM50/bilik yang boleh dikembalikan diperlukan untuk mengesahkan tempahan; ia bukan sebahagian daripada kadar bilik.",
           "Kadar bilik penuh berserta deposit keselamatan yang boleh dikembalikan mesti dijelaskan sebelum check-in.",
           "Deposit keselamatan akan dikembalikan sepenuhnya selepas check-out, tertakluk kepada pemeriksaan bilik yang memastikan tiada kerosakan atau kehilangan.",
+          "Sehingga 2 kanak-kanak bawah 12 tahun menginap percuma setiap bilik, berkongsi katil sedia ada.",
           "Pembatalan yang dibuat dalam tempoh 7 hari sebelum tarikh check-in adalah tidak boleh dikembalikan.",
           "Self check-in: kod locker dan arahan akan dikongsi melalui WhatsApp pada hari ketibaan. Sila kunci semula locker selepas mengambil kunci.",
           "Tetamu bertanggungjawab terhadap kebersihan, keselamatan, penjimatan elektrik & air, serta menjaga kunci bilik sepanjang penginapan.",

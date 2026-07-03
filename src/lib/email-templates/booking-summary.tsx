@@ -56,6 +56,9 @@ const Email = (p: Props) => {
           ? 'Once we verify the transfer we will share your key-locker check-in code.'
           : 'We will send a room-rate balance reminder 7 days before check-in with a secure link to settle the remainder.'}
       </Text>
+      <Text style={{ ...styles.p, fontSize: '12px', color: '#6b7280' }}>
+        Family note: up to 2 children under 12 stay free per room, sharing the existing bedding.
+      </Text>
     </EmailLayout>
   )
 }
