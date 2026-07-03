@@ -769,6 +769,83 @@ export const isCurrentUserAdmin = createServerFn({ method: "GET" })
     return { isAdmin: Boolean(data) };
   });
 
+// Admin: quote room prices for a set of cabins over a date range.
+// Uses compute_booking_price RPC so weekend / holiday / school-break rates apply.
+const quoteSchema = z.object({
+  cabinIds: z.array(z.string().uuid()).min(1).max(10),
+  checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+export const quoteRoomPrices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => quoteSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    if (new Date(data.checkOut) <= new Date(data.checkIn)) {
+      throw new Error("Check-out must be after check-in");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const quotes: Array<{ cabinId: string; nights: number; total: number }> = [];
+    for (const cid of data.cabinIds) {
+      const { data: q, error } = await supabaseAdmin.rpc("compute_booking_price", {
+        _cabin_id: cid,
+        _check_in: data.checkIn,
+        _check_out: data.checkOut,
+        _comforter: false,
+      });
+      if (error) throw new Error(error.message);
+      const row = (Array.isArray(q) ? q[0] : q) as { nights: number; total: number } | null;
+      quotes.push({ cabinId: cid, nights: Number(row?.nights ?? 0), total: Number(row?.total ?? 0) });
+    }
+    return { quotes };
+  });
+
+// Admin: update per-room amounts on an existing booking group.
+const updatePricesSchema = z.object({
+  bookingId: z.string().uuid(),
+  rows: z.array(z.object({ id: z.string().uuid(), amount: z.number().min(0).max(100000) })).min(1),
+});
+export const updateBookingRoomPrices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => updatePricesSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+    const { data: existing, error: eErr } = await supabaseAdmin
+      .from("booking_requests")
+      .select("id, comforter_total, status, balance_paid_at")
+      .eq("booking_group_id", gid);
+    if (eErr) throw new Error(eErr.message);
+    const byId = new Map((existing ?? []).map((r) => [r.id as string, r]));
+    for (const r of data.rows) {
+      const cur = byId.get(r.id);
+      if (!cur) throw new Error("Row not in this booking");
+      const comforter = Number(cur.comforter_total ?? 0);
+      const total = Math.round((r.amount + comforter) * 100) / 100;
+      const isPaid = cur.status === "fully_paid" || cur.balance_paid_at;
+      const patch: Record<string, unknown> = {
+        subtotal: r.amount,
+        total_amount: total,
+        balance_amount: isPaid ? 0 : total,
+      };
+      const { error: uErr } = await supabaseAdmin
+        .from("booking_requests")
+        .update(patch)
+        .eq("id", r.id);
+      if (uErr) throw new Error(uErr.message);
+    }
+    return { ok: true };
+  });
+
 // Admin gate: signed-in user's email must be on the admin_email_recipients allowlist.
 export const isAdminRecipient = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
