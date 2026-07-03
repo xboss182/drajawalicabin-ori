@@ -1498,6 +1498,7 @@ const holidaySchema = z.object({
   label: z.string().trim().min(1).max(120),
   starts_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   ends_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  kind: z.enum(["public_holiday", "school_break"]).default("school_break"),
 });
 
 export const upsertHoliday = createServerFn({ method: "POST" })
