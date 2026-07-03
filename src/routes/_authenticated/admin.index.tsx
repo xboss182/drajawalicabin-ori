@@ -12,6 +12,8 @@ import {
   adminCreateBooking,
   listCabinsAdmin,
   cancelAndRefundBooking,
+  quoteRoomPrices,
+  updateBookingRoomPrices,
 } from "@/lib/booking.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 
@@ -193,25 +195,25 @@ function AdminPage() {
           <>
             <Section title={`Awaiting your confirmation (${filtered("awaiting_review").length})`} highlight>
               {filtered("awaiting_review").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} />
+                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
               ))}
               {filtered("awaiting_review").length === 0 && <Empty />}
             </Section>
             <Section title={`Holding for payment (${filtered("pending_payment").length})`}>
               {filtered("pending_payment").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} />
+                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
               ))}
               {filtered("pending_payment").length === 0 && <Empty />}
             </Section>
             <Section title={`Confirmed (${filtered("confirmed").length})`}>
               {filtered("confirmed").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onMarkPaid={onMarkPaid} onDelete={onDelete} onCancelRefund={onCancelRefund} />
+                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onMarkPaid={onMarkPaid} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
               ))}
               {filtered("confirmed").length === 0 && <Empty />}
             </Section>
             <Section title={`Fully paid (${filtered("fully_paid").length})`}>
               {filtered("fully_paid").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} />
+                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
               ))}
               {filtered("fully_paid").length === 0 && <Empty />}
             </Section>
@@ -245,7 +247,7 @@ function Empty() {
 }
 
 function Card({
-  b, onConfirm, onReject, onMarkPaid, onDelete, onCancelRefund,
+  b, onConfirm, onReject, onMarkPaid, onDelete, onCancelRefund, onRefresh,
 }: {
   b: Booking;
   onConfirm: (id: string) => void;
@@ -253,7 +255,32 @@ function Card({
   onMarkPaid?: (b: Booking) => void;
   onDelete?: (id: string) => void;
   onCancelRefund?: (b: Booking) => void;
+  onRefresh?: () => void;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Record<string, number>>({});
+  const [savingPrice, setSavingPrice] = useState(false);
+
+  function openEdit() {
+    const d: Record<string, number> = {};
+    for (const r of b.rooms ?? []) d[r.id] = Number(r.total ?? 0);
+    setDraft(d);
+    setEditing(true);
+  }
+  async function savePrices() {
+    setSavingPrice(true);
+    try {
+      const rows = Object.entries(draft).map(([id, amount]) => ({ id, amount: Number(amount) || 0 }));
+      await updateBookingRoomPrices({ data: { bookingId: b.id, rows } });
+      setEditing(false);
+      onRefresh?.();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to update prices");
+    } finally {
+      setSavingPrice(false);
+    }
+  }
+
   return (
     <article className="rounded-xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -291,6 +318,14 @@ function Card({
           >
             View invoice
           </Link>
+          {onRefresh && (
+            <button
+              onClick={openEdit}
+              className="mt-1 ml-3 inline-block text-[11px] uppercase tracking-widest text-forest underline hover:no-underline"
+            >
+              Edit prices
+            </button>
+          )}
         </div>
       </div>
       {b.rooms && b.rooms.length > 1 && (
@@ -302,6 +337,51 @@ function Card({
             </li>
           ))}
         </ul>
+      )}
+      {editing && b.rooms && (
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+          <p className="text-[10px] uppercase tracking-widest text-amber-800">Edit room prices</p>
+          <ul className="mt-2 flex flex-col gap-2 text-sm">
+            {b.rooms.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-2">
+                <span className="flex-1">{r.name}</span>
+                <span className="flex items-center gap-1 text-xs">
+                  RM
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={draft[r.id] ?? 0}
+                    onChange={(e) =>
+                      setDraft((prev) => ({ ...prev, [r.id]: Number(e.target.value) }))
+                    }
+                    className="w-24 rounded border border-border bg-white px-2 py-1 text-sm"
+                  />
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[11px] text-stone">
+            New total: RM {Object.values(draft).reduce((s, v) => s + (Number(v) || 0), 0).toFixed(2)}
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={savePrices}
+              disabled={savingPrice}
+              className="rounded-full bg-forest px-4 py-1.5 text-[11px] uppercase tracking-widest text-coconut hover:bg-forest/90 disabled:opacity-60"
+            >
+              {savingPrice ? "Saving…" : "Save prices"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="rounded-full border border-border px-4 py-1.5 text-[11px] uppercase tracking-widest text-stone hover:text-forest"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
       <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
         <Row label="Check-in" value={b.check_in} />
@@ -411,10 +491,40 @@ function ManualBookingForm({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [guests, setGuests] = useState(2);
-  const [totalAmount, setTotalAmount] = useState(0);
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<"confirmed" | "fully_paid" | "pending_payment">("confirmed");
   const [saving, setSaving] = useState(false);
+  // Per-cabin price map. `overridden` tracks which rows the owner edited manually.
+  const [perRoom, setPerRoom] = useState<Record<string, number>>({});
+  const [overridden, setOverridden] = useState<Record<string, boolean>>({});
+  const [quoting, setQuoting] = useState(false);
+
+  // Auto-quote prices whenever selected cabins or dates change — but never
+  // overwrite a value the owner has manually edited.
+  useEffect(() => {
+    if (cabinIds.length === 0) return;
+    if (new Date(checkOut) <= new Date(checkIn)) return;
+    const idsToQuote = cabinIds.filter((id) => !overridden[id]);
+    if (idsToQuote.length === 0) return;
+    let cancelled = false;
+    setQuoting(true);
+    quoteRoomPrices({ data: { cabinIds: idsToQuote, checkIn, checkOut } })
+      .then((res) => {
+        if (cancelled) return;
+        setPerRoom((prev) => {
+          const next = { ...prev };
+          for (const q of res.quotes) next[q.cabinId] = q.total;
+          return next;
+        });
+      })
+      .catch(() => {})
+      .finally(() => !cancelled && setQuoting(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [cabinIds.join(","), checkIn, checkOut]);
+
+  const totalAmount = cabinIds.reduce((s, id) => s + (Number(perRoom[id]) || 0), 0);
 
   useEffect(() => {
     if (cabinIds.length === 0 && cabins[0]) setCabinIds([cabins[0].id]);
@@ -422,6 +532,32 @@ function ManualBookingForm({
 
   function toggleCabin(id: string) {
     setCabinIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    // If unchecking, drop any override so re-adding later re-quotes cleanly.
+    setOverridden((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  function setRoomPrice(id: string, val: number) {
+    setPerRoom((prev) => ({ ...prev, [id]: val }));
+    setOverridden((prev) => ({ ...prev, [id]: true }));
+  }
+
+  function resetRoomPrice(id: string) {
+    setOverridden((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    // Trigger re-quote for just this room.
+    quoteRoomPrices({ data: { cabinIds: [id], checkIn, checkOut } })
+      .then((res) => {
+        const q = res.quotes[0];
+        if (q) setPerRoom((prev) => ({ ...prev, [id]: q.total }));
+      })
+      .catch(() => {});
   }
 
   async function submit(e: React.FormEvent) {
@@ -432,8 +568,24 @@ function ManualBookingForm({
     }
     setSaving(true);
     try {
+      const perRoomAmounts = cabinIds.map((cid) => ({
+        cabinId: cid,
+        amount: Number(perRoom[cid]) || 0,
+      }));
       await adminCreateBooking({
-        data: { cabinIds, checkIn, checkOut, guestName: guestName.trim(), phone, email, guests, totalAmount, notes, status },
+        data: {
+          cabinIds,
+          checkIn,
+          checkOut,
+          guestName: guestName.trim(),
+          phone,
+          email,
+          guests,
+          totalAmount,
+          notes,
+          status,
+          perRoomAmounts,
+        },
       });
       onDone();
     } catch (err) {
@@ -496,13 +648,64 @@ function ManualBookingForm({
         <Field label="Guests">
           <input type="number" min={1} value={guests} onChange={(e) => setGuests(Number(e.target.value))} className="input" />
         </Field>
-        <Field label="Total (RM)">
-          <input type="number" min={0} step="0.01" value={totalAmount} onChange={(e) => setTotalAmount(Number(e.target.value))} className="input" />
-        </Field>
         <Field label="Notes">
           <input value={notes} onChange={(e) => setNotes(e.target.value)} className="input" />
         </Field>
       </div>
+      {cabinIds.length > 0 && (
+        <div className="mt-4 rounded-lg border border-border bg-white p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase tracking-widest text-stone">
+              Room prices {quoting && <span className="ml-2 normal-case text-stone/70">quoting…</span>}
+            </p>
+            <p className="text-xs text-stone">
+              Total: <span className="font-display text-forest">RM {totalAmount.toFixed(2)}</span>
+            </p>
+          </div>
+          <ul className="mt-2 flex flex-col gap-2">
+            {cabinIds.map((cid) => {
+              const c = cabins.find((x) => x.id === cid);
+              if (!c) return null;
+              return (
+                <li key={cid} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="flex-1">
+                    {c.name}{" "}
+                    <span className="text-xs text-stone">({c.cabin_type})</span>
+                    {overridden[cid] && (
+                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] uppercase tracking-widest text-amber-800">
+                        custom
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex items-center gap-1 text-xs">
+                    RM
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={perRoom[cid] ?? 0}
+                      onChange={(e) => setRoomPrice(cid, Number(e.target.value))}
+                      className="w-24 rounded border border-border bg-white px-2 py-1 text-sm"
+                    />
+                    {overridden[cid] && (
+                      <button
+                        type="button"
+                        onClick={() => resetRoomPrice(cid)}
+                        className="text-[10px] uppercase tracking-widest text-forest underline"
+                      >
+                        reset
+                      </button>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-2 text-[11px] text-stone">
+            Prices are auto-fetched from the room's weekday / weekend / holiday rate for the selected dates. Edit any row to override.
+          </p>
+        </div>
+      )}
       <div className="mt-4 flex gap-2">
         <button
           type="submit"

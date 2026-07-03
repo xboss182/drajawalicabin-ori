@@ -120,6 +120,11 @@ export const Route = createFileRoute("/")({
             },
             {
               "@type": "Question",
+              name: "Do children stay free?",
+              acceptedAnswer: { "@type": "Answer", text: "Yes. Up to 2 children under 12 years old stay free per room, sharing the existing bedding." },
+            },
+            {
+              "@type": "Question",
               name: "Is Rajawali D'Cabin Chalet family and Muslim friendly?",
               acceptedAnswer: { "@type": "Answer", text: "Yes. The chalet is family-friendly and Muslim-friendly, with private cabins suitable for families and groups visiting Kuala Terengganu." },
             },

@@ -621,6 +621,9 @@ const adminCreateSchema = z.object({
   totalAmount: z.number().min(0).max(100000).default(0),
   notes: z.string().trim().max(1000).optional().default(""),
   status: z.enum(["confirmed", "fully_paid", "pending_payment"]).default("confirmed"),
+  perRoomAmounts: z
+    .array(z.object({ cabinId: z.string().uuid(), amount: z.number().min(0).max(100000) }))
+    .optional(),
 }).refine((v) => v.cabinId || (v.cabinIds && v.cabinIds.length > 0), {
   message: "Pick at least one cabin",
 });
@@ -658,12 +661,17 @@ export const adminCreateBooking = createServerFn({ method: "POST" })
     const groupId = globalThis.crypto?.randomUUID?.();
     const guestToken = globalThis.crypto?.randomUUID?.();
     const nowIso = new Date().toISOString();
-    const perRoomAmount = Math.round((data.totalAmount / cabinIds.length) * 100) / 100;
-    // Distribute rounding remainder to the first row
-    const remainder = Math.round((data.totalAmount - perRoomAmount * cabinIds.length) * 100) / 100;
+    // Prefer explicit per-room overrides when provided; otherwise split totalAmount evenly.
+    const overrideMap = new Map<string, number>();
+    for (const p of data.perRoomAmounts ?? []) overrideMap.set(p.cabinId, p.amount);
+    const useOverrides = overrideMap.size > 0;
+    const evenPer = Math.round((data.totalAmount / cabinIds.length) * 100) / 100;
+    const evenRemainder = Math.round((data.totalAmount - evenPer * cabinIds.length) * 100) / 100;
     const rows = cabinIds.map((cid, i) => {
       const cabin = cabinById.get(cid)!;
-      const amount = i === 0 ? perRoomAmount + remainder : perRoomAmount;
+      const amount = useOverrides
+        ? (overrideMap.get(cid) ?? 0)
+        : (i === 0 ? evenPer + evenRemainder : evenPer);
       const row: Record<string, unknown> = {
         guest_name: data.guestName,
         email: data.email || "manual@admin.local",
@@ -759,6 +767,83 @@ export const isCurrentUserAdmin = createServerFn({ method: "GET" })
       _role: "admin",
     });
     return { isAdmin: Boolean(data) };
+  });
+
+// Admin: quote room prices for a set of cabins over a date range.
+// Uses compute_booking_price RPC so weekend / holiday / school-break rates apply.
+const quoteSchema = z.object({
+  cabinIds: z.array(z.string().uuid()).min(1).max(10),
+  checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+export const quoteRoomPrices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => quoteSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    if (new Date(data.checkOut) <= new Date(data.checkIn)) {
+      throw new Error("Check-out must be after check-in");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const quotes: Array<{ cabinId: string; nights: number; total: number }> = [];
+    for (const cid of data.cabinIds) {
+      const { data: q, error } = await supabaseAdmin.rpc("compute_booking_price", {
+        _cabin_id: cid,
+        _check_in: data.checkIn,
+        _check_out: data.checkOut,
+        _comforter: false,
+      });
+      if (error) throw new Error(error.message);
+      const row = (Array.isArray(q) ? q[0] : q) as { nights: number; total: number } | null;
+      quotes.push({ cabinId: cid, nights: Number(row?.nights ?? 0), total: Number(row?.total ?? 0) });
+    }
+    return { quotes };
+  });
+
+// Admin: update per-room amounts on an existing booking group.
+const updatePricesSchema = z.object({
+  bookingId: z.string().uuid(),
+  rows: z.array(z.object({ id: z.string().uuid(), amount: z.number().min(0).max(100000) })).min(1),
+});
+export const updateBookingRoomPrices = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => updatePricesSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+    const { data: existing, error: eErr } = await supabaseAdmin
+      .from("booking_requests")
+      .select("id, comforter_total, status, balance_paid_at")
+      .eq("booking_group_id", gid);
+    if (eErr) throw new Error(eErr.message);
+    const byId = new Map((existing ?? []).map((r) => [r.id as string, r]));
+    for (const r of data.rows) {
+      const cur = byId.get(r.id);
+      if (!cur) throw new Error("Row not in this booking");
+      const comforter = Number(cur.comforter_total ?? 0);
+      const total = Math.round((r.amount + comforter) * 100) / 100;
+      const isPaid = cur.status === "fully_paid" || cur.balance_paid_at;
+      const patch: Record<string, unknown> = {
+        subtotal: r.amount,
+        total_amount: total,
+        balance_amount: isPaid ? 0 : total,
+      };
+      const { error: uErr } = await supabaseAdmin
+        .from("booking_requests")
+        .update(patch as never)
+        .eq("id", r.id);
+      if (uErr) throw new Error(uErr.message);
+    }
+    return { ok: true };
   });
 
 // Admin gate: signed-in user's email must be on the admin_email_recipients allowlist.
