@@ -843,7 +843,6 @@ function DetailsStep(props: {
               <li>This deposit is not part of the room rate and will be refunded after check-out, subject to room inspection.</li>
               <li>The full room rate is due 7 days before check-in; we'll email a reminder.</li>
               <li>Cancellations within 7 days of check-in are strictly non-refundable.</li>
-              <li>Locker code is shared on the morning of check-in via WhatsApp.</li>
               <li>Refunds for earlier cancellations are processed within 7 working days.</li>
             </ul>
           ) : (
