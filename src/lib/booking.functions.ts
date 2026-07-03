@@ -1201,6 +1201,12 @@ export const getOccupancy = createServerFn({ method: "POST" })
       .gt("check_out", data.from)
       .in("status", ["pending_payment", "awaiting_review", "confirmed", "fully_paid"]);
 
+    const { data: holidayRows } = await supabaseAdmin
+      .from("school_holidays")
+      .select("label, starts_on, ends_on, kind")
+      .lte("starts_on", data.to)
+      .gte("ends_on", data.from);
+
     const cabinById = new Map<string, { name: string; cabin_type: string }>();
     for (const c of cabins ?? []) cabinById.set(c.id, { name: c.name, cabin_type: c.cabin_type });
 
@@ -1269,7 +1275,30 @@ export const getOccupancy = createServerFn({ method: "POST" })
         });
       }
     }
-    return { days: Object.values(days) };
+    // Attach holiday info per day
+    const daysWithHolidays: Record<
+      string,
+      (typeof days)[string] & {
+        holidays: Array<{ label: string; kind: "public_holiday" | "school_break" }>;
+      }
+    > = {};
+    for (const [ds, d] of Object.entries(days)) {
+      daysWithHolidays[ds] = { ...d, holidays: [] };
+    }
+    for (const h of holidayRows ?? []) {
+      const hs = new Date(h.starts_on + "T00:00:00Z");
+      const he = new Date(h.ends_on + "T00:00:00Z");
+      for (let t = new Date(hs); t <= he; t.setUTCDate(t.getUTCDate() + 1)) {
+        const ds = t.toISOString().slice(0, 10);
+        const d = daysWithHolidays[ds];
+        if (!d) continue;
+        d.holidays.push({
+          label: h.label,
+          kind: (h.kind ?? "school_break") as "public_holiday" | "school_break",
+        });
+      }
+    }
+    return { days: Object.values(daysWithHolidays) };
   });
 
 // ============== ADMIN: recipients ==============
@@ -1498,6 +1527,7 @@ const holidaySchema = z.object({
   label: z.string().trim().min(1).max(120),
   starts_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   ends_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  kind: z.enum(["public_holiday", "school_break"]).default("school_break"),
 });
 
 export const upsertHoliday = createServerFn({ method: "POST" })

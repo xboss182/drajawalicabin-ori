@@ -8,7 +8,13 @@ export const Route = createFileRoute("/_authenticated/admin/holidays")({
   component: HolidaysPage,
 });
 
-type H = { id?: string; label: string; starts_on: string; ends_on: string };
+type H = {
+  id?: string;
+  label: string;
+  starts_on: string;
+  ends_on: string;
+  kind: "public_holiday" | "school_break";
+};
 
 function HolidaysPage() {
   const [rows, setRows] = useState<H[]>([]);
@@ -53,14 +59,20 @@ function HolidaysPage() {
       </header>
       <section className="mx-auto max-w-4xl px-6 py-10 lg:px-10">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-3xl text-forest">School holidays</h1>
+          <h1 className="font-display text-3xl text-forest">Holidays</h1>
           <button
-            onClick={() => setEditing({ label: "", starts_on: "", ends_on: "" })}
+            onClick={() =>
+              setEditing({ label: "", starts_on: "", ends_on: "", kind: "public_holiday" })
+            }
             className="rounded-full bg-forest px-4 py-1.5 text-xs uppercase tracking-widest text-coconut"
           >
             + Add range
           </button>
         </div>
+        <p className="mt-2 text-xs text-stone">
+          Public holidays are charged at the weekend rate. School breaks are charged at the school
+          holiday rate.
+        </p>
         {err && <p className="mt-3 text-sm text-red-700">{err}</p>}
 
         <div className="mt-6 overflow-auto rounded-xl border border-border bg-card">
@@ -68,6 +80,7 @@ function HolidaysPage() {
             <thead className="bg-coconut/60 text-left text-[10px] uppercase tracking-widest text-stone">
               <tr>
                 <th className="p-2">Label</th>
+                <th className="p-2">Type</th>
                 <th className="p-2">Starts</th>
                 <th className="p-2">Ends</th>
                 <th className="p-2"></th>
@@ -77,6 +90,17 @@ function HolidaysPage() {
               {rows.map((r) => (
                 <tr key={r.id} className="border-t border-border/40">
                   <td className="p-2">{r.label}</td>
+                  <td className="p-2">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                        r.kind === "public_holiday"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-purple-100 text-purple-700"
+                      }`}
+                    >
+                      {r.kind === "public_holiday" ? "Public holiday" : "School break"}
+                    </span>
+                  </td>
                   <td className="p-2">{r.starts_on}</td>
                   <td className="p-2">{r.ends_on}</td>
                   <td className="p-2 text-right">
@@ -87,7 +111,7 @@ function HolidaysPage() {
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-3 text-center text-stone">No holiday ranges yet.</td>
+                  <td colSpan={5} className="p-3 text-center text-stone">No holiday ranges yet.</td>
                 </tr>
               )}
             </tbody>
@@ -105,6 +129,24 @@ function HolidaysPage() {
                   onChange={(e) => setEditing({ ...editing, label: e.target.value })}
                   className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
                 />
+              </label>
+              <label className="block sm:col-span-3">
+                <span className="block text-[10px] uppercase tracking-widest text-stone">
+                  Type
+                </span>
+                <select
+                  value={editing.kind}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      kind: e.target.value as "public_holiday" | "school_break",
+                    })
+                  }
+                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="public_holiday">Public holiday — weekend rate</option>
+                  <option value="school_break">School break — holiday rate</option>
+                </select>
               </label>
               <label className="block">
                 <span className="block text-[10px] uppercase tracking-widest text-stone">Starts</span>

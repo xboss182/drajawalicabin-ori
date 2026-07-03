@@ -416,6 +416,7 @@ export type Database = {
           created_at: string
           ends_on: string
           id: string
+          kind: string
           label: string
           starts_on: string
         }
@@ -423,6 +424,7 @@ export type Database = {
           created_at?: string
           ends_on: string
           id?: string
+          kind?: string
           label: string
           starts_on: string
         }
@@ -430,6 +432,7 @@ export type Database = {
           created_at?: string
           ends_on?: string
           id?: string
+          kind?: string
           label?: string
           starts_on?: string
         }
