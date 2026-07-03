@@ -108,6 +108,17 @@ function CalendarPage() {
           ))}
           <span className="ml-2">Light = some booked · Solid = fully booked · ● = fully paid</span>
         </div>
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-stone">
+          <span className="font-medium text-foreground">Holidays:</span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded bg-red-500" />
+            Public holiday (weekend rate)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded bg-purple-500" />
+            School break (holiday rate)
+          </span>
+        </div>
 
         <div className="mt-6 overflow-hidden rounded-xl border border-border bg-card">
           <div className="grid grid-cols-7 border-b border-border bg-coconut/60 text-center text-[10px] uppercase tracking-widest text-stone">
@@ -125,18 +136,46 @@ function CalendarPage() {
               const allBookings = Object.values(d.byType).flatMap((t) => t.bookings);
               const fullyPaid = allBookings.some((b) => b.status === "fully_paid");
               const typesWithBookings = Object.entries(d.byType).filter(([, s]) => s.booked > 0);
+              const holidays = (d as any).holidays as
+                | Array<{ label: string; kind: "public_holiday" | "school_break" }>
+                | undefined;
+              const hasPublic = holidays?.some((h) => h.kind === "public_holiday");
+              const hasBreak = holidays?.some((h) => h.kind === "school_break");
               return (
                 <button
                   key={d.date}
                   onClick={() => setSelected(d)}
-                  className="h-28 border-b border-r border-border/50 bg-card px-1.5 py-1 text-left transition hover:brightness-95"
+                  className="relative h-28 border-b border-r border-border/50 bg-card px-1.5 py-1 text-left transition hover:brightness-95"
                 >
+                  {(hasPublic || hasBreak) && (
+                    <span className="absolute right-1 top-1 flex gap-0.5">
+                      {hasPublic && (
+                        <span
+                          className="inline-block h-1.5 w-1.5 rounded-full bg-red-500"
+                          title="Public holiday"
+                        />
+                      )}
+                      {hasBreak && (
+                        <span
+                          className="inline-block h-1.5 w-1.5 rounded-full bg-purple-500"
+                          title="School break"
+                        />
+                      )}
+                    </span>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">
                       {Number(d.date.slice(8, 10))}
                     </span>
                     {fullyPaid && <span className="text-forest">●</span>}
                   </div>
+                  {holidays && holidays.length > 0 && (
+                    <div className="mt-0.5 truncate text-[9px] font-medium">
+                      <span className={hasPublic ? "text-red-600" : "text-purple-600"}>
+                        {holidays[0].label}
+                      </span>
+                    </div>
+                  )}
                   <div className="mt-1 space-y-0.5">
                     {typesWithBookings.length === 0 && (
                       <span className="text-[10px] text-stone">Available</span>
@@ -175,6 +214,25 @@ function CalendarPage() {
                 close
               </button>
             </div>
+            {(selected as any).holidays && (selected as any).holidays.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {((selected as any).holidays as Array<{
+                  label: string;
+                  kind: "public_holiday" | "school_break";
+                }>).map((h, i) => (
+                  <span
+                    key={i}
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      h.kind === "public_holiday"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-purple-100 text-purple-700"
+                    }`}
+                  >
+                    {h.label} · {h.kind === "public_holiday" ? "Public holiday" : "School break"}
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="mt-3 space-y-3">
               {Object.entries(selected.byType).map(([type, slot]) => (
                 <div key={type}>
