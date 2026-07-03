@@ -621,6 +621,9 @@ const adminCreateSchema = z.object({
   totalAmount: z.number().min(0).max(100000).default(0),
   notes: z.string().trim().max(1000).optional().default(""),
   status: z.enum(["confirmed", "fully_paid", "pending_payment"]).default("confirmed"),
+  perRoomAmounts: z
+    .array(z.object({ cabinId: z.string().uuid(), amount: z.number().min(0).max(100000) }))
+    .optional(),
 }).refine((v) => v.cabinId || (v.cabinIds && v.cabinIds.length > 0), {
   message: "Pick at least one cabin",
 });
@@ -658,12 +661,17 @@ export const adminCreateBooking = createServerFn({ method: "POST" })
     const groupId = globalThis.crypto?.randomUUID?.();
     const guestToken = globalThis.crypto?.randomUUID?.();
     const nowIso = new Date().toISOString();
-    const perRoomAmount = Math.round((data.totalAmount / cabinIds.length) * 100) / 100;
-    // Distribute rounding remainder to the first row
-    const remainder = Math.round((data.totalAmount - perRoomAmount * cabinIds.length) * 100) / 100;
+    // Prefer explicit per-room overrides when provided; otherwise split totalAmount evenly.
+    const overrideMap = new Map<string, number>();
+    for (const p of data.perRoomAmounts ?? []) overrideMap.set(p.cabinId, p.amount);
+    const useOverrides = overrideMap.size > 0;
+    const evenPer = Math.round((data.totalAmount / cabinIds.length) * 100) / 100;
+    const evenRemainder = Math.round((data.totalAmount - evenPer * cabinIds.length) * 100) / 100;
     const rows = cabinIds.map((cid, i) => {
       const cabin = cabinById.get(cid)!;
-      const amount = i === 0 ? perRoomAmount + remainder : perRoomAmount;
+      const amount = useOverrides
+        ? (overrideMap.get(cid) ?? 0)
+        : (i === 0 ? evenPer + evenRemainder : evenPer);
       const row: Record<string, unknown> = {
         guest_name: data.guestName,
         email: data.email || "manual@admin.local",
