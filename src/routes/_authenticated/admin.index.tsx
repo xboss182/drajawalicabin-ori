@@ -494,7 +494,7 @@ function ManualBookingForm({
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input" />
         </Field>
         <Field label="Guests">
-          <input type="number" min={1} max={12} value={guests} onChange={(e) => setGuests(Number(e.target.value))} className="input" />
+          <input type="number" min={1} value={guests} onChange={(e) => setGuests(Number(e.target.value))} className="input" />
         </Field>
         <Field label="Total (RM)">
           <input type="number" min={0} step="0.01" value={totalAmount} onChange={(e) => setTotalAmount(Number(e.target.value))} className="input" />

@@ -617,7 +617,7 @@ const adminCreateSchema = z.object({
   guestName: z.string().trim().min(1).max(100),
   phone: z.string().trim().max(30).optional().default(""),
   email: z.string().trim().max(255).optional().default(""),
-  guests: z.number().int().min(1).max(12).default(1),
+  guests: z.number().int().min(1).default(1),
   totalAmount: z.number().min(0).max(100000).default(0),
   notes: z.string().trim().max(1000).optional().default(""),
   status: z.enum(["confirmed", "fully_paid", "pending_payment"]).default("confirmed"),
