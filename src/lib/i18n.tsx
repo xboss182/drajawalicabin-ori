@@ -23,6 +23,7 @@ export const translations = {
       anyCabin: "Any cabin",
       submit: "Search",
       note: "We'll take your details on the next step. Your dates will be confirmed shortly.",
+      childNote: "Up to 2 children under 12 stay free per room.",
     },
     about: {
       eyebrow: "About the chalet",
@@ -240,6 +241,7 @@ export const translations = {
       anyCabin: "Mana-mana kabin",
       submit: "Cari",
       note: "Maklumat anda akan diambil pada langkah seterusnya. Tarikh anda akan disahkan secara peribadi — biasanya dalam masa beberapa jam.",
+      childNote: "Sehingga 2 kanak-kanak bawah 12 tahun menginap percuma setiap bilik.",
     },
     about: {
       eyebrow: "Tentang chalet",

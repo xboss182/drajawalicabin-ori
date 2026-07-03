@@ -464,6 +464,9 @@ function AvailabilitySearch() {
       <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
         {t.search.note}
       </p>
+      <p className="mx-auto mt-1.5 max-w-3xl text-center text-[11px] text-foreground/60 sm:text-xs">
+        {t.search.childNote}
+      </p>
     </section>
   );
 }
