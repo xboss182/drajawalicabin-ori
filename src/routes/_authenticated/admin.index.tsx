@@ -404,7 +404,7 @@ function ManualBookingForm({
 }) {
   const today = new Date().toISOString().slice(0, 10);
   const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  const [cabinId, setCabinId] = useState(cabins[0]?.id ?? "");
+  const [cabinIds, setCabinIds] = useState<string[]>(cabins[0] ? [cabins[0].id] : []);
   const [checkIn, setCheckIn] = useState(today);
   const [checkOut, setCheckOut] = useState(tomorrow);
   const [guestName, setGuestName] = useState("");
@@ -417,19 +417,23 @@ function ManualBookingForm({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!cabinId && cabins[0]) setCabinId(cabins[0].id);
-  }, [cabins, cabinId]);
+    if (cabinIds.length === 0 && cabins[0]) setCabinIds([cabins[0].id]);
+  }, [cabins, cabinIds.length]);
+
+  function toggleCabin(id: string) {
+    setCabinIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!cabinId || !guestName.trim()) {
-      alert("Please pick a cabin and enter a guest name.");
+    if (cabinIds.length === 0 || !guestName.trim()) {
+      alert("Please pick at least one cabin and enter a guest name.");
       return;
     }
     setSaving(true);
     try {
       await adminCreateBooking({
-        data: { cabinId, checkIn, checkOut, guestName: guestName.trim(), phone, email, guests, totalAmount, notes, status },
+        data: { cabinIds, checkIn, checkOut, guestName: guestName.trim(), phone, email, guests, totalAmount, notes, status },
       });
       onDone();
     } catch (err) {
@@ -447,15 +451,26 @@ function ManualBookingForm({
       <h2 className="font-display text-lg text-forest">Add manual booking</h2>
       <p className="mt-1 text-xs text-stone">For reservations confirmed outside the website (WhatsApp, walk-in, etc.).</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <Field label="Cabin">
-          <select value={cabinId} onChange={(e) => setCabinId(e.target.value)} className="input">
+        <div className="sm:col-span-2">
+          <span className="text-[10px] uppercase tracking-widest text-stone">
+            Cabins ({cabinIds.length} selected)
+          </span>
+          <div className="mt-1 grid grid-cols-2 gap-2 rounded-lg border border-border bg-white p-3 sm:grid-cols-3">
             {cabins.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.cabin_type})
-              </option>
+              <label key={c.id} className="flex cursor-pointer items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={cabinIds.includes(c.id)}
+                  onChange={() => toggleCabin(c.id)}
+                />
+                <span>
+                  {c.name}{" "}
+                  <span className="text-xs text-stone">({c.cabin_type})</span>
+                </span>
+              </label>
             ))}
-          </select>
-        </Field>
+          </div>
+        </div>
         <Field label="Status">
           <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className="input">
             <option value="confirmed">Confirmed</option>
