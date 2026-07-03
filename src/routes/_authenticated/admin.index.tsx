@@ -12,6 +12,8 @@ import {
   adminCreateBooking,
   listCabinsAdmin,
   cancelAndRefundBooking,
+  quoteRoomPrices,
+  updateBookingRoomPrices,
 } from "@/lib/booking.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 
