@@ -839,7 +839,7 @@ export const updateBookingRoomPrices = createServerFn({ method: "POST" })
       };
       const { error: uErr } = await supabaseAdmin
         .from("booking_requests")
-        .update(patch)
+        .update(patch as never)
         .eq("id", r.id);
       if (uErr) throw new Error(uErr.message);
     }
