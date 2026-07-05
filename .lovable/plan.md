@@ -1,43 +1,39 @@
-## Room rename + inventory change
+# Plan: Official Website Notice Banner
 
-### New lineup
+## Goal
+Add a prominent but non-blocking notice that this is the sole official website of the property and that listings on OYO / Agoda / Booking.com / Expedia are unauthorized.
 
-| DB row (current name) | New name | Type | Capacity |
-|---|---|---|---|
-| Deluxe Queen 1 | Room 1 — Queen room | Queen | 2 |
-| Deluxe Twin 1 | Room 2 — Twin room | Twin | 2 |
-| Deluxe Queen 2 | Room 3 — Queen room | Queen | 2 |
-| Deluxe Twin 2 | Room 4 — Twin room | Twin | 2 |
-| Triple Suite 1 | Room 5 — Triple room | Triple | 3 |
-| Family Suite 1 | Room 6 — Family room | Family | 4 |
-| Family Suite 2 | Room 7 — Family room | Family | 4 |
-| **Triple Suite 2** | **Room 8 — Family room** | **Family** (converted) | **4** |
+## Approach
+Use a **dismissible top banner** placed just below the navbar on the homepage (and optionally on `/book`). It will show on every visit until dismissed, and its dismissed state will be stored in `localStorage` so repeat visitors aren't nagged.
 
-Existing bookings on Triple Suite 2 stay attached to the same row, now labeled Room 8 Family.
+## Copy (tightened)
+**Important Notice**
+This is the sole official website of this property.
 
-### Open question — Room 8 rates
+We have no affiliation, partnership, or business relationship with OYO, Agoda, Booking.com, Expedia, or any other online travel agency. Any listing of this property on such platforms is not authorized by us and may contain inaccurate or outdated information.
 
-Triple Suite 2's current rates are RM132 / 143 / 165 (weekday / weekend / school holiday). The other Family rooms are RM165 / 176 / 198. Which rates should Room 8 use? I'll default to **matching Family Suite 1 & 2 (RM165 / 176 / 198)** unless you say otherwise.
+For genuine reservations, current rates, and official enquiries, please book directly through this website or contact us using our official contact information.
 
-### Changes
+## Malay translation
+**Notis Penting**
+Ini adalah laman web rasmi tunggal hartanah ini.
 
-1. **Migration** — rename the 8 cabin rows and convert Triple Suite 2:
-   - `UPDATE cabins SET name = 'Room 1 — Queen room' WHERE name = 'Deluxe Queen 1'` (and so on for all 8)
-   - For the ex-Triple: also `cabin_type = 'Family'`, `capacity = 4`, and update rates as above
+Kami tidak mempunyai sebarang perkaitan, perkongsian, atau hubungan perniagaan dengan OYO, Agoda, Booking.com, Expedia, atau mana-mana agensi pelancongan dalam talian lain. Sebarang senarai hartanah ini di platform sedemikian tidak dibenarkan oleh kami dan mungkin mengandungi maklumat yang tidak tepat atau lapuk.
 
-2. **`booking_requests.room_type`** — this text column stores the room type at booking time. Backfill Triple Suite 2's past bookings from `Triple` → `Family` so admin lists and invoices show the right label. (Historical totals stay untouched.)
+Untuk tempahan sahih, kadar semasa, dan pertanyaan rasmi, sila tempah terus melalui laman web ini atau hubungi kami menggunakan maklumat rasmi kami.
 
-3. **Frontend copy sync** — search for any hard-coded references to the old names and update:
-   - `src/lib/i18n.tsx` — any room labels
-   - `src/routes/book.tsx`, `manage-booking.tsx`, `checkout.tsx`, `admin.*.tsx`, `admin.invoice.$id.tsx`
-   - Email templates in `src/lib/email-templates/*` and `src/lib/email.server.ts`
-   - `public/llms.txt`, `src/routes/index.tsx` FAQ/JSON-LD
-   - Anywhere the strings "Deluxe Queen", "Deluxe Twin", "Triple Suite", "Family Suite" appear
+## Technical changes
+1. **Create component** `src/components/official-notice-banner.tsx` — small, full-width dismissible banner using the existing `Alert`, `Button`, or plain styled div (matching the forest/sand palette).
+2. **Add translations** to `src/lib/i18n.tsx` under a new `notice` key for both `en` and `bm`.
+3. **Wire to home page** `src/routes/index.tsx` — render the banner just below the header / nav area.
+4. **Wire to booking page** `src/routes/book.tsx` — optionally render the same banner so the notice is visible at the booking entry point.
+5. **Persistence** — use `localStorage` key `official-notice-dismissed` to keep the banner hidden after the user clicks “Got it” / “Faham”.
+6. **SEO / accessibility** — include `role="banner"`, close button with clear label, and ensure it doesn't shift layout abruptly on close.
 
-   Wherever a room name is rendered from the DB, no code change is needed — the new name flows through automatically.
+## Design notes
+- Background: a warm sand / accent color (`bg-secondary`) with dark text (`text-foreground`) to stand out without looking like a warning.
+- Left accent stripe in `primary` forest green to make it look official.
+- Close button as a subtle text link with icon.
+- Responsive padding and text size.
 
-4. **Type dropdown / capacity filters** — if any UI filters by `cabin_type = 'Triple'`, verify it still makes sense with only one Triple room, and that Family filter now includes Room 8.
-
-Please confirm:
-- **Rates for Room 8** (match other Family rooms at 165/176/198, or keep Triple rates 132/143/165, or custom?)
-- **Label format** — "Room 1 — Queen room" (em dash) everywhere?
+No backend changes required.
