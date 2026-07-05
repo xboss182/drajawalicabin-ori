@@ -254,11 +254,11 @@ export const translations = {
     },
     notice: {
       title: "Notis Penting",
-      line1: "Ini adalah laman web rasmi tunggal hartanah ini.",
+      line1: "Ini merupakan satu-satunya laman web rasmi bagi penginapan ini.",
       line2:
-        "Kami tidak mempunyai sebarang perkaitan, perkongsian, atau hubungan perniagaan dengan OYO, Agoda, Booking.com, Expedia, atau mana-mana agensi pelancongan dalam talian lain. Sebarang senarai hartanah ini di platform sedemikian tidak dibenarkan oleh kami dan mungkin mengandungi maklumat yang tidak tepat atau lapuk.",
+        "Kami tidak mempunyai sebarang hubungan, kerjasama, atau kaitan perniagaan dengan OYO, Agoda, Booking.com, Expedia, atau mana-mana platform tempahan dalam talian (OTA) yang lain. Sebarang penyenaraian penginapan ini di platform tersebut tidak mendapat kebenaran daripada kami dan mungkin mengandungi maklumat yang tidak tepat atau tidak lagi terkini.",
       line3:
-        "Untuk tempahan sahih, kadar semasa, dan pertanyaan rasmi, sila tempah terus melalui laman web ini atau hubungi kami menggunakan maklumat rasmi kami.",
+        "Bagi mendapatkan tempahan yang sah, kadar harga terkini, dan sebarang pertanyaan rasmi, sila buat tempahan terus melalui laman web ini atau hubungi kami menggunakan maklumat hubungan rasmi yang disediakan.",
       close: "Tutup notis",
     },
     about: {
