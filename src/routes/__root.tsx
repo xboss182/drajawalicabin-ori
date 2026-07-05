@@ -12,6 +12,10 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LanguageProvider } from "../lib/i18n";
+import {
+  OfficialNoticeBanner,
+  OfficialNoticeFooter,
+} from "../components/official-notice-banner";
 
 function NotFoundComponent() {
   return (
@@ -167,8 +171,10 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+        <OfficialNoticeBanner />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <OfficialNoticeFooter />
       </LanguageProvider>
     </QueryClientProvider>
   );
