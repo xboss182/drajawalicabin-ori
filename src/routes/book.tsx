@@ -418,6 +418,7 @@ function BookPage() {
   return (
     <main className="min-h-[100svh] bg-background text-foreground">
       <BookHeader />
+      <OfficialNoticeBanner />
       {step === "details" && (
         <DetailsStep
           {...{
