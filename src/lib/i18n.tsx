@@ -34,6 +34,8 @@ export const translations = {
         "For genuine reservations, current rates, and official enquiries, please book directly through this website or contact us using our official contact information.",
       close: "Dismiss notice",
     },
+    noticeShort:
+      "⚠️ This is the only official website of this property. We are not affiliated with OYO, Agoda, Booking.com, Expedia, or any other online booking platform. For authentic reservations and the latest rates, please book directly with us.",
     about: {
       eyebrow: "About the chalet",
       title1: "A quiet escape near",
@@ -261,6 +263,8 @@ export const translations = {
         "Bagi mendapatkan tempahan yang sah, kadar harga terkini, dan sebarang pertanyaan rasmi, sila buat tempahan terus melalui laman web ini atau hubungi kami menggunakan maklumat hubungan rasmi yang disediakan.",
       close: "Tutup notis",
     },
+    noticeShort:
+      "⚠️ Ini adalah satu-satunya laman web rasmi bagi penginapan ini. Kami tidak mempunyai kaitan dengan OYO, Agoda, Booking.com, Expedia, atau mana-mana platform tempahan dalam talian yang lain. Untuk tempahan yang sah dan kadar terkini, sila tempah terus dengan kami.",
     about: {
       eyebrow: "Tentang chalet",
       title1: "Percutian tenang berhampiran",
