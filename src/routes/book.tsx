@@ -15,7 +15,6 @@ import cabinFamilyImg from "@/assets/cabin-family.jpg";
 import cabinTripleImg from "@/assets/cabin-triple.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
-import { OfficialNoticeBanner } from "@/components/official-notice-banner";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Plus, Minus, X } from "lucide-react";
@@ -418,7 +417,6 @@ function BookPage() {
   return (
     <main className="min-h-[100svh] bg-background text-foreground">
       <BookHeader />
-      <OfficialNoticeBanner />
       {step === "details" && (
         <DetailsStep
           {...{
