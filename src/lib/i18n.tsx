@@ -263,6 +263,8 @@ export const translations = {
         "Bagi mendapatkan tempahan yang sah, kadar harga terkini, dan sebarang pertanyaan rasmi, sila buat tempahan terus melalui laman web ini atau hubungi kami menggunakan maklumat hubungan rasmi yang disediakan.",
       close: "Tutup notis",
     },
+    noticeShort:
+      "⚠️ Ini adalah satu-satunya laman web rasmi bagi penginapan ini. Kami tidak mempunyai kaitan dengan OYO, Agoda, Booking.com, Expedia, atau mana-mana platform tempahan dalam talian yang lain. Untuk tempahan yang sah dan kadar terkini, sila tempah terus dengan kami.",
     about: {
       eyebrow: "Tentang chalet",
       title1: "Percutian tenang berhampiran",
