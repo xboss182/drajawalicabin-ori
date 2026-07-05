@@ -34,6 +34,8 @@ export const translations = {
         "For genuine reservations, current rates, and official enquiries, please book directly through this website or contact us using our official contact information.",
       close: "Dismiss notice",
     },
+    noticeShort:
+      "⚠️ This is the only official website of this property. We are not affiliated with OYO, Agoda, Booking.com, Expedia, or any other online booking platform. For authentic reservations and the latest rates, please book directly with us.",
     about: {
       eyebrow: "About the chalet",
       title1: "A quiet escape near",
