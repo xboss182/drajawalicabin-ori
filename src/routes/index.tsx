@@ -155,6 +155,7 @@ function Index() {
     <main className="bg-background text-foreground">
       <Nav />
       <Hero />
+      <OfficialNoticeBanner />
       <AvailabilitySearch />
       <About />
       <Accommodation />
