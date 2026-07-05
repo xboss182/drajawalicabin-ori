@@ -25,6 +25,15 @@ export const translations = {
       note: "We'll take your details on the next step. Your dates will be confirmed shortly.",
       childNote: "Up to 2 children under 12 stay free per room.",
     },
+    notice: {
+      title: "Important Notice",
+      line1: "This is the sole official website of this property.",
+      line2:
+        "We have no affiliation, partnership, or business relationship with OYO, Agoda, Booking.com, Expedia, or any other online travel agency. Any listing of this property on such platforms is not authorized by us and may contain inaccurate or outdated information.",
+      line3:
+        "For genuine reservations, current rates, and official enquiries, please book directly through this website or contact us using our official contact information.",
+      close: "Dismiss notice",
+    },
     about: {
       eyebrow: "About the chalet",
       title1: "A quiet escape near",
