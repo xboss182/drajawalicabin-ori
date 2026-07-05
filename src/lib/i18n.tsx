@@ -252,6 +252,15 @@ export const translations = {
       note: "Maklumat anda akan diambil pada langkah seterusnya. Tarikh anda akan disahkan secara peribadi — biasanya dalam masa beberapa jam.",
       childNote: "Sehingga 2 kanak-kanak bawah 12 tahun menginap percuma setiap bilik.",
     },
+    notice: {
+      title: "Notis Penting",
+      line1: "Ini adalah laman web rasmi tunggal hartanah ini.",
+      line2:
+        "Kami tidak mempunyai sebarang perkaitan, perkongsian, atau hubungan perniagaan dengan OYO, Agoda, Booking.com, Expedia, atau mana-mana agensi pelancongan dalam talian lain. Sebarang senarai hartanah ini di platform sedemikian tidak dibenarkan oleh kami dan mungkin mengandungi maklumat yang tidak tepat atau lapuk.",
+      line3:
+        "Untuk tempahan sahih, kadar semasa, dan pertanyaan rasmi, sila tempah terus melalui laman web ini atau hubungi kami menggunakan maklumat rasmi kami.",
+      close: "Tutup notis",
+    },
     about: {
       eyebrow: "Tentang chalet",
       title1: "Percutian tenang berhampiran",
