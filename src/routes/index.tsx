@@ -25,6 +25,7 @@ import toilet2paxAsset from "@/assets/toilet-2pax.png.asset.json";
 import toilet3paxAsset from "@/assets/toilet-3pax.png.asset.json";
 import toilet4paxAsset from "@/assets/toilet-4pax.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
+import { OfficialNoticeBanner } from "@/components/official-notice-banner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -155,6 +156,7 @@ function Index() {
       <Nav />
       <Hero />
       <AvailabilitySearch />
+      <OfficialNoticeBanner />
       <About />
       <Accommodation />
       <WhyStay />
