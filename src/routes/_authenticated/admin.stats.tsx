@@ -8,16 +8,18 @@ export const Route = createFileRoute("/_authenticated/admin/stats")({
   component: StatsPage,
 });
 
-function fmtDateInput(d: Date) {
-  return d.toISOString().slice(0, 10);
+function fmtMonthInput(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+function lastDayOfMonth(month: string) {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
 }
 
 function StatsPage() {
   const today = new Date();
-  const past = new Date();
-  past.setDate(past.getDate() - 30);
-  const [from, setFrom] = useState(fmtDateInput(past));
-  const [to, setTo] = useState(fmtDateInput(today));
+  const [monthFrom, setMonthFrom] = useState(fmtMonthInput(today));
+  const [monthTo, setMonthTo] = useState(fmtMonthInput(today));
 
   const [stats, setStats] = useState<Awaited<ReturnType<typeof getBookingStats>> | null>(null);
   const [emails, setEmails] = useState<Awaited<ReturnType<typeof listEmailLog>> | null>(null);
@@ -26,6 +28,8 @@ function StatsPage() {
   const [offset, setOffset] = useState(0);
 
   async function refresh() {
+    const from = `${monthFrom}-01`;
+    const to = lastDayOfMonth(monthTo);
     const s = await getBookingStats({ data: { from, to } });
     setStats(s);
     const e = await listEmailLog({
@@ -35,7 +39,7 @@ function StatsPage() {
   }
   useEffect(() => {
     refresh();
-  }, [from, to, kind, status, offset]);
+  }, [monthFrom, monthTo, kind, status, offset]);
 
   return (
     <main className="min-h-[100svh] bg-background text-foreground">
