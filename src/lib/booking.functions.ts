@@ -1730,23 +1730,19 @@ export const getBookingStats = createServerFn({ method: "POST" })
     const { data: rows, error } = await supabaseAdmin
       .from("booking_requests")
       .select("booking_group_id, status, total_amount, deposit_amount, nights, room_type, cabin_id, created_at, check_in, check_out, guests, notes")
-      .gte("created_at", data.from)
-      .lte("created_at", data.to + "T23:59:59");
+      .gte("check_in", data.from)
+      .lte("check_in", data.to);
     if (error) throw new Error(error.message);
 
     const seenGroups = new Set<string>();
     let reservations = 0;
+    let rooms = 0;
     let confirmedRevenue = 0;
     let depositRevenue = 0;
     let nightsSold = 0;
     let adults = 0;
     let kids = 0;
     const byType = new Map<string, { reservations: number; nights: number; revenue: number }>();
-    const byMonth = new Map<
-      string,
-      { reservations: number; nights: number; revenue: number; adults: number; kids: number }
-    >();
-    const seenGroupsPerMonth = new Map<string, Set<string>>();
 
     const { data: cabins } = await supabaseAdmin.from("cabins").select("id, cabin_type, is_active");
     const typeByCabin = new Map<string, string>();
@@ -1754,6 +1750,26 @@ export const getBookingStats = createServerFn({ method: "POST" })
     for (const c of cabins ?? []) {
       typeByCabin.set(c.id, c.cabin_type);
       if (c.is_active) activeCabins++;
+    }
+
+    // Pre-fill every month in the selected range so the monthly report shows all months.
+    const monthList: string[] = [];
+    const [startY, startM] = data.from.split("-").map(Number);
+    const [endY, endM] = data.to.split("-").map(Number);
+    let y = startY, mo = startM;
+    while (y < endY || (y === endY && mo <= endM)) {
+      monthList.push(`${y}-${String(mo).padStart(2, "0")}`);
+      mo++;
+      if (mo > 12) { mo = 1; y++; }
+    }
+    const byMonth = new Map<
+      string,
+      { reservations: number; nights: number; revenue: number; adults: number; kids: number; capacity: number; occupancy: number }
+    >();
+    for (const key of monthList) {
+      const [yy, mm] = key.split("-").map(Number);
+      const daysInMonth = new Date(Date.UTC(yy, mm, 0)).getUTCDate();
+      byMonth.set(key, { reservations: 0, nights: 0, revenue: 0, adults: 0, kids: 0, capacity: activeCabins * daysInMonth, occupancy: 0 });
     }
 
     for (const r of rows ?? []) {
@@ -1764,6 +1780,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
       }
       const active = ["confirmed", "fully_paid", "awaiting_review"].includes(r.status as string);
       if (active) {
+        rooms++;
         confirmedRevenue += Number(r.total_amount ?? 0);
         depositRevenue += Number(r.deposit_amount ?? 0);
         nightsSold += Number(r.nights ?? 0);
@@ -1779,22 +1796,10 @@ export const getBookingStats = createServerFn({ method: "POST" })
         slot.revenue += Number(r.total_amount ?? 0);
         byType.set(type, slot);
 
-        // Group by check-in month (YYYY-MM)
-        const ci = String(r.check_in ?? r.created_at ?? "").slice(0, 7);
-        if (ci) {
-          const mSlot = byMonth.get(ci) ?? {
-            reservations: 0,
-            nights: 0,
-            revenue: 0,
-            adults: 0,
-            kids: 0,
-          };
-          const monthGroups = seenGroupsPerMonth.get(ci) ?? new Set<string>();
-          if (!monthGroups.has(gid)) {
-            monthGroups.add(gid);
-            mSlot.reservations += 1;
-            seenGroupsPerMonth.set(ci, monthGroups);
-          }
+        const ci = String(r.check_in ?? "").slice(0, 7);
+        const mSlot = byMonth.get(ci);
+        if (mSlot) {
+          mSlot.reservations += 1;
           mSlot.nights += Number(r.nights ?? 0);
           mSlot.revenue += Number(r.total_amount ?? 0);
           mSlot.adults += rowAdults;
@@ -1802,6 +1807,10 @@ export const getBookingStats = createServerFn({ method: "POST" })
           byMonth.set(ci, mSlot);
         }
       }
+    }
+
+    for (const mSlot of byMonth.values()) {
+      mSlot.occupancy = mSlot.capacity > 0 ? mSlot.nights / mSlot.capacity : 0;
     }
 
     const dayCount =
@@ -1816,6 +1825,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
 
     return {
       reservations,
+      rooms,
       confirmedRevenue,
       depositRevenue,
       nightsSold,
