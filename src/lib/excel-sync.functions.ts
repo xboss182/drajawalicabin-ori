@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { groupBookings, groupToCells, type BookingRow } from "./booking-export-shared";
 
 // Syncs all bookings to a CSV file on the admin's OneDrive.
 // File: /Dr Ajawali Cabin - Bookings.csv at the OneDrive root.
@@ -40,13 +41,6 @@ function csvEscape(v: unknown): string {
 function toRow(cells: unknown[]): string {
   return cells.map(csvEscape).join(",");
 }
-function depositPaid(status: string): string {
-  // "paid" once we're past pending_payment
-  return status === "pending_payment" || status === "cancelled" ? "nil" : "paid";
-}
-function roomPaymentPaid(status: string): string {
-  return status === "fully_paid" ? "paid" : "nil";
-}
 
 export const syncBookingsToOneDrive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -74,7 +68,7 @@ export const syncBookingsToOneDrive = createServerFn({ method: "POST" })
 
     const lines: string[] = [toRow(HEADERS)];
     let rowCount = 0;
-    const groups = groupBookings(data ?? []);
+    const groups = groupBookings((data ?? []) as unknown as BookingRow[]);
     for (const g of groups) {
       lines.push(toRow(groupToCells(g)));
       rowCount++;
