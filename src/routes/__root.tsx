@@ -176,7 +176,7 @@ function RootComponent() {
         {!isAdmin && <OfficialNoticeBanner />}
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
-        <OfficialNoticeFooter />
+        {!isAdmin && <OfficialNoticeFooter />}
       </LanguageProvider>
     </QueryClientProvider>
   );
