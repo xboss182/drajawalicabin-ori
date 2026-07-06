@@ -576,6 +576,7 @@ function ManualBookingForm({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [guests, setGuests] = useState(2);
+  const [kids, setKids] = useState(0);
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<"confirmed" | "fully_paid" | "pending_payment">("confirmed");
   const [saving, setSaving] = useState(false);
@@ -657,6 +658,12 @@ function ManualBookingForm({
         cabinId: cid,
         amount: Number(perRoom[cid]) || 0,
       }));
+      const composedNotes = (() => {
+        const parts: string[] = [];
+        if (kids > 0) parts.push(`Children under 12: ${kids}`);
+        if (notes.trim()) parts.push(notes.trim());
+        return parts.join("\n");
+      })();
       await adminCreateBooking({
         data: {
           cabinIds,
@@ -667,7 +674,7 @@ function ManualBookingForm({
           email,
           guests,
           totalAmount,
-          notes,
+          notes: composedNotes,
           status,
           perRoomAmounts,
         },
