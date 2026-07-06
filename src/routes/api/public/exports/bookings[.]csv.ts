@@ -7,27 +7,26 @@ import { createFileRoute } from "@tanstack/react-router";
 // Excel: Data -> From Web -> paste URL. Refresh via Data -> Refresh All.
 
 const HEADERS = [
-  "Booking Ref",
-  "Date Booking",
-  "Name",
-  "IC",
-  "Contact/Tel",
-  "Vehicle Model",
-  "Veh Reg No",
-  "No of Pax",
-  "Deposit Status",
-  "Total Payment Status",
-  "No of Nite Stay",
-  "No of Rooms",
-  "Room No",
-  "Comforter No",
-  "Occupancy (room x stay)",
-  "Date Check In",
-  "Date Check Out",
-  "Security Deposit",
-  "Room Payment Amount",
-  "Remarks",
+  "Booking No",
+  "Guest Name",
+  "IC no.",
+  "Contact @HP No",
+  "Jenis Kenderaan",
+  "No Kenderaan",
+  "Deposit @ Booking",
+  "Room Payment",
+  "No. of Pax",
   "Relation",
+  "Nite stay",
+  "Room Qty",
+  "Room No",
+  "Comforter",
+  "Occupancy",
+  "Check-in Date",
+  "Check-out Date",
+  "Booking @ Security Deposit (RM50/Room)",
+  "Room Payment (paid before check in)",
+  "Remarks",
 ];
 
 function csvEscape(v: unknown): string {
@@ -41,27 +40,12 @@ function toRow(cells: unknown[]): string {
   return cells.map(csvEscape).join(",");
 }
 
-function depositStatus(status: string): string {
-  // Deposit is considered paid once we've moved past pending_payment.
-  if (status === "pending_payment") return "Unpaid";
-  return "Paid";
+function depositPaid(status: string): string {
+  return status === "pending_payment" || status === "cancelled" ? "nil" : "paid";
 }
 
-function totalPaymentStatus(status: string): string {
-  switch (status) {
-    case "fully_paid":
-      return "Fully paid";
-    case "confirmed":
-      return "Deposit paid";
-    case "awaiting_review":
-      return "Awaiting review";
-    case "pending_payment":
-      return "Pending";
-    case "cancelled":
-      return "Cancelled";
-    default:
-      return status ?? "";
-  }
+function roomPaymentPaid(status: string): string {
+  return status === "fully_paid" ? "paid" : "nil";
 }
 
 export const Route = createFileRoute("/api/public/exports/bookings.csv")({
@@ -107,9 +91,6 @@ export const Route = createFileRoute("/api/public/exports/bookings.csv")({
           const cabinName =
             (b as unknown as { cabins?: { name?: string } | null }).cabins
               ?.name ?? b.room_type ?? "";
-          const dateBooked = b.created_at
-            ? String(b.created_at).slice(0, 10)
-            : "";
 
           // One row per cabin/room in the booking so "Room No" is meaningful.
           for (let i = 1; i <= Math.max(1, numRooms); i++) {
@@ -118,15 +99,15 @@ export const Route = createFileRoute("/api/public/exports/bookings.csv")({
             lines.push(
               toRow([
                 b.payment_reference ?? b.id.slice(0, 8),
-                dateBooked,
                 b.guest_name,
                 "", // IC — not collected in the booking form yet
                 b.phone,
                 b.vehicle_type ?? "",
                 b.vehicle_number ?? "",
+                depositPaid(b.status as string),
+                roomPaymentPaid(b.status as string),
                 b.guests,
-                depositStatus(b.status as string),
-                totalPaymentStatus(b.status as string),
+                b.relationship ?? "",
                 nights,
                 numRooms,
                 roomLabel,
@@ -137,7 +118,6 @@ export const Route = createFileRoute("/api/public/exports/bookings.csv")({
                 b.deposit_amount ?? "",
                 b.total_amount ?? "",
                 b.notes ?? "",
-                b.relationship ?? "",
               ]),
             );
           }
