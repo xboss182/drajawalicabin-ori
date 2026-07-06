@@ -3,11 +3,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { groupBookings, groupToCells, type BookingRow } from "./booking-export-shared";
 
 // Syncs all bookings to a CSV file on the admin's OneDrive.
-// File: /Dr Ajawali Cabin - Bookings.csv at the OneDrive root.
+// File: /Rajawali D'Cabin - Bookings.csv at the OneDrive root.
 // Overwrites on every call. Open from OneDrive in Excel (web or desktop).
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/microsoft_excel";
-const FILE_NAME = "Dr Ajawali Cabin - Bookings.csv";
+const FILE_NAME = "Rajawali D'Cabin - Bookings.csv";
 
 const HEADERS = [
   "Booking No",
