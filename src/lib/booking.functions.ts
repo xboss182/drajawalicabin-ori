@@ -1784,21 +1784,48 @@ export const getBookingStats = createServerFn({ method: "POST" })
       byYear.set(key, { reservations: 0, nights: 0, revenue: 0, adults: 0, kids: 0, capacity: activeCabins * daysInYear(yy), occupancy: 0 });
     }
 
+    function daysInMonth(year: number, month: number) {
+      return new Date(Date.UTC(year, month, 0)).getUTCDate();
+    }
+    const byMonth = new Map<
+      string,
+      { reservations: number; nights: number; revenue: number; adults: number; kids: number; capacity: number; occupancy: number }
+    >();
+    function ensureMonth(key: string) {
+      let slot = byMonth.get(key);
+      if (!slot) {
+        const [yy, mm] = key.split("-").map(Number);
+        slot = { reservations: 0, nights: 0, revenue: 0, adults: 0, kids: 0, capacity: activeCabins * daysInMonth(yy, mm), occupancy: 0 };
+        byMonth.set(key, slot);
+      }
+      return slot;
+    }
+
     // Populate byYear from ALL rows (independent of the from/to filter).
     for (const r of allRows ?? []) {
       const active = ["confirmed", "fully_paid", "awaiting_review"].includes(r.status as string);
       if (!active) continue;
       const ci = String(r.check_in ?? "").slice(0, 4);
       const ySlot = byYear.get(ci);
-      if (!ySlot) continue;
+      const monthKey = String(r.check_in ?? "").slice(0, 7);
       const rowAdults = Number(r.guests ?? 0);
       const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
       const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
-      ySlot.reservations += 1;
-      ySlot.nights += Number(r.nights ?? 0);
-      ySlot.revenue += Number(r.total_amount ?? 0);
-      ySlot.adults += rowAdults;
-      ySlot.kids += rowKids;
+      if (ySlot) {
+        ySlot.reservations += 1;
+        ySlot.nights += Number(r.nights ?? 0);
+        ySlot.revenue += Number(r.total_amount ?? 0);
+        ySlot.adults += rowAdults;
+        ySlot.kids += rowKids;
+      }
+      if (/^\d{4}-\d{2}$/.test(monthKey)) {
+        const mSlot = ensureMonth(monthKey);
+        mSlot.reservations += 1;
+        mSlot.nights += Number(r.nights ?? 0);
+        mSlot.revenue += Number(r.total_amount ?? 0);
+        mSlot.adults += rowAdults;
+        mSlot.kids += rowKids;
+      }
     }
 
     for (const r of rows ?? []) {
@@ -1832,6 +1859,9 @@ export const getBookingStats = createServerFn({ method: "POST" })
     for (const ySlot of byYear.values()) {
       ySlot.occupancy = ySlot.capacity > 0 ? ySlot.nights / ySlot.capacity : 0;
     }
+    for (const mSlot of byMonth.values()) {
+      mSlot.occupancy = mSlot.capacity > 0 ? mSlot.nights / mSlot.capacity : 0;
+    }
 
     const dayCount =
       Math.max(
@@ -1858,6 +1888,9 @@ export const getBookingStats = createServerFn({ method: "POST" })
       byType: Array.from(byType, ([type, v]) => ({ type, ...v })),
       byYear: Array.from(byYear, ([year, v]) => ({ year, ...v })).sort((a, b) =>
         a.year.localeCompare(b.year),
+      ),
+      byMonth: Array.from(byMonth, ([month, v]) => ({ month, ...v })).sort((a, b) =>
+        a.month.localeCompare(b.month),
       ),
     };
   });
