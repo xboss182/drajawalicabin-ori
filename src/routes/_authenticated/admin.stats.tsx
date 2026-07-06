@@ -78,8 +78,10 @@ function StatsPage() {
                 <thead className="bg-coconut/60 text-left text-[10px] uppercase tracking-widest text-stone">
                   <tr>
                     <th className="p-2">Cabin type</th>
-                    <th className="p-2 text-right">Reservations</th>
+                    <th className="p-2 text-right">Rooms</th>
                     <th className="p-2 text-right">Nights</th>
+                    <th className="p-2 text-right">Adults</th>
+                    <th className="p-2 text-right">Children</th>
                     <th className="p-2 text-right">Revenue</th>
                   </tr>
                 </thead>
@@ -89,22 +91,24 @@ function StatsPage() {
                       <td className="p-2">{r.type}</td>
                       <td className="p-2 text-right">{r.reservations}</td>
                       <td className="p-2 text-right">{r.nights}</td>
+                      <td className="p-2 text-right">{r.adults}</td>
+                      <td className="p-2 text-right">{r.kids}</td>
                       <td className="p-2 text-right">RM {r.revenue.toFixed(2)}</td>
                     </tr>
                   ))}
                   {stats.byType.length === 0 && (
-                    <tr><td colSpan={4} className="p-3 text-center text-stone">No data.</td></tr>
+                    <tr><td colSpan={6} className="p-3 text-center text-stone">No data.</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
 
-            <h2 className="mt-8 font-display text-2xl text-forest">By month</h2>
+            <h2 className="mt-8 font-display text-2xl text-forest">Yearly reports</h2>
             <div className="mt-3 overflow-auto rounded-xl border border-border bg-card">
               <table className="w-full text-sm">
                 <thead className="bg-coconut/60 text-left text-[10px] uppercase tracking-widest text-stone">
                   <tr>
-                    <th className="p-2">Month</th>
+                    <th className="p-2">Year</th>
                     <th className="p-2 text-right">Rooms</th>
                     <th className="p-2 text-right">Nights</th>
                     <th className="p-2 text-right">Adults</th>
@@ -114,16 +118,11 @@ function StatsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {((stats as any).byMonth ?? [])
+                  {(stats.byYear ?? [])
                     .filter((r: any) => Number(r.reservations) > 0 || Number(r.nights) > 0)
                     .map((r: any) => (
-                    <tr key={r.month} className="border-t border-border/40">
-                      <td className="p-2">
-                        {new Date(r.month + "-01").toLocaleString("en-MY", {
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </td>
+                    <tr key={r.year} className="border-t border-border/40">
+                      <td className="p-2">{r.year}</td>
                       <td className="p-2 text-right">{r.reservations}</td>
                       <td className="p-2 text-right">{r.nights}</td>
                       <td className="p-2 text-right">{r.adults}</td>
@@ -132,8 +131,8 @@ function StatsPage() {
                       <td className="p-2 text-right">RM {Number(r.revenue).toFixed(2)}</td>
                     </tr>
                   ))}
-                  {(!((stats as any).byMonth) ||
-                    ((stats as any).byMonth ?? []).filter(
+                  {(!stats.byYear ||
+                    (stats.byYear ?? []).filter(
                       (r: any) => Number(r.reservations) > 0 || Number(r.nights) > 0,
                     ).length === 0) && (
                     <tr><td colSpan={7} className="p-3 text-center text-stone">No data.</td></tr>

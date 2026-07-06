@@ -1734,7 +1734,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
       .lte("check_in", data.to);
     if (error) throw new Error(error.message);
 
-    // Fetch ALL rows (unfiltered) for the byMonth breakdown so it always shows
+    // Fetch ALL rows (unfiltered) for the byYear breakdown so it always shows
     // the full history/future regardless of the top-of-page date filter.
     const { data: allRows } = await supabaseAdmin
       .from("booking_requests")
@@ -1748,7 +1748,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
     let nightsSold = 0;
     let adults = 0;
     let kids = 0;
-    const byType = new Map<string, { reservations: number; nights: number; revenue: number }>();
+    const byType = new Map<string, { reservations: number; nights: number; revenue: number; adults: number; kids: number }>();
 
     const { data: cabins } = await supabaseAdmin.from("cabins").select("id, cabin_type, is_active");
     const typeByCabin = new Map<string, string>();
@@ -1758,47 +1758,47 @@ export const getBookingStats = createServerFn({ method: "POST" })
       if (c.is_active) activeCabins++;
     }
 
-    // Build month list from min/max check_in across ALL rows.
-    const monthList: string[] = [];
+    function daysInYear(year: number) {
+      return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 366 : 365;
+    }
+
+    // Build year list from min/max check_in across ALL rows.
+    const yearList: string[] = [];
     const checkIns = (allRows ?? [])
-      .map((r) => String(r.check_in ?? "").slice(0, 7))
-      .filter((s) => /^\d{4}-\d{2}$/.test(s))
+      .map((r) => String(r.check_in ?? "").slice(0, 4))
+      .filter((s) => /^\d{4}$/.test(s))
       .sort();
     if (checkIns.length > 0) {
-      const [startY, startM] = checkIns[0].split("-").map(Number);
-      const [endY, endM] = checkIns[checkIns.length - 1].split("-").map(Number);
-      let y = startY, mo = startM;
-      while (y < endY || (y === endY && mo <= endM)) {
-        monthList.push(`${y}-${String(mo).padStart(2, "0")}`);
-        mo++;
-        if (mo > 12) { mo = 1; y++; }
+      const startY = Number(checkIns[0]);
+      const endY = Number(checkIns[checkIns.length - 1]);
+      for (let y = startY; y <= endY; y++) {
+        yearList.push(String(y));
       }
     }
-    const byMonth = new Map<
+    const byYear = new Map<
       string,
       { reservations: number; nights: number; revenue: number; adults: number; kids: number; capacity: number; occupancy: number }
     >();
-    for (const key of monthList) {
-      const [yy, mm] = key.split("-").map(Number);
-      const daysInMonth = new Date(Date.UTC(yy, mm, 0)).getUTCDate();
-      byMonth.set(key, { reservations: 0, nights: 0, revenue: 0, adults: 0, kids: 0, capacity: activeCabins * daysInMonth, occupancy: 0 });
+    for (const key of yearList) {
+      const yy = Number(key);
+      byYear.set(key, { reservations: 0, nights: 0, revenue: 0, adults: 0, kids: 0, capacity: activeCabins * daysInYear(yy), occupancy: 0 });
     }
 
-    // Populate byMonth from ALL rows (independent of the from/to filter).
+    // Populate byYear from ALL rows (independent of the from/to filter).
     for (const r of allRows ?? []) {
       const active = ["confirmed", "fully_paid", "awaiting_review"].includes(r.status as string);
       if (!active) continue;
-      const ci = String(r.check_in ?? "").slice(0, 7);
-      const mSlot = byMonth.get(ci);
-      if (!mSlot) continue;
+      const ci = String(r.check_in ?? "").slice(0, 4);
+      const ySlot = byYear.get(ci);
+      if (!ySlot) continue;
       const rowAdults = Number(r.guests ?? 0);
       const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
       const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
-      mSlot.reservations += 1;
-      mSlot.nights += Number(r.nights ?? 0);
-      mSlot.revenue += Number(r.total_amount ?? 0);
-      mSlot.adults += rowAdults;
-      mSlot.kids += rowKids;
+      ySlot.reservations += 1;
+      ySlot.nights += Number(r.nights ?? 0);
+      ySlot.revenue += Number(r.total_amount ?? 0);
+      ySlot.adults += rowAdults;
+      ySlot.kids += rowKids;
     }
 
     for (const r of rows ?? []) {
@@ -1819,16 +1819,18 @@ export const getBookingStats = createServerFn({ method: "POST" })
         adults += rowAdults;
         kids += rowKids;
         const type = (r.cabin_id ? typeByCabin.get(r.cabin_id) : null) ?? "Unknown";
-        const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0 };
+        const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0, adults: 0, kids: 0 };
         slot.reservations += 1;
         slot.nights += Number(r.nights ?? 0);
         slot.revenue += Number(r.total_amount ?? 0);
+        slot.adults += rowAdults;
+        slot.kids += rowKids;
         byType.set(type, slot);
       }
     }
 
-    for (const mSlot of byMonth.values()) {
-      mSlot.occupancy = mSlot.capacity > 0 ? mSlot.nights / mSlot.capacity : 0;
+    for (const ySlot of byYear.values()) {
+      ySlot.occupancy = ySlot.capacity > 0 ? ySlot.nights / ySlot.capacity : 0;
     }
 
     const dayCount =
@@ -1854,8 +1856,8 @@ export const getBookingStats = createServerFn({ method: "POST" })
       kids,
       capacity,
       byType: Array.from(byType, ([type, v]) => ({ type, ...v })),
-      byMonth: Array.from(byMonth, ([month, v]) => ({ month, ...v })).sort((a, b) =>
-        a.month.localeCompare(b.month),
+      byYear: Array.from(byYear, ([year, v]) => ({ year, ...v })).sort((a, b) =>
+        a.year.localeCompare(b.year),
       ),
     };
   });
