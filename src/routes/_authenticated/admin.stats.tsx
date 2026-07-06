@@ -215,11 +215,11 @@ function Stat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-function DateInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function MonthInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <label className="text-xs text-stone">
       <span className="mr-2 uppercase tracking-widest">{label}</span>
-      <input type="date" value={value} onChange={(e) => onChange(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-sm" />
+      <input type="month" value={value} onChange={(e) => onChange(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-sm" />
     </label>
   );
 }
