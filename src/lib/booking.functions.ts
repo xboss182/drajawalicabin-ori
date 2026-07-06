@@ -1738,7 +1738,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
     // the full history/future regardless of the top-of-page date filter.
     const { data: allRows } = await supabaseAdmin
       .from("booking_requests")
-      .select("status, total_amount, nights, check_in, guests, notes");
+      .select("booking_group_id, id, status, total_amount, nights, check_in, guests, notes");
 
     const seenGroups = new Set<string>();
     let reservations = 0;
@@ -1802,12 +1802,21 @@ export const getBookingStats = createServerFn({ method: "POST" })
     }
 
     // Populate byYear from ALL rows (independent of the from/to filter).
+    const seenGroupsY = new Set<string>();
+    const seenGroupsM = new Set<string>();
     for (const r of allRows ?? []) {
       const active = ["confirmed", "fully_paid", "awaiting_review"].includes(r.status as string);
       if (!active) continue;
       const ci = String(r.check_in ?? "").slice(0, 4);
       const ySlot = byYear.get(ci);
       const monthKey = String(r.check_in ?? "").slice(0, 7);
+      const gid = (r as any).booking_group_id ?? (r as any).id ?? "";
+      const yKey = `${ci}::${gid}`;
+      const mKey = `${monthKey}::${gid}`;
+      const countAdultsY = !seenGroupsY.has(yKey);
+      const countAdultsM = !seenGroupsM.has(mKey);
+      seenGroupsY.add(yKey);
+      seenGroupsM.add(mKey);
       const rowAdults = Number(r.guests ?? 0);
       const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
       const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
@@ -1815,16 +1824,20 @@ export const getBookingStats = createServerFn({ method: "POST" })
         ySlot.reservations += 1;
         ySlot.nights += Number(r.nights ?? 0);
         ySlot.revenue += Number(r.total_amount ?? 0);
-        ySlot.adults += rowAdults;
-        ySlot.kids += rowKids;
+        if (countAdultsY) {
+          ySlot.adults += rowAdults;
+          ySlot.kids += rowKids;
+        }
       }
       if (/^\d{4}-\d{2}$/.test(monthKey)) {
         const mSlot = ensureMonth(monthKey);
         mSlot.reservations += 1;
         mSlot.nights += Number(r.nights ?? 0);
         mSlot.revenue += Number(r.total_amount ?? 0);
-        mSlot.adults += rowAdults;
-        mSlot.kids += rowKids;
+        if (countAdultsM) {
+          mSlot.adults += rowAdults;
+          mSlot.kids += rowKids;
+        }
       }
     }
 
@@ -1843,15 +1856,28 @@ export const getBookingStats = createServerFn({ method: "POST" })
         const rowAdults = Number(r.guests ?? 0);
         const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
         const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
-        adults += rowAdults;
-        kids += rowKids;
         const type = (r.cabin_id ? typeByCabin.get(r.cabin_id) : null) ?? "Unknown";
         const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0, adults: 0, kids: 0 };
         slot.reservations += 1;
         slot.nights += Number(r.nights ?? 0);
         slot.revenue += Number(r.total_amount ?? 0);
-        slot.adults += rowAdults;
-        slot.kids += rowKids;
+        // Adults/kids are stored per row of a booking group (same values on every
+        // room of the reservation). Only count once per (group, cabin type) so
+        // multi-room bookings don't multiply pax.
+        const typeKey = `${gid}::${type}`;
+        if (!(byType as any)._seenType) (byType as any)._seenType = new Set<string>();
+        if (!(byType as any)._seenType.has(typeKey)) {
+          (byType as any)._seenType.add(typeKey);
+          slot.adults += rowAdults;
+          slot.kids += rowKids;
+        }
+        // Totals: count adults/kids once per booking group.
+        if (!(seenGroups as any)._paxSeen) (seenGroups as any)._paxSeen = new Set<string>();
+        if (!(seenGroups as any)._paxSeen.has(gid)) {
+          (seenGroups as any)._paxSeen.add(gid);
+          adults += rowAdults;
+          kids += rowKids;
+        }
         byType.set(type, slot);
       }
     }
