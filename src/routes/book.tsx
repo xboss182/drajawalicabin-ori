@@ -120,6 +120,7 @@ function BookPage() {
   const [checkin, setCheckin] = useState(search.checkin);
   const [checkout, setCheckout] = useState(search.checkout);
   const [guests, setGuests] = useState(search.guests);
+  const [kids, setKids] = useState("0");
   const [comforter, setComforter] = useState(false);
 
   const [name, setName] = useState("");
@@ -131,6 +132,7 @@ function BookPage() {
   const [notes, setNotes] = useState("");
 
   const [price, setPrice] = useState<{ nights: number; subtotal: number; comforter_total: number; total: number } | null>(null);
+  const [priceByType, setPriceByType] = useState<Record<string, { nights: number; subtotal: number; total: number; perNight: number }>>({});
   const [takenByCabin, setTakenByCabin] = useState<Record<string, string[]>>({});
 
   const [step, setStep] = useState<Step>("details");
@@ -207,6 +209,7 @@ function BookPage() {
         let subtotal = 0;
         let comforter_total = 0;
         let total = 0;
+        const byType: Record<string, { nights: number; subtotal: number; total: number; perNight: number }> = {};
         for (const it of cart) {
           const g = groupByType.get(it.cabinType);
           const sample = g?.rooms[0];
@@ -218,10 +221,18 @@ function BookPage() {
           subtotal += p.subtotal * it.qty;
           comforter_total += p.comforter_total * it.qty;
           total += p.total * it.qty;
+          byType[it.cabinType] = {
+            nights: p.nights,
+            subtotal: p.subtotal,
+            total: p.total,
+            perNight: p.nights > 0 ? p.subtotal / p.nights : 0,
+          };
         }
         setPrice({ nights, subtotal, comforter_total, total });
+        setPriceByType(byType);
       } catch {
         setPrice(null);
+        setPriceByType({});
       }
     })();
   }, [cart, checkin, checkout, comforter, groupByType]);
@@ -369,7 +380,13 @@ function BookPage() {
           relationship: relationship.trim() || undefined,
           vehicleType: vehicleType.trim() || undefined,
           vehicleNumber: vehicleNumber.trim() || undefined,
-          notes: notes.trim() || undefined,
+          notes: (() => {
+            const nKids = Math.max(0, Number(kids) || 0);
+            const parts: string[] = [];
+            if (nKids > 0) parts.push(`Children under 12: ${nKids}`);
+            if (notes.trim()) parts.push(notes.trim());
+            return parts.length ? parts.join("\n") : undefined;
+          })(),
           paymentType,
         },
       });
@@ -423,10 +440,11 @@ function BookPage() {
             cabinGroups, cart, setCart,
             checkin, setCheckin, checkout, setCheckout,
             guests, setGuests, comforter, setComforter,
+            kids, setKids,
             name, setName, email, setEmail, phone, setPhone,
             relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
             notes, setNotes,
-            price, previewCabin, blockedDates, blockedReasonByDate, totalRooms,
+            price, priceByType, previewCabin, blockedDates, blockedReasonByDate, totalRooms,
             freeCabinsForType,
             submit, submitting, error,
             agreed, setAgreed,
@@ -475,6 +493,7 @@ function DetailsStep(props: {
   checkin: string; setCheckin: (s: string) => void;
   checkout: string; setCheckout: (s: string) => void;
   guests: string; setGuests: (s: string) => void;
+  kids: string; setKids: (s: string) => void;
   comforter: boolean; setComforter: (b: boolean) => void;
   name: string; setName: (s: string) => void;
   email: string; setEmail: (s: string) => void;
@@ -484,6 +503,7 @@ function DetailsStep(props: {
   vehicleNumber: string; setVehicleNumber: (s: string) => void;
   notes: string; setNotes: (s: string) => void;
   price: { nights: number; subtotal: number; comforter_total: number; total: number } | null;
+  priceByType: Record<string, { nights: number; subtotal: number; total: number; perNight: number }>;
   previewCabin?: Cabin;
   blockedDates: string[];
   blockedReasonByDate: Map<string, string>;
@@ -509,11 +529,11 @@ function DetailsStep(props: {
   const {
     cabinGroups, cart, setCart,
     checkin, setCheckin, checkout, setCheckout,
-    guests, setGuests, comforter, setComforter,
+    guests, setGuests, kids, setKids, comforter, setComforter,
     name, setName, email, setEmail, phone, setPhone,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
-    price, previewCabin, blockedDates, blockedReasonByDate, totalRooms, freeCabinsForType,
+    price, priceByType, previewCabin, blockedDates, blockedReasonByDate, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
   } = props;
@@ -703,7 +723,14 @@ function DetailsStep(props: {
                     <div className="min-w-0">
                       <p className="font-display text-base text-forest">{g.label}</p>
                       <p className="text-xs text-stone">
-                        Sleeps {sample?.capacity ?? "?"} · from RM {sample?.weekday_rate ?? 0}/night · {maxQty} room{maxQty > 1 ? "s" : ""} in this type
+                        Sleeps {sample?.capacity ?? "?"} ·{" "}
+                        {priceByType[it.cabinType]?.nights
+                          ? `RM ${priceByType[it.cabinType].perNight.toFixed(2)}/night avg · RM ${(priceByType[it.cabinType].subtotal * it.qty).toFixed(2)} for ${priceByType[it.cabinType].nights} night${priceByType[it.cabinType].nights > 1 ? "s" : ""}`
+                          : `from RM ${sample?.weekday_rate ?? 0}/night`}{" "}
+                        · {maxQty} room{maxQty > 1 ? "s" : ""} in this type
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-stone/80">
+                        Weekday RM {sample?.weekday_rate} · Weekend RM {sample?.weekend_rate} · School holiday RM {sample?.school_holiday_rate}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -768,7 +795,20 @@ function DetailsStep(props: {
         <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
           <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
           <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
-          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
+          <Field
+            label={`${bt.f.guests} (adults)`}
+            type="number"
+            value={guests}
+            min="1"
+            onChange={(v) => setGuests(String(Math.max(1, Number(v) || 1)))}
+          />
+          <Field
+            label="Children under 12"
+            type="number"
+            value={kids}
+            min="0"
+            onChange={(v) => setKids(String(Math.max(0, Number(v) || 0)))}
+          />
           <div className="flex flex-col gap-1 bg-card px-5 py-4 text-left">
             <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{bt.f.rooms}</span>
             <span className="text-base text-foreground">
@@ -882,7 +922,7 @@ function DetailsStep(props: {
       </form>
 
       <aside className="order-1 lg:order-2">
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card lg:sticky lg:top-6 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
           <img
             src={
               previewCabin
@@ -926,7 +966,7 @@ function DetailsStep(props: {
               <Row label={bt.summary.checkin} value={fmt(checkin, bt.locale)} />
               <Row label={bt.summary.checkout} value={fmt(checkout, bt.locale)} />
               <Row label={bt.summary.nights} value={String(price?.nights ?? "—")} />
-              <Row label={bt.summary.guests} value={guests} />
+              <Row label={bt.summary.guests} value={`${guests} adult${Number(guests) === 1 ? "" : "s"}${Number(kids) > 0 ? ` + ${kids} child${Number(kids) === 1 ? "" : "ren"} <12` : ""}`} />
               <Row label={bt.summary.rooms} value={String(totalRooms)} />
               {price && (
                 <>
