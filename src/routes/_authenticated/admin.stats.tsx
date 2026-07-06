@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getBookingStats, listEmailLog } from "@/lib/booking.functions";
 import { AdminTabs } from "./admin";
+import { Separator } from "@/components/ui/separator";
 
 export const Route = createFileRoute("/_authenticated/admin/stats")({
   head: () => ({ meta: [{ title: "Stats — Rajawali D'Cabin" }, { name: "robots", content: "noindex" }] }),
@@ -102,6 +103,8 @@ function StatsPage() {
                 </tbody>
               </table>
             </div>
+
+            <Separator className="mt-8" />
 
             <h2 className="mt-8 font-display text-2xl text-forest">Monthly reports</h2>
             <div className="mt-3 overflow-auto rounded-xl border border-border bg-card">
