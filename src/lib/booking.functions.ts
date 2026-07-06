@@ -1746,6 +1746,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
     let confirmedRevenue = 0;
     let depositRevenue = 0;
     let nightsSold = 0;
+    let roomNightsSold = 0;
     let adults = 0;
     let kids = 0;
     const byType = new Map<string, { reservations: number; nights: number; revenue: number; adults: number; kids: number }>();
@@ -1855,6 +1856,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
         rooms++;
         confirmedRevenue += Number(r.total_amount ?? 0);
         depositRevenue += Number(r.deposit_amount ?? 0);
+        roomNightsSold += Number(r.nights ?? 0);
         const rowAdults = Number(r.guests ?? 0);
         const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
         const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
@@ -1900,7 +1902,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
         ) + 1,
       );
     const capacity = activeCabins * dayCount;
-    const occupancy = capacity > 0 ? nightsSold / capacity : 0;
+    const occupancy = capacity > 0 ? roomNightsSold / capacity : 0;
 
     return {
       reservations,
@@ -1908,6 +1910,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
       confirmedRevenue,
       depositRevenue,
       nightsSold,
+      roomNightsSold,
       occupancy,
       activeCabins,
       dayCount,
