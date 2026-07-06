@@ -17,6 +17,25 @@ import {
 } from "@/lib/booking.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { syncBookingsToOneDrive } from "@/lib/excel-sync.functions";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+
+function parseLocalDate(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+}
+function formatLocalDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function addDaysISO(iso: string, days: number): string {
+  const d = parseLocalDate(iso);
+  d.setDate(d.getDate() + days);
+  return formatLocalDate(d);
+}
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -557,6 +576,7 @@ function ManualBookingForm({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [guests, setGuests] = useState(2);
+  const [kids, setKids] = useState(0);
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<"confirmed" | "fully_paid" | "pending_payment">("confirmed");
   const [saving, setSaving] = useState(false);
@@ -638,6 +658,12 @@ function ManualBookingForm({
         cabinId: cid,
         amount: Number(perRoom[cid]) || 0,
       }));
+      const composedNotes = (() => {
+        const parts: string[] = [];
+        if (kids > 0) parts.push(`Children under 12: ${kids}`);
+        if (notes.trim()) parts.push(notes.trim());
+        return parts.join("\n");
+      })();
       await adminCreateBooking({
         data: {
           cabinIds,
@@ -648,7 +674,7 @@ function ManualBookingForm({
           email,
           guests,
           totalAmount,
-          notes,
+          notes: composedNotes,
           status,
           perRoomAmounts,
         },
@@ -696,11 +722,37 @@ function ManualBookingForm({
             <option value="pending_payment">Pending payment</option>
           </select>
         </Field>
-        <Field label="Check-in">
-          <input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className="input" />
-        </Field>
-        <Field label="Check-out">
-          <input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} className="input" />
+        <Field label="Stay dates">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className="input text-left">
+                {format(parseLocalDate(checkIn), "MMM d, yyyy")} → {format(parseLocalDate(checkOut), "MMM d, yyyy")}
+                <span className="ml-2 text-xs text-stone">
+                  ({Math.max(1, Math.round((parseLocalDate(checkOut).getTime() - parseLocalDate(checkIn).getTime()) / 86400000))} night
+                  {Math.round((parseLocalDate(checkOut).getTime() - parseLocalDate(checkIn).getTime()) / 86400000) === 1 ? "" : "s"})
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="range"
+                numberOfMonths={2}
+                showOutsideDays={false}
+                selected={{
+                  from: parseLocalDate(checkIn),
+                  to: parseLocalDate(addDaysISO(checkOut, -1)),
+                }}
+                onSelect={(r) => {
+                  if (!r?.from) return;
+                  const from = r.from;
+                  const to = r.to && r.to.getTime() !== from.getTime() ? r.to : from;
+                  setCheckIn(formatLocalDate(from));
+                  setCheckOut(addDaysISO(formatLocalDate(to), 1));
+                }}
+                className="pointer-events-auto p-3"
+              />
+            </PopoverContent>
+          </Popover>
         </Field>
         <Field label="Guest name">
           <input value={guestName} onChange={(e) => setGuestName(e.target.value)} className="input" required />
@@ -711,8 +763,11 @@ function ManualBookingForm({
         <Field label="Email (optional)">
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input" />
         </Field>
-        <Field label="Guests">
+        <Field label="Adults">
           <input type="number" min={1} value={guests} onChange={(e) => setGuests(Number(e.target.value))} className="input" />
+        </Field>
+        <Field label="Children under 12">
+          <input type="number" min={0} value={kids} onChange={(e) => setKids(Math.max(0, Number(e.target.value) || 0))} className="input" />
         </Field>
         <Field label="Notes">
           <input value={notes} onChange={(e) => setNotes(e.target.value)} className="input" />
