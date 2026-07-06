@@ -40,7 +40,7 @@ export const Route = createFileRoute("/")({
       { property: "og:site_name", content: "Rajawali D'Cabin Chalet" },
       { property: "og:locale", content: "en_MY" },
       { property: "og:image", content: heroRiverside },
-      { property: "og:image:alt", content: "Riverside wooden cabins at Rajawali D'Cabin Chalet, Chendering" },
+      { property: "og:image:alt", content: "Riverside cabins at Rajawali D'Cabin Chalet, Chendering" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Rajawali D'Cabin Chalet — Chalet Chendering, Kuala Terengganu" },
       { name: "twitter:description", content: "Muslim-friendly riverside chalet & roomstay in Chendering, KT. 8 private cabins for a quiet family staycation." },
@@ -527,7 +527,7 @@ function About() {
         <div className="relative">
           <img
             src={cabinsExterior}
-            alt="Wooden chalet cabins among coconut palms at dusk"
+            alt="Chalet cabins among coconut palms at dusk"
             width={1600}
             height={1067}
             loading="lazy"
