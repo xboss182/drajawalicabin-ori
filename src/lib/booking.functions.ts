@@ -1822,9 +1822,9 @@ export const getBookingStats = createServerFn({ method: "POST" })
       const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
       if (ySlot) {
         ySlot.reservations += 1;
-        ySlot.nights += Number(r.nights ?? 0);
         ySlot.revenue += Number(r.total_amount ?? 0);
         if (countAdultsY) {
+          ySlot.nights += Number(r.nights ?? 0);
           ySlot.adults += rowAdults;
           ySlot.kids += rowKids;
         }
@@ -1832,9 +1832,9 @@ export const getBookingStats = createServerFn({ method: "POST" })
       if (/^\d{4}-\d{2}$/.test(monthKey)) {
         const mSlot = ensureMonth(monthKey);
         mSlot.reservations += 1;
-        mSlot.nights += Number(r.nights ?? 0);
         mSlot.revenue += Number(r.total_amount ?? 0);
         if (countAdultsM) {
+          mSlot.nights += Number(r.nights ?? 0);
           mSlot.adults += rowAdults;
           mSlot.kids += rowKids;
         }
@@ -1852,14 +1852,12 @@ export const getBookingStats = createServerFn({ method: "POST" })
         rooms++;
         confirmedRevenue += Number(r.total_amount ?? 0);
         depositRevenue += Number(r.deposit_amount ?? 0);
-        nightsSold += Number(r.nights ?? 0);
         const rowAdults = Number(r.guests ?? 0);
         const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
         const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
         const type = (r.cabin_id ? typeByCabin.get(r.cabin_id) : null) ?? "Unknown";
         const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0, adults: 0, kids: 0 };
         slot.reservations += 1;
-        slot.nights += Number(r.nights ?? 0);
         slot.revenue += Number(r.total_amount ?? 0);
         // Adults/kids are stored per row of a booking group (same values on every
         // room of the reservation). Only count once per (group, cabin type) so
@@ -1868,6 +1866,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
         if (!(byType as any)._seenType) (byType as any)._seenType = new Set<string>();
         if (!(byType as any)._seenType.has(typeKey)) {
           (byType as any)._seenType.add(typeKey);
+          slot.nights += Number(r.nights ?? 0);
           slot.adults += rowAdults;
           slot.kids += rowKids;
         }
@@ -1875,6 +1874,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
         if (!(seenGroups as any)._paxSeen) (seenGroups as any)._paxSeen = new Set<string>();
         if (!(seenGroups as any)._paxSeen.has(gid)) {
           (seenGroups as any)._paxSeen.add(gid);
+          nightsSold += Number(r.nights ?? 0);
           adults += rowAdults;
           kids += rowKids;
         }
