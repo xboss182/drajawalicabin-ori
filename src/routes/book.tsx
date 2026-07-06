@@ -723,7 +723,14 @@ function DetailsStep(props: {
                     <div className="min-w-0">
                       <p className="font-display text-base text-forest">{g.label}</p>
                       <p className="text-xs text-stone">
-                        Sleeps {sample?.capacity ?? "?"} · from RM {sample?.weekday_rate ?? 0}/night · {maxQty} room{maxQty > 1 ? "s" : ""} in this type
+                        Sleeps {sample?.capacity ?? "?"} ·{" "}
+                        {priceByType[it.cabinType]?.nights
+                          ? `RM ${priceByType[it.cabinType].perNight.toFixed(2)}/night avg · RM ${(priceByType[it.cabinType].subtotal * it.qty).toFixed(2)} for ${priceByType[it.cabinType].nights} night${priceByType[it.cabinType].nights > 1 ? "s" : ""}`
+                          : `from RM ${sample?.weekday_rate ?? 0}/night`}{" "}
+                        · {maxQty} room{maxQty > 1 ? "s" : ""} in this type
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-stone/80">
+                        Weekday RM {sample?.weekday_rate} · Weekend RM {sample?.weekend_rate} · School holiday RM {sample?.school_holiday_rate}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
