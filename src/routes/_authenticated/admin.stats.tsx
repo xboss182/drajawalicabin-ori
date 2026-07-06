@@ -53,8 +53,8 @@ function StatsPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="font-display text-3xl text-forest">Reports</h1>
           <div className="flex gap-2">
-            <DateInput label="From" value={from} onChange={setFrom} />
-            <DateInput label="To" value={to} onChange={setTo} />
+            <MonthInput label="From" value={monthFrom} onChange={setMonthFrom} />
+            <MonthInput label="To" value={monthTo} onChange={setMonthTo} />
           </div>
         </div>
 
