@@ -1729,7 +1729,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("booking_requests")
-      .select("booking_group_id, status, total_amount, deposit_amount, nights, room_type, cabin_id, created_at, check_in, check_out")
+      .select("booking_group_id, status, total_amount, deposit_amount, nights, room_type, cabin_id, created_at, check_in, check_out, guests, notes")
       .gte("created_at", data.from)
       .lte("created_at", data.to + "T23:59:59");
     if (error) throw new Error(error.message);
@@ -1739,7 +1739,14 @@ export const getBookingStats = createServerFn({ method: "POST" })
     let confirmedRevenue = 0;
     let depositRevenue = 0;
     let nightsSold = 0;
+    let adults = 0;
+    let kids = 0;
     const byType = new Map<string, { reservations: number; nights: number; revenue: number }>();
+    const byMonth = new Map<
+      string,
+      { reservations: number; nights: number; revenue: number; adults: number; kids: number }
+    >();
+    const seenGroupsPerMonth = new Map<string, Set<string>>();
 
     const { data: cabins } = await supabaseAdmin.from("cabins").select("id, cabin_type, is_active");
     const typeByCabin = new Map<string, string>();
@@ -1760,12 +1767,40 @@ export const getBookingStats = createServerFn({ method: "POST" })
         confirmedRevenue += Number(r.total_amount ?? 0);
         depositRevenue += Number(r.deposit_amount ?? 0);
         nightsSold += Number(r.nights ?? 0);
+        const rowAdults = Number(r.guests ?? 0);
+        const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
+        const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
+        adults += rowAdults;
+        kids += rowKids;
         const type = (r.cabin_id ? typeByCabin.get(r.cabin_id) : null) ?? "Unknown";
         const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0 };
         slot.reservations += 1;
         slot.nights += Number(r.nights ?? 0);
         slot.revenue += Number(r.total_amount ?? 0);
         byType.set(type, slot);
+
+        // Group by check-in month (YYYY-MM)
+        const ci = String(r.check_in ?? r.created_at ?? "").slice(0, 7);
+        if (ci) {
+          const mSlot = byMonth.get(ci) ?? {
+            reservations: 0,
+            nights: 0,
+            revenue: 0,
+            adults: 0,
+            kids: 0,
+          };
+          const monthGroups = seenGroupsPerMonth.get(ci) ?? new Set<string>();
+          if (!monthGroups.has(gid)) {
+            monthGroups.add(gid);
+            mSlot.reservations += 1;
+            seenGroupsPerMonth.set(ci, monthGroups);
+          }
+          mSlot.nights += Number(r.nights ?? 0);
+          mSlot.revenue += Number(r.total_amount ?? 0);
+          mSlot.adults += rowAdults;
+          mSlot.kids += rowKids;
+          byMonth.set(ci, mSlot);
+        }
       }
     }
 
@@ -1787,7 +1822,13 @@ export const getBookingStats = createServerFn({ method: "POST" })
       occupancy,
       activeCabins,
       dayCount,
+      adults,
+      kids,
+      capacity,
       byType: Array.from(byType, ([type, v]) => ({ type, ...v })),
+      byMonth: Array.from(byMonth, ([month, v]) => ({ month, ...v })).sort((a, b) =>
+        a.month.localeCompare(b.month),
+      ),
     };
   });
 
