@@ -17,6 +17,25 @@ import {
 } from "@/lib/booking.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { syncBookingsToOneDrive } from "@/lib/excel-sync.functions";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+
+function parseLocalDate(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+}
+function formatLocalDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function addDaysISO(iso: string, days: number): string {
+  const d = parseLocalDate(iso);
+  d.setDate(d.getDate() + days);
+  return formatLocalDate(d);
+}
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
