@@ -34,6 +34,7 @@ import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/l
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksSendBalanceRemindersRouteImport } from './routes/api/public/hooks/send-balance-reminders'
+import { Route as ApiPublicExportsBookingsDotcsvRouteImport } from './routes/api/public/exports/bookings[.]csv'
 import { Route as AuthenticatedAdminInvoiceIdRouteImport } from './routes/_authenticated/admin.invoice.$id'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -170,6 +171,12 @@ const ApiPublicHooksSendBalanceRemindersRoute =
     path: '/api/public/hooks/send-balance-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicExportsBookingsDotcsvRoute =
+  ApiPublicExportsBookingsDotcsvRouteImport.update({
+    id: '/api/public/exports/bookings.csv',
+    path: '/api/public/exports/bookings.csv',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminInvoiceIdRoute =
   AuthenticatedAdminInvoiceIdRouteImport.update({
     id: '/invoice/$id',
@@ -198,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
+  '/api/public/exports/bookings.csv': typeof ApiPublicExportsBookingsDotcsvRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -224,6 +232,7 @@ export interface FileRoutesByTo {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
+  '/api/public/exports/bookings.csv': typeof ApiPublicExportsBookingsDotcsvRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -253,6 +262,7 @@ export interface FileRoutesById {
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
+  '/api/public/exports/bookings.csv': typeof ApiPublicExportsBookingsDotcsvRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -282,6 +292,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/admin/'
     | '/admin/invoice/$id'
+    | '/api/public/exports/bookings.csv'
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
     | '/lovable/email/queue/process'
@@ -308,6 +319,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/admin'
     | '/admin/invoice/$id'
+    | '/api/public/exports/bookings.csv'
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
     | '/lovable/email/queue/process'
@@ -336,6 +348,7 @@ export interface FileRouteTypes {
     | '/lovable/email/suppression'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/invoice/$id'
+    | '/api/public/exports/bookings.csv'
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
     | '/lovable/email/queue/process'
@@ -355,6 +368,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicExportsBookingsDotcsvRoute: typeof ApiPublicExportsBookingsDotcsvRoute
   ApiPublicHooksSendBalanceRemindersRoute: typeof ApiPublicHooksSendBalanceRemindersRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -539,6 +553,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksSendBalanceRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/exports/bookings.csv': {
+      id: '/api/public/exports/bookings.csv'
+      path: '/api/public/exports/bookings.csv'
+      fullPath: '/api/public/exports/bookings.csv'
+      preLoaderRoute: typeof ApiPublicExportsBookingsDotcsvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/invoice/$id': {
       id: '/_authenticated/admin/invoice/$id'
       path: '/invoice/$id'
@@ -609,6 +630,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicExportsBookingsDotcsvRoute: ApiPublicExportsBookingsDotcsvRoute,
   ApiPublicHooksSendBalanceRemindersRoute:
     ApiPublicHooksSendBalanceRemindersRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
@@ -619,13 +641,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

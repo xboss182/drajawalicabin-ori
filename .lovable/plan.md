@@ -1,39 +1,65 @@
-# Plan: Official Website Notice Banner
+# Sync bookings to local Excel via Power Query
 
-## Goal
-Add a prominent but non-blocking notice that this is the sole official website of the property and that listings on OYO / Agoda / Booking.com / Expedia are unauthorized.
+Goal: give you a single URL that Excel's Power Query can refresh on demand to pull all bookings, mapped exactly to your column list.
 
-## Approach
-Use a **dismissible top banner** placed just below the navbar on the homepage (and optionally on `/book`). It will show on every visit until dismissed, and its dismissed state will be stored in `localStorage` so repeat visitors aren't nagged.
+## How it will work
 
-## Copy (tightened)
-**Important Notice**
-This is the sole official website of this property.
+1. Add a new secure public endpoint that returns booking data as **CSV** (Power Query's most reliable format).
+2. Endpoint is protected by a **secret token** in the URL query string — only someone with the token can read the data.
+3. In Excel: **Data → Get Data → From Web** → paste the URL. Power Query loads it as a refreshable table. Click **Refresh All** anytime to re-pull the latest data.
 
-We have no affiliation, partnership, or business relationship with OYO, Agoda, Booking.com, Expedia, or any other online travel agency. Any listing of this property on such platforms is not authorized by us and may contain inaccurate or outdated information.
+## Endpoint
 
-For genuine reservations, current rates, and official enquiries, please book directly through this website or contact us using our official contact information.
+- URL: `https://drajawalicabin.com/api/public/exports/bookings.csv?token=<SECRET>`
+- Method: GET, returns `text/csv`
+- Rows: one row **per cabin/room** within a booking group (so "Room No" and "Occupancy" make sense when a guest books multiple rooms)
+- Optional filters: `?from=YYYY-MM-DD&to=YYYY-MM-DD` on check-in date
 
-## Malay translation
-**Notis Penting**
-Ini adalah laman web rasmi tunggal hartanah ini.
+## Columns (in this exact order)
 
-Kami tidak mempunyai sebarang perkaitan, perkongsian, atau hubungan perniagaan dengan OYO, Agoda, Booking.com, Expedia, atau mana-mana agensi pelancongan dalam talian lain. Sebarang senarai hartanah ini di platform sedemikian tidak dibenarkan oleh kami dan mungkin mengandungi maklumat yang tidak tepat atau lapuk.
+| Excel column          | Source                                                          |
+|-----------------------|-----------------------------------------------------------------|
+| Booking Ref           | `payment_reference` (e.g. RJW-1234)                             |
+| Date Booking          | `created_at` (date only)                                        |
+| Name                  | `guest_name`                                                    |
+| IC                    | ⚠️ **not currently collected** — see below                      |
+| Contact / Tel         | `phone`                                                         |
+| Vehicle Model         | `vehicle_type`                                                  |
+| Veh Reg No            | `vehicle_number`                                                |
+| No of Pax             | `guests`                                                        |
+| Deposit Status        | Paid / Unpaid (derived from status + `deposit_amount`)          |
+| Total Payment Status  | Deposit only / Fully paid / Awaiting review / Pending           |
+| No of Nite Stay       | `nights`                                                        |
+| No of Rooms           | `num_rooms`                                                     |
+| Room No               | Cabin name/number for that row (e.g. "1", "2")                  |
+| Comforter No          | `comforter_total` ÷ (20 × nights) — count of comforters         |
+| Occupancy (room×stay) | `num_rooms × nights`                                            |
+| Date Check In         | `check_in`                                                      |
+| Date Check Out        | `check_out`                                                     |
+| Security Deposit      | `deposit_amount`                                                |
+| Room Payment Amount   | `total_amount`                                                  |
+| Remarks               | `notes`                                                         |
+| Relation              | `relationship`                                                  |
 
-Untuk tempahan sahih, kadar semasa, dan pertanyaan rasmi, sila tempah terus melalui laman web ini atau hubungi kami menggunakan maklumat rasmi kami.
+## One decision needed from you
 
-## Technical changes
-1. **Create component** `src/components/official-notice-banner.tsx` — small, full-width dismissible banner using the existing `Alert`, `Button`, or plain styled div (matching the forest/sand palette).
-2. **Add translations** to `src/lib/i18n.tsx` under a new `notice` key for both `en` and `bm`.
-3. **Wire to home page** `src/routes/index.tsx` — render the banner just below the header / nav area.
-4. **Wire to booking page** `src/routes/book.tsx` — optionally render the same banner so the notice is visible at the booking entry point.
-5. **Persistence** — use `localStorage` key `official-notice-dismissed` to keep the banner hidden after the user clicks “Got it” / “Faham”.
-6. **SEO / accessibility** — include `role="banner"`, close button with clear label, and ensure it doesn't shift layout abruptly on close.
+**IC (NRIC) is not captured anywhere today** — the booking form only collects name, email, phone, vehicle, etc. Two options:
 
-## Design notes
-- Background: a warm sand / accent color (`bg-secondary`) with dark text (`text-foreground`) to stand out without looking like a warning.
-- Left accent stripe in `primary` forest green to make it look official.
-- Close button as a subtle text link with icon.
-- Responsive padding and text size.
+- **A. Leave the IC column blank in the export** (ship now, no form changes).
+- **B. Add an IC field to the booking form + admin edit screen** first, then include it in the export (bigger change, needs a DB migration + form UI update).
 
-No backend changes required.
+Tell me A or B and I'll build it.
+
+## Excel side (once endpoint exists)
+
+1. Excel → **Data → From Web** → paste the URL with token.
+2. In the Power Query preview, click **Load**.
+3. To refresh: **Data → Refresh All** (or right-click table → Refresh). Set auto-refresh interval under Query Properties if you want.
+
+## Technical details
+
+- New route: `src/routes/api/public/exports/bookings.csv.ts` (server route, public path so no auth wall).
+- Auth: compare `?token=` against a new secret `BOOKINGS_EXPORT_TOKEN` (stored in Cloud). No token = 401.
+- Uses `supabaseAdmin` (service role) inside the handler to read `booking_requests` joined with `cabins` for the room name.
+- CSV built manually (no dep) with proper quoting so commas in `notes` don't break columns.
+- One booking row expands to N rows when `num_rooms > 1`, so "Room No" column is meaningful.
