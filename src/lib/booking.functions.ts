@@ -1822,9 +1822,9 @@ export const getBookingStats = createServerFn({ method: "POST" })
       const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
       if (ySlot) {
         ySlot.reservations += 1;
-        ySlot.nights += Number(r.nights ?? 0);
         ySlot.revenue += Number(r.total_amount ?? 0);
         if (countAdultsY) {
+          ySlot.nights += Number(r.nights ?? 0);
           ySlot.adults += rowAdults;
           ySlot.kids += rowKids;
         }
@@ -1832,9 +1832,9 @@ export const getBookingStats = createServerFn({ method: "POST" })
       if (/^\d{4}-\d{2}$/.test(monthKey)) {
         const mSlot = ensureMonth(monthKey);
         mSlot.reservations += 1;
-        mSlot.nights += Number(r.nights ?? 0);
         mSlot.revenue += Number(r.total_amount ?? 0);
         if (countAdultsM) {
+          mSlot.nights += Number(r.nights ?? 0);
           mSlot.adults += rowAdults;
           mSlot.kids += rowKids;
         }
