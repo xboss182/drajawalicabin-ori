@@ -120,6 +120,7 @@ function BookPage() {
   const [checkin, setCheckin] = useState(search.checkin);
   const [checkout, setCheckout] = useState(search.checkout);
   const [guests, setGuests] = useState(search.guests);
+  const [kids, setKids] = useState("0");
   const [comforter, setComforter] = useState(false);
 
   const [name, setName] = useState("");
@@ -131,6 +132,7 @@ function BookPage() {
   const [notes, setNotes] = useState("");
 
   const [price, setPrice] = useState<{ nights: number; subtotal: number; comforter_total: number; total: number } | null>(null);
+  const [priceByType, setPriceByType] = useState<Record<string, { nights: number; subtotal: number; total: number; perNight: number }>>({});
   const [takenByCabin, setTakenByCabin] = useState<Record<string, string[]>>({});
 
   const [step, setStep] = useState<Step>("details");
@@ -207,6 +209,7 @@ function BookPage() {
         let subtotal = 0;
         let comforter_total = 0;
         let total = 0;
+        const byType: Record<string, { nights: number; subtotal: number; total: number; perNight: number }> = {};
         for (const it of cart) {
           const g = groupByType.get(it.cabinType);
           const sample = g?.rooms[0];
@@ -218,10 +221,18 @@ function BookPage() {
           subtotal += p.subtotal * it.qty;
           comforter_total += p.comforter_total * it.qty;
           total += p.total * it.qty;
+          byType[it.cabinType] = {
+            nights: p.nights,
+            subtotal: p.subtotal,
+            total: p.total,
+            perNight: p.nights > 0 ? p.subtotal / p.nights : 0,
+          };
         }
         setPrice({ nights, subtotal, comforter_total, total });
+        setPriceByType(byType);
       } catch {
         setPrice(null);
+        setPriceByType({});
       }
     })();
   }, [cart, checkin, checkout, comforter, groupByType]);
@@ -369,7 +380,13 @@ function BookPage() {
           relationship: relationship.trim() || undefined,
           vehicleType: vehicleType.trim() || undefined,
           vehicleNumber: vehicleNumber.trim() || undefined,
-          notes: notes.trim() || undefined,
+          notes: (() => {
+            const nKids = Math.max(0, Number(kids) || 0);
+            const parts: string[] = [];
+            if (nKids > 0) parts.push(`Children under 12: ${nKids}`);
+            if (notes.trim()) parts.push(notes.trim());
+            return parts.length ? parts.join("\n") : undefined;
+          })(),
           paymentType,
         },
       });
