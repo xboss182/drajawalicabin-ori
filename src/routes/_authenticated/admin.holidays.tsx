@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { listHolidays, upsertHoliday, deleteHoliday } from "@/lib/booking.functions";
+import { listHolidays, upsertHoliday, deleteHoliday, seedHolidays } from "@/lib/booking.functions";
 import { AdminTabs } from "./admin";
 
 export const Route = createFileRoute("/_authenticated/admin/holidays")({
@@ -49,6 +49,17 @@ function HolidaysPage() {
     load();
   }
 
+  async function populate() {
+    if (!confirm("Populate Malaysian public holidays & school breaks through end of 2027? Existing rows are skipped.")) return;
+    try {
+      const r = await seedHolidays();
+      alert(`Added ${r.inserted} holidays (skipped ${r.skipped} existing).`);
+      load();
+    } catch (e: any) {
+      alert(e?.message ?? "Failed");
+    }
+  }
+
   return (
     <main className="min-h-[100svh] bg-background text-foreground">
       <header className="border-b border-border bg-coconut">
@@ -60,14 +71,22 @@ function HolidaysPage() {
       <section className="mx-auto max-w-4xl px-6 py-10 lg:px-10">
         <div className="flex items-center justify-between">
           <h1 className="font-display text-3xl text-forest">Holidays</h1>
-          <button
-            onClick={() =>
-              setEditing({ label: "", starts_on: "", ends_on: "", kind: "public_holiday" })
-            }
-            className="rounded-full bg-forest px-4 py-1.5 text-xs uppercase tracking-widest text-coconut"
-          >
-            + Add range
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={populate}
+              className="rounded-full border border-forest px-4 py-1.5 text-xs uppercase tracking-widest text-forest"
+            >
+              Populate through 2027
+            </button>
+            <button
+              onClick={() =>
+                setEditing({ label: "", starts_on: "", ends_on: "", kind: "public_holiday" })
+              }
+              className="rounded-full bg-forest px-4 py-1.5 text-xs uppercase tracking-widest text-coconut"
+            >
+              + Add range
+            </button>
+          </div>
         </div>
         <p className="mt-2 text-xs text-stone">
           Public holidays are charged at the weekend rate. School breaks are charged at the school

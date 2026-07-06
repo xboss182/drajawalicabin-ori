@@ -56,13 +56,56 @@ function StatsPage() {
 
         {stats && (
           <>
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
               <Stat label="Reservations" value={String(stats.reservations)} />
               <Stat label="Confirmed revenue" value={`RM ${stats.confirmedRevenue.toFixed(2)}`} />
               <Stat label="Deposit revenue" value={`RM ${stats.depositRevenue.toFixed(2)}`} />
               <Stat label="Nights sold" value={String(stats.nightsSold)} />
-              <Stat label="Occupancy" value={`${(stats.occupancy * 100).toFixed(0)}%`} />
+              <Stat
+                label="Occupancy"
+                value={`${stats.nightsSold} / ${(stats as any).capacity ?? stats.activeCabins * stats.dayCount}`}
+              />
+              <Stat label="Adults (pax)" value={String((stats as any).adults ?? 0)} />
+              <Stat label="Children <12" value={String((stats as any).kids ?? 0)} />
             </div>
+
+            <h2 className="mt-8 font-display text-2xl text-forest">By month</h2>
+            <div className="mt-3 overflow-auto rounded-xl border border-border bg-card">
+              <table className="w-full text-sm">
+                <thead className="bg-coconut/60 text-left text-[10px] uppercase tracking-widest text-stone">
+                  <tr>
+                    <th className="p-2">Month</th>
+                    <th className="p-2 text-right">Reservations</th>
+                    <th className="p-2 text-right">Nights</th>
+                    <th className="p-2 text-right">Adults</th>
+                    <th className="p-2 text-right">Children</th>
+                    <th className="p-2 text-right">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {((stats as any).byMonth ?? []).map((r: any) => (
+                    <tr key={r.month} className="border-t border-border/40">
+                      <td className="p-2">
+                        {new Date(r.month + "-01").toLocaleString("en-MY", {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="p-2 text-right">{r.reservations}</td>
+                      <td className="p-2 text-right">{r.nights}</td>
+                      <td className="p-2 text-right">{r.adults}</td>
+                      <td className="p-2 text-right">{r.kids}</td>
+                      <td className="p-2 text-right">RM {Number(r.revenue).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                  {(!((stats as any).byMonth) || (stats as any).byMonth.length === 0) && (
+                    <tr><td colSpan={6} className="p-3 text-center text-stone">No data.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <h2 className="mt-8 font-display text-2xl text-forest">By cabin type</h2>
             <div className="mt-6 overflow-auto rounded-xl border border-border bg-card">
               <table className="w-full text-sm">
                 <thead className="bg-coconut/60 text-left text-[10px] uppercase tracking-widest text-stone">

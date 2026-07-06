@@ -1642,6 +1642,76 @@ export const deleteHoliday = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const seedHolidays = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    // Curated Malaysian federal public holidays + MOE school breaks through
+    // end of next year. Islamic/lunar dates are best-effort estimates —
+    // admins can edit or delete inaccurate rows.
+    const rows: Array<{
+      label: string;
+      starts_on: string;
+      ends_on: string;
+      kind: "public_holiday" | "school_break";
+    }> = [
+      // ===== 2026 =====
+      { label: "New Year's Day", starts_on: "2026-01-01", ends_on: "2026-01-01", kind: "public_holiday" },
+      { label: "Chinese New Year", starts_on: "2026-02-17", ends_on: "2026-02-18", kind: "public_holiday" },
+      { label: "Hari Raya Aidilfitri", starts_on: "2026-03-20", ends_on: "2026-03-21", kind: "public_holiday" },
+      { label: "Labour Day", starts_on: "2026-05-01", ends_on: "2026-05-01", kind: "public_holiday" },
+      { label: "Wesak Day", starts_on: "2026-05-01", ends_on: "2026-05-01", kind: "public_holiday" },
+      { label: "Agong's Birthday", starts_on: "2026-06-01", ends_on: "2026-06-01", kind: "public_holiday" },
+      { label: "Hari Raya Haji", starts_on: "2026-05-27", ends_on: "2026-05-27", kind: "public_holiday" },
+      { label: "Awal Muharram", starts_on: "2026-06-16", ends_on: "2026-06-16", kind: "public_holiday" },
+      { label: "Merdeka Day", starts_on: "2026-08-31", ends_on: "2026-08-31", kind: "public_holiday" },
+      { label: "Maulidur Rasul", starts_on: "2026-08-25", ends_on: "2026-08-25", kind: "public_holiday" },
+      { label: "Malaysia Day", starts_on: "2026-09-16", ends_on: "2026-09-16", kind: "public_holiday" },
+      { label: "Deepavali", starts_on: "2026-11-08", ends_on: "2026-11-08", kind: "public_holiday" },
+      { label: "Christmas Day", starts_on: "2026-12-25", ends_on: "2026-12-25", kind: "public_holiday" },
+      // 2026 school breaks (approx MOE calendar)
+      { label: "School Break — Term 1", starts_on: "2026-03-14", ends_on: "2026-03-22", kind: "school_break" },
+      { label: "School Break — Term 2", starts_on: "2026-05-23", ends_on: "2026-06-07", kind: "school_break" },
+      { label: "School Break — Term 3", starts_on: "2026-08-22", ends_on: "2026-08-30", kind: "school_break" },
+      { label: "School Break — Year End", starts_on: "2026-12-12", ends_on: "2027-01-03", kind: "school_break" },
+
+      // ===== 2027 =====
+      { label: "New Year's Day", starts_on: "2027-01-01", ends_on: "2027-01-01", kind: "public_holiday" },
+      { label: "Chinese New Year", starts_on: "2027-02-06", ends_on: "2027-02-07", kind: "public_holiday" },
+      { label: "Hari Raya Aidilfitri", starts_on: "2027-03-10", ends_on: "2027-03-11", kind: "public_holiday" },
+      { label: "Labour Day", starts_on: "2027-05-01", ends_on: "2027-05-01", kind: "public_holiday" },
+      { label: "Wesak Day", starts_on: "2027-05-20", ends_on: "2027-05-20", kind: "public_holiday" },
+      { label: "Hari Raya Haji", starts_on: "2027-05-17", ends_on: "2027-05-17", kind: "public_holiday" },
+      { label: "Agong's Birthday", starts_on: "2027-06-07", ends_on: "2027-06-07", kind: "public_holiday" },
+      { label: "Awal Muharram", starts_on: "2027-06-06", ends_on: "2027-06-06", kind: "public_holiday" },
+      { label: "Maulidur Rasul", starts_on: "2027-08-15", ends_on: "2027-08-15", kind: "public_holiday" },
+      { label: "Merdeka Day", starts_on: "2027-08-31", ends_on: "2027-08-31", kind: "public_holiday" },
+      { label: "Malaysia Day", starts_on: "2027-09-16", ends_on: "2027-09-16", kind: "public_holiday" },
+      { label: "Deepavali", starts_on: "2027-10-28", ends_on: "2027-10-28", kind: "public_holiday" },
+      { label: "Christmas Day", starts_on: "2027-12-25", ends_on: "2027-12-25", kind: "public_holiday" },
+      { label: "School Break — Term 1", starts_on: "2027-03-13", ends_on: "2027-03-21", kind: "school_break" },
+      { label: "School Break — Term 2", starts_on: "2027-05-29", ends_on: "2027-06-13", kind: "school_break" },
+      { label: "School Break — Term 3", starts_on: "2027-08-21", ends_on: "2027-08-29", kind: "school_break" },
+      { label: "School Break — Year End", starts_on: "2027-12-11", ends_on: "2028-01-02", kind: "school_break" },
+    ];
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin
+      .from("school_holidays")
+      .select("label, starts_on");
+    const seen = new Set(
+      (existing ?? []).map((r: any) => `${r.label}::${r.starts_on}`),
+    );
+    const toInsert = rows.filter((r) => !seen.has(`${r.label}::${r.starts_on}`));
+    let inserted = 0;
+    if (toInsert.length > 0) {
+      const { error } = await supabaseAdmin.from("school_holidays").insert(toInsert);
+      if (error) throw new Error(error.message);
+      inserted = toInsert.length;
+    }
+    return { inserted, skipped: rows.length - toInsert.length };
+  });
+
 // ============== ADMIN: stats + email log ==============
 
 export const getBookingStats = createServerFn({ method: "POST" })
@@ -1659,7 +1729,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("booking_requests")
-      .select("booking_group_id, status, total_amount, deposit_amount, nights, room_type, cabin_id, created_at, check_in, check_out")
+      .select("booking_group_id, status, total_amount, deposit_amount, nights, room_type, cabin_id, created_at, check_in, check_out, guests, notes")
       .gte("created_at", data.from)
       .lte("created_at", data.to + "T23:59:59");
     if (error) throw new Error(error.message);
@@ -1669,7 +1739,14 @@ export const getBookingStats = createServerFn({ method: "POST" })
     let confirmedRevenue = 0;
     let depositRevenue = 0;
     let nightsSold = 0;
+    let adults = 0;
+    let kids = 0;
     const byType = new Map<string, { reservations: number; nights: number; revenue: number }>();
+    const byMonth = new Map<
+      string,
+      { reservations: number; nights: number; revenue: number; adults: number; kids: number }
+    >();
+    const seenGroupsPerMonth = new Map<string, Set<string>>();
 
     const { data: cabins } = await supabaseAdmin.from("cabins").select("id, cabin_type, is_active");
     const typeByCabin = new Map<string, string>();
@@ -1690,12 +1767,40 @@ export const getBookingStats = createServerFn({ method: "POST" })
         confirmedRevenue += Number(r.total_amount ?? 0);
         depositRevenue += Number(r.deposit_amount ?? 0);
         nightsSold += Number(r.nights ?? 0);
+        const rowAdults = Number(r.guests ?? 0);
+        const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
+        const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
+        adults += rowAdults;
+        kids += rowKids;
         const type = (r.cabin_id ? typeByCabin.get(r.cabin_id) : null) ?? "Unknown";
         const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0 };
         slot.reservations += 1;
         slot.nights += Number(r.nights ?? 0);
         slot.revenue += Number(r.total_amount ?? 0);
         byType.set(type, slot);
+
+        // Group by check-in month (YYYY-MM)
+        const ci = String(r.check_in ?? r.created_at ?? "").slice(0, 7);
+        if (ci) {
+          const mSlot = byMonth.get(ci) ?? {
+            reservations: 0,
+            nights: 0,
+            revenue: 0,
+            adults: 0,
+            kids: 0,
+          };
+          const monthGroups = seenGroupsPerMonth.get(ci) ?? new Set<string>();
+          if (!monthGroups.has(gid)) {
+            monthGroups.add(gid);
+            mSlot.reservations += 1;
+            seenGroupsPerMonth.set(ci, monthGroups);
+          }
+          mSlot.nights += Number(r.nights ?? 0);
+          mSlot.revenue += Number(r.total_amount ?? 0);
+          mSlot.adults += rowAdults;
+          mSlot.kids += rowKids;
+          byMonth.set(ci, mSlot);
+        }
       }
     }
 
@@ -1717,7 +1822,13 @@ export const getBookingStats = createServerFn({ method: "POST" })
       occupancy,
       activeCabins,
       dayCount,
+      adults,
+      kids,
+      capacity,
       byType: Array.from(byType, ([type, v]) => ({ type, ...v })),
+      byMonth: Array.from(byMonth, ([month, v]) => ({ month, ...v })).sort((a, b) =>
+        a.month.localeCompare(b.month),
+      ),
     };
   });
 
