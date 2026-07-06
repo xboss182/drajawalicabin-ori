@@ -103,6 +103,48 @@ function StatsPage() {
               </table>
             </div>
 
+            <h2 className="mt-8 font-display text-2xl text-forest">Monthly reports</h2>
+            <div className="mt-3 overflow-auto rounded-xl border border-border bg-card">
+              <table className="w-full text-sm">
+                <thead className="bg-coconut/60 text-left text-[10px] uppercase tracking-widest text-stone">
+                  <tr>
+                    <th className="p-2">Month</th>
+                    <th className="p-2 text-right">Rooms</th>
+                    <th className="p-2 text-right">Nights</th>
+                    <th className="p-2 text-right">Adults</th>
+                    <th className="p-2 text-right">Children</th>
+                    <th className="p-2 text-right">Occupancy</th>
+                    <th className="p-2 text-right">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {((stats as any).byMonth ?? [])
+                    .filter((r: any) => Number(r.reservations) > 0 || Number(r.nights) > 0)
+                    .map((r: any) => {
+                      const [yy, mm] = String(r.month).split("-").map(Number);
+                      const label = `${MONTH_NAMES[mm - 1]} ${yy}`;
+                      return (
+                        <tr key={r.month} className="border-t border-border/40">
+                          <td className="p-2">{label}</td>
+                          <td className="p-2 text-right">{r.reservations}</td>
+                          <td className="p-2 text-right">{r.nights}</td>
+                          <td className="p-2 text-right">{r.adults}</td>
+                          <td className="p-2 text-right">{r.kids}</td>
+                          <td className="p-2 text-right">{r.nights} / {r.capacity}</td>
+                          <td className="p-2 text-right">RM {Number(r.revenue).toFixed(2)}</td>
+                        </tr>
+                      );
+                    })}
+                  {(!(stats as any).byMonth ||
+                    ((stats as any).byMonth ?? []).filter(
+                      (r: any) => Number(r.reservations) > 0 || Number(r.nights) > 0,
+                    ).length === 0) && (
+                    <tr><td colSpan={7} className="p-3 text-center text-stone">No data.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
             <h2 className="mt-8 font-display text-2xl text-forest">Yearly reports</h2>
             <div className="mt-3 overflow-auto rounded-xl border border-border bg-card">
               <table className="w-full text-sm">
