@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { groupBookings, groupToCells, type BookingRow } from "@/lib/booking-export-shared";
 
 // CSV feed for Excel Power Query sync.
 // URL: /api/public/exports/bookings.csv?token=<BOOKINGS_EXPORT_TOKEN>
@@ -40,14 +41,6 @@ function toRow(cells: unknown[]): string {
   return cells.map(csvEscape).join(",");
 }
 
-function depositPaid(status: string): string {
-  return status === "pending_payment" || status === "cancelled" ? "nil" : "paid";
-}
-
-function roomPaymentPaid(status: string): string {
-  return status === "fully_paid" ? "paid" : "nil";
-}
-
 export const Route = createFileRoute("/api/public/exports/bookings.csv")({
   server: {
     handlers: {
@@ -81,47 +74,8 @@ export const Route = createFileRoute("/api/public/exports/bookings.csv")({
         }
 
         const lines: string[] = [toRow(HEADERS)];
-        for (const b of data ?? []) {
-          const nights = Number(b.nights ?? 0);
-          const numRooms = Number(b.num_rooms ?? 1);
-          const comforterTotal = Number(b.comforter_total ?? 0);
-          const comforterCount =
-            nights > 0 ? Math.round(comforterTotal / (20 * nights)) : 0;
-          const occupancy = numRooms * nights;
-          const cabinName =
-            (b as unknown as { cabins?: { name?: string } | null }).cabins
-              ?.name ?? b.room_type ?? "";
-
-          // One row per cabin/room in the booking so "Room No" is meaningful.
-          for (let i = 1; i <= Math.max(1, numRooms); i++) {
-            const roomLabel =
-              numRooms > 1 ? `${cabinName} #${i}` : cabinName;
-            lines.push(
-              toRow([
-                b.payment_reference ?? b.id.slice(0, 8),
-                b.guest_name,
-                "", // IC — not collected in the booking form yet
-                b.phone,
-                b.vehicle_type ?? "",
-                b.vehicle_number ?? "",
-                depositPaid(b.status as string),
-                roomPaymentPaid(b.status as string),
-                b.guests,
-                b.relationship ?? "",
-                nights,
-                numRooms,
-                roomLabel,
-                comforterCount,
-                occupancy,
-                b.check_in,
-                b.check_out,
-                b.deposit_amount ?? "",
-                b.total_amount ?? "",
-                b.notes ?? "",
-              ]),
-            );
-          }
-        }
+        const groups = groupBookings((data ?? []) as unknown as BookingRow[]);
+        for (const g of groups) lines.push(toRow(groupToCells(g)));
 
         // Prepend UTF-8 BOM so Excel opens the file with the right encoding.
         const body = "\uFEFF" + lines.join("\r\n") + "\r\n";
