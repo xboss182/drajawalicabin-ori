@@ -527,7 +527,7 @@ function About() {
         <div className="relative">
           <img
             src={cabinsExterior}
-            alt="Wooden chalet cabins among coconut palms at dusk"
+            alt="Chalet cabins among coconut palms at dusk"
             width={1600}
             height={1067}
             loading="lazy"
