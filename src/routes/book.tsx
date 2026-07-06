@@ -493,6 +493,7 @@ function DetailsStep(props: {
   checkin: string; setCheckin: (s: string) => void;
   checkout: string; setCheckout: (s: string) => void;
   guests: string; setGuests: (s: string) => void;
+  kids: string; setKids: (s: string) => void;
   comforter: boolean; setComforter: (b: boolean) => void;
   name: string; setName: (s: string) => void;
   email: string; setEmail: (s: string) => void;
@@ -502,6 +503,7 @@ function DetailsStep(props: {
   vehicleNumber: string; setVehicleNumber: (s: string) => void;
   notes: string; setNotes: (s: string) => void;
   price: { nights: number; subtotal: number; comforter_total: number; total: number } | null;
+  priceByType: Record<string, { nights: number; subtotal: number; total: number; perNight: number }>;
   previewCabin?: Cabin;
   blockedDates: string[];
   blockedReasonByDate: Map<string, string>;
@@ -527,11 +529,11 @@ function DetailsStep(props: {
   const {
     cabinGroups, cart, setCart,
     checkin, setCheckin, checkout, setCheckout,
-    guests, setGuests, comforter, setComforter,
+    guests, setGuests, kids, setKids, comforter, setComforter,
     name, setName, email, setEmail, phone, setPhone,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
-    price, previewCabin, blockedDates, blockedReasonByDate, totalRooms, freeCabinsForType,
+    price, priceByType, previewCabin, blockedDates, blockedReasonByDate, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
   } = props;
