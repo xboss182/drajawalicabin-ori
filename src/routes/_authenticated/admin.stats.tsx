@@ -69,7 +69,7 @@ function StatsPage() {
               <Stat label="Nights sold" value={String(stats.nightsSold)} />
               <Stat
                 label="Occupancy"
-                value={`${stats.nightsSold} / ${stats.capacity}`}
+                value={`${(stats as any).roomNightsSold ?? stats.nightsSold} / ${stats.capacity}`}
               />
             </div>
 
@@ -130,7 +130,7 @@ function StatsPage() {
                           <td className="p-2 text-right">{r.nights}</td>
                           <td className="p-2 text-right">{r.adults}</td>
                           <td className="p-2 text-right">{r.kids}</td>
-                          <td className="p-2 text-right">{r.nights} / {r.capacity}</td>
+                          <td className="p-2 text-right">{r.roomNights ?? r.nights} / {r.capacity}</td>
                           <td className="p-2 text-right">RM {Number(r.revenue).toFixed(2)}</td>
                         </tr>
                       );
@@ -169,7 +169,7 @@ function StatsPage() {
                       <td className="p-2 text-right">{r.nights}</td>
                       <td className="p-2 text-right">{r.adults}</td>
                       <td className="p-2 text-right">{r.kids}</td>
-                      <td className="p-2 text-right">{r.nights} / {r.capacity}</td>
+                      <td className="p-2 text-right">{(r as any).roomNights ?? r.nights} / {r.capacity}</td>
                       <td className="p-2 text-right">RM {Number(r.revenue).toFixed(2)}</td>
                     </tr>
                   ))}
