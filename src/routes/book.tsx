@@ -922,7 +922,7 @@ function DetailsStep(props: {
       </form>
 
       <aside className="order-1 lg:order-2">
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card lg:sticky lg:top-6 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
           <img
             src={
               previewCabin
