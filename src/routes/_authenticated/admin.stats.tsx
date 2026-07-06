@@ -52,10 +52,12 @@ function StatsPage() {
       <section className="mx-auto max-w-6xl px-6 py-10 lg:px-10">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="font-display text-3xl text-forest">Reports</h1>
-          <div className="flex gap-2">
-            <MonthInput label="From" value={monthFrom} onChange={setMonthFrom} />
-            <MonthInput label="To" value={monthTo} onChange={setMonthTo} />
-          </div>
+          <MonthRangePicker
+            from={monthFrom}
+            to={monthTo}
+            onFromChange={setMonthFrom}
+            onToChange={setMonthTo}
+          />
         </div>
 
         {stats && (
@@ -112,7 +114,9 @@ function StatsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {((stats as any).byMonth ?? []).map((r: any) => (
+                  {((stats as any).byMonth ?? [])
+                    .filter((r: any) => Number(r.reservations) > 0 || Number(r.nights) > 0)
+                    .map((r: any) => (
                     <tr key={r.month} className="border-t border-border/40">
                       <td className="p-2">
                         {new Date(r.month + "-01").toLocaleString("en-MY", {
@@ -128,7 +132,10 @@ function StatsPage() {
                       <td className="p-2 text-right">RM {Number(r.revenue).toFixed(2)}</td>
                     </tr>
                   ))}
-                  {(!((stats as any).byMonth) || (stats as any).byMonth.length === 0) && (
+                  {(!((stats as any).byMonth) ||
+                    ((stats as any).byMonth ?? []).filter(
+                      (r: any) => Number(r.reservations) > 0 || Number(r.nights) > 0,
+                    ).length === 0) && (
                     <tr><td colSpan={7} className="p-3 text-center text-stone">No data.</td></tr>
                   )}
                 </tbody>
@@ -215,11 +222,123 @@ function Stat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-function MonthInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+function MonthRangePicker({
+  from,
+  to,
+  onFromChange,
+  onToChange,
+}: {
+  from: string;
+  to: string;
+  onFromChange: (v: string) => void;
+  onToChange: (v: string) => void;
+}) {
+  const now = new Date();
+  const years: number[] = [];
+  for (let y = now.getFullYear() - 3; y <= now.getFullYear() + 2; y++) years.push(y);
+
+  const [fy, fm] = from.split("-").map(Number);
+  const [ty, tm] = to.split("-").map(Number);
+
+  function setPart(which: "from" | "to", part: "y" | "m", value: number) {
+    const [y, m] = (which === "from" ? from : to).split("-").map(Number);
+    const ny = part === "y" ? value : y;
+    const nm = part === "m" ? value : m;
+    const iso = `${ny}-${String(nm).padStart(2, "0")}`;
+    (which === "from" ? onFromChange : onToChange)(iso);
+  }
+
+  function quickRange(months: number) {
+    const end = new Date(now.getFullYear(), now.getMonth(), 1);
+    const start = new Date(end.getFullYear(), end.getMonth() - (months - 1), 1);
+    onFromChange(`${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`);
+    onToChange(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}`);
+  }
+
+  const selectCls =
+    "rounded-md border border-border bg-background px-2 py-1.5 text-sm text-forest focus:outline-none focus:ring-2 focus:ring-forest/30";
+
   return (
-    <label className="text-xs text-stone">
-      <span className="mr-2 uppercase tracking-widest">{label}</span>
-      <input type="month" value={value} onChange={(e) => onChange(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-sm" />
-    </label>
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-2">
+        <span className="pl-1 text-[10px] uppercase tracking-widest text-stone">From</span>
+        <select
+          aria-label="From month"
+          value={fm}
+          onChange={(e) => setPart("from", "m", Number(e.target.value))}
+          className={selectCls}
+        >
+          {MONTH_NAMES.map((n, i) => (
+            <option key={n} value={i + 1}>{n}</option>
+          ))}
+        </select>
+        <select
+          aria-label="From year"
+          value={fy}
+          onChange={(e) => setPart("from", "y", Number(e.target.value))}
+          className={selectCls}
+        >
+          {years.map((y) => <option key={y} value={y}>{y}</option>)}
+        </select>
+        <span className="px-1 text-xs uppercase tracking-widest text-stone">to</span>
+        <select
+          aria-label="To month"
+          value={tm}
+          onChange={(e) => setPart("to", "m", Number(e.target.value))}
+          className={selectCls}
+        >
+          {MONTH_NAMES.map((n, i) => (
+            <option key={n} value={i + 1}>{n}</option>
+          ))}
+        </select>
+        <select
+          aria-label="To year"
+          value={ty}
+          onChange={(e) => setPart("to", "y", Number(e.target.value))}
+          className={selectCls}
+        >
+          {years.map((y) => <option key={y} value={y}>{y}</option>)}
+        </select>
+      </div>
+      <div className="flex gap-1 text-xs">
+        <button
+          type="button"
+          onClick={() => quickRange(1)}
+          className="rounded-full border border-border bg-background px-3 py-1.5 hover:bg-coconut"
+        >
+          This month
+        </button>
+        <button
+          type="button"
+          onClick={() => quickRange(3)}
+          className="rounded-full border border-border bg-background px-3 py-1.5 hover:bg-coconut"
+        >
+          3M
+        </button>
+        <button
+          type="button"
+          onClick={() => quickRange(12)}
+          className="rounded-full border border-border bg-background px-3 py-1.5 hover:bg-coconut"
+        >
+          12M
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            onFromChange(`${now.getFullYear()}-01`);
+            onToChange(`${now.getFullYear()}-12`);
+          }}
+          className="rounded-full border border-border bg-background px-3 py-1.5 hover:bg-coconut"
+        >
+          YTD
+        </button>
+      </div>
+    </div>
   );
 }
