@@ -167,11 +167,13 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const isAdmin = router.state.location.pathname.startsWith("/admin");
 
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <OfficialNoticeBanner />
+        {!isAdmin && <OfficialNoticeBanner />}
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <OfficialNoticeFooter />
