@@ -16,6 +16,7 @@ import {
   updateBookingRoomPrices,
 } from "@/lib/booking.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
+import { syncBookingsToOneDrive } from "@/lib/excel-sync.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -61,6 +62,8 @@ function AdminPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [cabins, setCabins] = useState<Array<{ id: string; name: string; cabin_type: string }>>([]);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
 
   async function refresh() {
     setLoading(true);
@@ -149,6 +152,22 @@ function AdminPage() {
     navigate({ to: "/auth" });
   }
 
+  async function onSyncExcel() {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const res = await syncBookingsToOneDrive();
+      setSyncMsg(
+        `Synced ${res.rowCount} row${res.rowCount === 1 ? "" : "s"} to OneDrive (${res.fileName}).`,
+      );
+      if (res.webUrl) window.open(res.webUrl, "_blank", "noopener");
+    } catch (e) {
+      setSyncMsg(e instanceof Error ? e.message : "Sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   const filtered = (status: string) => bookings.filter((b) => b.status === status);
 
   return (
@@ -168,14 +187,28 @@ function AdminPage() {
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-display text-4xl text-forest">Bookings</h1>
           {isAdmin && (
-            <button
-              onClick={() => setShowAdd((v) => !v)}
-              className="rounded-full bg-forest px-5 py-2 text-xs font-medium uppercase tracking-widest text-coconut hover:bg-forest/90"
-            >
-              {showAdd ? "Close" : "+ Add manual booking"}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={onSyncExcel}
+                disabled={syncing}
+                className="rounded-full border border-forest px-5 py-2 text-xs font-medium uppercase tracking-widest text-forest hover:bg-coconut disabled:opacity-60"
+              >
+                {syncing ? "Syncing…" : "Sync to Excel"}
+              </button>
+              <button
+                onClick={() => setShowAdd((v) => !v)}
+                className="rounded-full bg-forest px-5 py-2 text-xs font-medium uppercase tracking-widest text-coconut hover:bg-forest/90"
+              >
+                {showAdd ? "Close" : "+ Add manual booking"}
+              </button>
+            </div>
           )}
         </div>
+        {syncMsg && (
+          <p className="mt-3 rounded-md border border-border bg-coconut/60 px-4 py-2 text-xs text-forest">
+            {syncMsg}
+          </p>
+        )}
         {showAdd && isAdmin && (
           <ManualBookingForm
             cabins={cabins}
