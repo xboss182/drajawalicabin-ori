@@ -64,6 +64,8 @@ function AdminPage() {
   const [cabins, setCabins] = useState<Array<{ id: string; name: string; cabin_type: string }>>([]);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -160,11 +162,23 @@ function AdminPage() {
       setSyncMsg(
         `Synced ${res.rowCount} row${res.rowCount === 1 ? "" : "s"} to OneDrive (${res.fileName}).`,
       );
-      if (res.webUrl) window.open(res.webUrl, "_blank", "noopener");
+      setShareUrl(res.shareUrl ?? null);
+      setCopied(false);
     } catch (e) {
       setSyncMsg(e instanceof Error ? e.message : "Sync failed");
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function copyShareUrl() {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
     }
   }
 
@@ -208,6 +222,25 @@ function AdminPage() {
           <p className="mt-3 rounded-md border border-border bg-coconut/60 px-4 py-2 text-xs text-forest">
             {syncMsg}
           </p>
+        )}
+        {shareUrl && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-border bg-coconut/60 px-4 py-2 text-xs text-forest">
+            <span className="uppercase tracking-widest">Share link:</span>
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="truncate max-w-[420px] underline"
+            >
+              {shareUrl}
+            </a>
+            <button
+              onClick={copyShareUrl}
+              className="ml-auto rounded-full border border-forest px-3 py-1 text-[11px] uppercase tracking-widest text-forest hover:bg-coconut"
+            >
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
         )}
         {showAdd && isAdmin && (
           <ManualBookingForm
