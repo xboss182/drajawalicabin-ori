@@ -144,12 +144,37 @@ export const syncBookingsToOneDrive = createServerFn({ method: "POST" })
     const item = (await res.json().catch(() => ({}))) as {
       webUrl?: string;
       name?: string;
+      id?: string;
     };
+
+    // Create (or fetch existing) anonymous view link so other admins can open it.
+    let shareUrl: string | null = null;
+    if (item.id) {
+      const linkRes = await fetch(
+        `${GATEWAY_URL}/me/drive/items/${item.id}/createLink`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${lovableKey}`,
+            "X-Connection-Api-Key": connKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ type: "view", scope: "anonymous" }),
+        },
+      );
+      if (linkRes.ok) {
+        const linkData = (await linkRes.json().catch(() => ({}))) as {
+          link?: { webUrl?: string };
+        };
+        shareUrl = linkData.link?.webUrl ?? null;
+      }
+    }
 
     return {
       ok: true as const,
       fileName: item.name ?? FILE_NAME,
       webUrl: item.webUrl ?? null,
+      shareUrl,
       rowCount,
     };
   });
