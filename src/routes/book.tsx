@@ -795,7 +795,20 @@ function DetailsStep(props: {
         <div className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
           <Field label={bt.f.checkin} type="date" value={checkin} min={todayStr} onChange={setCheckin} />
           <Field label={bt.f.checkout} type="date" value={checkout} min={checkin} onChange={setCheckout} />
-          <Select label={bt.f.guests} value={guests} onChange={setGuests} options={["1","2","3","4","5","6+"]} />
+          <Field
+            label={`${bt.f.guests} (adults)`}
+            type="number"
+            value={guests}
+            min="1"
+            onChange={(v) => setGuests(String(Math.max(1, Number(v) || 1)))}
+          />
+          <Field
+            label="Children under 12"
+            type="number"
+            value={kids}
+            min="0"
+            onChange={(v) => setKids(String(Math.max(0, Number(v) || 0)))}
+          />
           <div className="flex flex-col gap-1 bg-card px-5 py-4 text-left">
             <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{bt.f.rooms}</span>
             <span className="text-base text-foreground">
