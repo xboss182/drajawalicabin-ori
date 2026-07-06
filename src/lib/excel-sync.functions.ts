@@ -67,51 +67,17 @@ export const syncBookingsToOneDrive = createServerFn({ method: "POST" })
     const { data, error } = await supabaseAdmin
       .from("booking_requests")
       .select(
-        "id, payment_reference, created_at, guest_name, phone, vehicle_type, vehicle_number, guests, status, nights, num_rooms, comforter_total, check_in, check_out, deposit_amount, total_amount, notes, relationship, room_type, cabins(name)",
+        "id, payment_reference, created_at, guest_name, phone, vehicle_type, vehicle_number, guests, status, nights, num_rooms, comforter_total, check_in, check_out, deposit_amount, total_amount, notes, relationship, room_type, booking_group_id, cabins(name)",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 
     const lines: string[] = [toRow(HEADERS)];
     let rowCount = 0;
-    for (const b of data ?? []) {
-      const nights = Number(b.nights ?? 0);
-      const numRooms = Number(b.num_rooms ?? 1);
-      const comforterTotal = Number(b.comforter_total ?? 0);
-      const comforterCount =
-        nights > 0 ? Math.round(comforterTotal / (20 * nights)) : 0;
-      const occupancy = numRooms * nights;
-      const cabinName =
-        (b as unknown as { cabins?: { name?: string } | null }).cabins?.name ??
-        b.room_type ?? "";
-      for (let i = 1; i <= Math.max(1, numRooms); i++) {
-        const roomLabel = numRooms > 1 ? `${cabinName} #${i}` : cabinName;
-        lines.push(
-          toRow([
-            b.payment_reference ?? b.id.slice(0, 8),
-            b.guest_name,
-            "",
-            b.phone,
-            b.vehicle_type ?? "",
-            b.vehicle_number ?? "",
-            depositPaid(b.status as string),
-            roomPaymentPaid(b.status as string),
-            b.guests,
-            b.relationship ?? "",
-            nights,
-            numRooms,
-            roomLabel,
-            comforterCount,
-            occupancy,
-            b.check_in,
-            b.check_out,
-            b.deposit_amount ?? "",
-            b.total_amount ?? "",
-            b.notes ?? "",
-          ]),
-        );
-        rowCount++;
-      }
+    const groups = groupBookings(data ?? []);
+    for (const g of groups) {
+      lines.push(toRow(groupToCells(g)));
+      rowCount++;
     }
     const body = "\uFEFF" + lines.join("\r\n") + "\r\n";
 
