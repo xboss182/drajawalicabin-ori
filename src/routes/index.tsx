@@ -25,10 +25,6 @@ import toilet2paxAsset from "@/assets/toilet-2pax.png.asset.json";
 import toilet3paxAsset from "@/assets/toilet-3pax.png.asset.json";
 import toilet4paxAsset from "@/assets/toilet-4pax.png.asset.json";
 import galleryCabin from "@/assets/gallery/cabin-exterior-01.jpg.asset.json";
-import galleryBbq from "@/assets/gallery/bbq-pavilion-01.jpg.asset.json";
-import galleryPool from "@/assets/gallery/pool-01.jpg.asset.json";
-import galleryCommon from "@/assets/gallery/common-area-01.jpg.asset.json";
-import galleryInterior from "@/assets/gallery/cabin-interior-03.jpg.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
@@ -676,77 +672,26 @@ function WhyStay() {
           </div>
         </div>
 
-        {/* Right: gallery mosaic teaser */}
-        <aside className="lg:pl-4">
-          <div className="grid h-full grid-cols-4 grid-rows-6 gap-2 sm:gap-3">
-            <Link
-              to="/gallery"
-              className="group relative col-span-3 row-span-4 overflow-hidden rounded-lg bg-muted"
-              aria-label="View full gallery"
-            >
+        {/* Right: single gallery image */}
+        <aside className="flex items-center lg:pl-4">
+          <Link
+            to="/gallery"
+            className="group relative w-full overflow-hidden rounded-2xl bg-muted"
+            aria-label="View full gallery"
+          >
+            <div className="aspect-[4/5] sm:aspect-[3/4]">
               <img
                 src={galleryCabin.url}
-                alt="Cabin exterior with tropical landscaping"
+                alt="Riverside cabin exterior at Rajawali D'Cabin Chalet"
                 loading="lazy"
                 className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
               />
-              <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
-                Cabins
-              </span>
-            </Link>
-            <Link
-              to="/gallery"
-              className="group relative col-span-1 row-span-2 overflow-hidden rounded-lg bg-muted"
-              aria-label="View full gallery"
-            >
-              <img
-                src={galleryPool.url}
-                alt="Splash pool"
-                loading="lazy"
-                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-              />
-            </Link>
-            <Link
-              to="/gallery"
-              className="group relative col-span-1 row-span-2 overflow-hidden rounded-lg bg-muted"
-              aria-label="View full gallery"
-            >
-              <img
-                src={galleryInterior.url}
-                alt="Cabin interior"
-                loading="lazy"
-                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-              />
-            </Link>
-            <Link
-              to="/gallery"
-              className="group relative col-span-2 row-span-2 overflow-hidden rounded-lg bg-muted"
-              aria-label="View full gallery"
-            >
-              <img
-                src={galleryBbq.url}
-                alt="BBQ pavilion"
-                loading="lazy"
-                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-              />
-            </Link>
-            <Link
-              to="/gallery"
-              className="group relative col-span-2 row-span-2 overflow-hidden rounded-lg bg-forest text-coconut"
-              aria-label="View full gallery"
-            >
-              <img
-                src={galleryCommon.url}
-                alt="Common area"
-                loading="lazy"
-                className="h-full w-full object-cover opacity-40 transition duration-700 group-hover:opacity-50"
-              />
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <p className="text-[10px] uppercase tracking-[0.3em] opacity-80">Gallery</p>
-                <p className="mt-1 font-display text-lg leading-tight">View all photos →</p>
-              </div>
-            </Link>
-          </div>
+            </div>
+            <span className="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full bg-coconut/90 px-4 py-1.5 text-[11px] uppercase tracking-[0.25em] text-forest backdrop-blur">
+              Gallery
+              <span className="text-forest/70" aria-hidden>→</span>
+            </span>
+          </Link>
         </aside>
       </div>
     </section>
