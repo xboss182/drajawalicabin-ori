@@ -185,6 +185,7 @@ function Nav() {
           <a href="#stay" className="hover:text-coconut">{t.nav.cabins}</a>
           <a href="#about" className="hover:text-coconut">{t.nav.about}</a>
           <a href="#nearby" className="hover:text-coconut">{t.nav.nearby}</a>
+          <Link to="/gallery" className="hover:text-coconut">Gallery</Link>
           <a href="#book" className="hover:text-coconut">{t.nav.book}</a>
           <Link
             to="/manage-booking"
