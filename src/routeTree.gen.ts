@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ManageBookingRouteImport } from './routes/manage-booking'
+import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FindBookingRouteImport } from './routes/find-booking'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as BookRouteImport } from './routes/book'
@@ -50,6 +51,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ManageBookingRoute = ManageBookingRouteImport.update({
   id: '/manage-booking',
   path: '/manage-booking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FindBookingRoute = FindBookingRouteImport.update({
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/book': typeof BookRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/find-booking': typeof FindBookingRoute
+  '/gallery': typeof GalleryRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -218,6 +225,7 @@ export interface FileRoutesByTo {
   '/book': typeof BookRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/find-booking': typeof FindBookingRoute
+  '/gallery': typeof GalleryRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -247,6 +255,7 @@ export interface FileRoutesById {
   '/book': typeof BookRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/find-booking': typeof FindBookingRoute
+  '/gallery': typeof GalleryRoute
   '/manage-booking': typeof ManageBookingRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/checkout'
     | '/find-booking'
+    | '/gallery'
     | '/manage-booking'
     | '/sitemap.xml'
     | '/unsubscribe'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/checkout'
     | '/find-booking'
+    | '/gallery'
     | '/manage-booking'
     | '/sitemap.xml'
     | '/unsubscribe'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/book'
     | '/checkout'
     | '/find-booking'
+    | '/gallery'
     | '/manage-booking'
     | '/sitemap.xml'
     | '/unsubscribe'
@@ -363,6 +375,7 @@ export interface RootRouteChildren {
   BookRoute: typeof BookRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
   FindBookingRoute: typeof FindBookingRoute
+  GalleryRoute: typeof GalleryRoute
   ManageBookingRoute: typeof ManageBookingRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
@@ -397,6 +410,13 @@ declare module '@tanstack/react-router' {
       path: '/manage-booking'
       fullPath: '/manage-booking'
       preLoaderRoute: typeof ManageBookingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/find-booking': {
@@ -625,6 +645,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookRoute: BookRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
   FindBookingRoute: FindBookingRoute,
+  GalleryRoute: GalleryRoute,
   ManageBookingRoute: ManageBookingRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   UnsubscribeRoute: UnsubscribeRoute,
