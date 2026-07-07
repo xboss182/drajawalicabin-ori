@@ -680,7 +680,7 @@ function WhyStay() {
             className="group relative overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
             aria-label="View pool in gallery"
           >
-            <div className="aspect-[4/3]">
+            <div className="aspect-[4/2.55]">
               <img
                 src={galleryPool.url}
                 alt="Splash pool at Rajawali D'Cabin Chalet"
@@ -702,7 +702,7 @@ function WhyStay() {
             className="group relative overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
             aria-label="View BBQ area in gallery"
           >
-            <div className="aspect-[4/3]">
+            <div className="aspect-[4/2.55]">
               <img
                 src={galleryBbq.url}
                 alt="BBQ pavilion at Rajawali D'Cabin Chalet"
