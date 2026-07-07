@@ -11,6 +11,11 @@ import cabin01 from "@/assets/gallery/cabin-exterior-01.jpg.asset.json";
 import cabin02 from "@/assets/gallery/cabin-exterior-02.jpg.asset.json";
 import cabin03 from "@/assets/gallery/cabin-exterior-03.jpg.asset.json";
 import cabin04 from "@/assets/gallery/cabin-exterior-04.jpg.asset.json";
+import cabinInt01 from "@/assets/gallery/cabin-interior-01.jpg.asset.json";
+import cabinInt02 from "@/assets/gallery/cabin-interior-02.jpg.asset.json";
+import cabinInt03 from "@/assets/gallery/cabin-interior-03.jpg.asset.json";
+import cabinInt04 from "@/assets/gallery/cabin-interior-04.jpg.asset.json";
+import cabinInt05 from "@/assets/gallery/cabin-interior-05.jpg.asset.json";
 import parking01 from "@/assets/gallery/parking-01.jpg.asset.json";
 import parking02 from "@/assets/gallery/parking-02.jpg.asset.json";
 import motoParking from "@/assets/gallery/motorcycle-parking-01.jpg.asset.json";
@@ -42,6 +47,11 @@ const CATEGORIES: Category[] = [
       { url: cabin02.url, alt: "Row of blue cabins under clear sky" },
       { url: cabin03.url, alt: "Cabin walkway lined with heliconia plants" },
       { url: cabin04.url, alt: "Cabin garden path" },
+      { url: cabinInt05.url, alt: "Covered cabin walkway and porch" },
+      { url: cabinInt01.url, alt: "Queen bedroom interior with wall fan" },
+      { url: cabinInt02.url, alt: "Twin beds inside a cabin" },
+      { url: cabinInt03.url, alt: "Cabin room with queen bed and window" },
+      { url: cabinInt04.url, alt: "Twin bed cabin interior" },
     ],
   },
   {
