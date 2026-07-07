@@ -98,13 +98,6 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-const VIDEOS = [
-  { url: tour01.url, label: "Chalet walkthrough" },
-  { url: tour02.url, label: "Short clip" },
-  { url: tour03.url, label: "Grounds tour" },
-  { url: tour04.url, label: "Cabins overview" },
-  { url: tour05.url, label: "Full property tour" },
-];
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
@@ -184,53 +177,29 @@ function GalleryPage() {
               {c.label}
             </Chip>
           ))}
-          <Chip active={active === "videos"} onClick={() => setActive("videos")}>
-            Videos
-          </Chip>
         </div>
 
         {/* Content */}
-        {active === "videos" ? (
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {VIDEOS.map((v) => (
-              <figure
-                key={v.url}
-                className="overflow-hidden rounded-lg border border-border bg-card"
-              >
-                <video
-                  src={v.url}
-                  controls
-                  preload="metadata"
-                  className="aspect-video w-full bg-black object-contain"
-                />
-                <figcaption className="px-3 py-2 text-xs text-muted-foreground">
-                  {v.label}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {visible.map((p, i) => (
-              <button
-                key={`${p.url}-${i}`}
-                type="button"
-                onClick={() => setLightbox(p)}
-                className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <img
-                  src={p.url}
-                  alt={p.alt}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
-                  {p.cat}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {visible.map((p, i) => (
+            <button
+              key={`${p.url}-${i}`}
+              type="button"
+              onClick={() => setLightbox(p)}
+              className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <img
+                src={p.url}
+                alt={p.alt}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
+                {p.cat}
+              </span>
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* Lightbox */}
