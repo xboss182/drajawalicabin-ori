@@ -24,7 +24,8 @@ import nearbyCraftAsset from "@/assets/nearby-craft.jpg.asset.json";
 import toilet2paxAsset from "@/assets/toilet-2pax.png.asset.json";
 import toilet3paxAsset from "@/assets/toilet-3pax.png.asset.json";
 import toilet4paxAsset from "@/assets/toilet-4pax.png.asset.json";
-import galleryCabin from "@/assets/gallery/cabin-exterior-01.jpg.asset.json";
+import galleryPool from "@/assets/gallery/pool-01.jpg.asset.json";
+import galleryBbq from "@/assets/gallery/bbq-pavilion-01.jpg.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
@@ -672,24 +673,40 @@ function WhyStay() {
           </div>
         </div>
 
-        {/* Right: single gallery image */}
-        <aside className="flex items-center lg:pl-4">
+        {/* Right: two stacked gallery boxes */}
+        <aside className="flex flex-col gap-4 lg:pl-4">
           <Link
             to="/gallery"
-            className="group relative w-full overflow-hidden rounded-2xl bg-muted"
-            aria-label="View full gallery"
+            className="group relative overflow-hidden rounded-2xl bg-muted"
+            aria-label="View pool in gallery"
           >
-            <div className="aspect-[4/5] sm:aspect-[3/4]">
+            <div className="aspect-[4/3]">
               <img
-                src={galleryCabin.url}
-                alt="Riverside cabin exterior at Rajawali D'Cabin Chalet"
+                src={galleryPool.url}
+                alt="Splash pool at Rajawali D'Cabin Chalet"
                 loading="lazy"
                 className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
               />
             </div>
-            <span className="absolute bottom-4 left-4 inline-flex items-center gap-2 rounded-full bg-coconut/90 px-4 py-1.5 text-[11px] uppercase tracking-[0.25em] text-forest backdrop-blur">
-              Gallery
-              <span className="text-forest/70" aria-hidden>→</span>
+            <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
+              Pool
+            </span>
+          </Link>
+          <Link
+            to="/gallery"
+            className="group relative overflow-hidden rounded-2xl bg-muted"
+            aria-label="View BBQ area in gallery"
+          >
+            <div className="aspect-[4/3]">
+              <img
+                src={galleryBbq.url}
+                alt="BBQ pavilion at Rajawali D'Cabin Chalet"
+                loading="lazy"
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              />
+            </div>
+            <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
+              BBQ area
             </span>
           </Link>
         </aside>
