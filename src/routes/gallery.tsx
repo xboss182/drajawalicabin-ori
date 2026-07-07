@@ -106,7 +106,7 @@ export const Route = createFileRoute("/gallery")({
       {
         name: "description",
         content:
-          "Photos and videos of Rajawali D'Cabin Chalet in Chendering, Kuala Terengganu — cabins, BBQ pavilion, pool, parking and nearby landmarks.",
+          "Photos of Rajawali D'Cabin Chalet in Chendering, Kuala Terengganu — cabins, BBQ pavilion, pool, parking and nearby landmarks.",
       },
       { property: "og:title", content: "Gallery — Rajawali D'Cabin Chalet" },
       {
