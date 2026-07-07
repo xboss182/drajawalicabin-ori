@@ -655,36 +655,39 @@ function WhyStay() {
   const { t } = useLanguage();
   return (
     <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
-      <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
-      <h2 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">
-        {t.why.title1}<br />{t.why.title2}
-      </h2>
-
-      <div className="grid items-stretch gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+      <div className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         {/* Left: reasons */}
-        <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2">
-          {t.why.reasons.map((r, i) => (
-            <div key={r.title} className="border-t border-border pt-5">
-              <p className="text-xs text-stone">0{i + 1}</p>
-              <h3 className="mt-2 font-display text-lg text-forest">{r.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-foreground/70">{r.body}</p>
-            </div>
-          ))}
+        <div>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
+          <h2 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">
+            {t.why.title1}<br />{t.why.title2}
+          </h2>
+          <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2">
+            {t.why.reasons.map((r, i) => (
+              <div key={r.title} className="border-t border-border pt-5">
+                <p className="text-xs text-stone">0{i + 1}</p>
+                <h3 className="mt-2 font-display text-lg text-forest">{r.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/70">{r.body}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Right: two stacked gallery boxes, matched to reasons grid height */}
-        <aside className="flex min-h-0 flex-col gap-4 lg:pl-4">
+        {/* Right: two stacked gallery boxes */}
+        <aside className="flex flex-col gap-4 lg:pl-4">
           <Link
             to="/gallery"
-            className="group relative flex min-h-[200px] flex-1 overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest lg:min-h-0"
+            className="group relative overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
             aria-label="View pool in gallery"
           >
-            <img
-              src={galleryPool.url}
-              alt="Splash pool at Rajawali D'Cabin Chalet"
-              loading="lazy"
-              className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-            />
+            <div className="aspect-[4/3]">
+              <img
+                src={galleryPool.url}
+                alt="Splash pool at Rajawali D'Cabin Chalet"
+                loading="lazy"
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              />
+            </div>
             <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
               Pool
             </span>
@@ -696,15 +699,17 @@ function WhyStay() {
           </Link>
           <Link
             to="/gallery"
-            className="group relative flex min-h-[200px] flex-1 overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest lg:min-h-0"
+            className="group relative overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
             aria-label="View BBQ area in gallery"
           >
-            <img
-              src={galleryBbq.url}
-              alt="BBQ pavilion at Rajawali D'Cabin Chalet"
-              loading="lazy"
-              className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-            />
+            <div className="aspect-[4/3]">
+              <img
+                src={galleryBbq.url}
+                alt="BBQ pavilion at Rajawali D'Cabin Chalet"
+                loading="lazy"
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              />
+            </div>
             <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
               BBQ area
             </span>
@@ -715,7 +720,6 @@ function WhyStay() {
             </span>
           </Link>
         </aside>
-
       </div>
 
       <p className="mt-6 text-center text-sm text-stone lg:text-left">
@@ -726,6 +730,7 @@ function WhyStay() {
     </section>
   );
 }
+
 
 
 
