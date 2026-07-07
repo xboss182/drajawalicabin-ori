@@ -655,7 +655,7 @@ function WhyStay() {
   const { t } = useLanguage();
   return (
     <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
-      <div className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+      <div className="grid items-stretch gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         {/* Left: reasons */}
         <div>
           <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
@@ -673,40 +673,46 @@ function WhyStay() {
           </div>
         </div>
 
-        {/* Right: two stacked gallery boxes */}
-        <aside className="flex flex-col gap-4 lg:pl-4">
+        {/* Right: two stacked gallery boxes, height matched to reasons column */}
+        <aside className="flex min-h-0 flex-col gap-4 lg:pl-4">
           <Link
             to="/gallery"
-            className="group relative overflow-hidden rounded-2xl bg-muted"
+            className="group relative flex min-h-0 flex-1 overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
             aria-label="View pool in gallery"
           >
-            <div className="aspect-[4/3]">
-              <img
-                src={galleryPool.url}
-                alt="Splash pool at Rajawali D'Cabin Chalet"
-                loading="lazy"
-                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-              />
-            </div>
+            <img
+              src={galleryPool.url}
+              alt="Splash pool at Rajawali D'Cabin Chalet"
+              loading="lazy"
+              className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+            />
             <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
               Pool
+            </span>
+            <span className="absolute inset-0 flex items-center justify-center bg-forest/0 text-coconut opacity-0 transition duration-300 group-hover:bg-forest/30 group-hover:opacity-100">
+              <span className="rounded-full bg-coconut px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-forest">
+                View gallery
+              </span>
             </span>
           </Link>
           <Link
             to="/gallery"
-            className="group relative overflow-hidden rounded-2xl bg-muted"
+            className="group relative flex min-h-0 flex-1 overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
             aria-label="View BBQ area in gallery"
           >
-            <div className="aspect-[4/3]">
-              <img
-                src={galleryBbq.url}
-                alt="BBQ pavilion at Rajawali D'Cabin Chalet"
-                loading="lazy"
-                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-              />
-            </div>
+            <img
+              src={galleryBbq.url}
+              alt="BBQ pavilion at Rajawali D'Cabin Chalet"
+              loading="lazy"
+              className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+            />
             <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
               BBQ area
+            </span>
+            <span className="absolute inset-0 flex items-center justify-center bg-forest/0 text-coconut opacity-0 transition duration-300 group-hover:bg-forest/30 group-hover:opacity-100">
+              <span className="rounded-full bg-coconut px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-forest">
+                View gallery
+              </span>
             </span>
           </Link>
         </aside>
@@ -714,6 +720,7 @@ function WhyStay() {
     </section>
   );
 }
+
 
 /* ---------------- Nearby ---------------- */
 function NearbySection() {
