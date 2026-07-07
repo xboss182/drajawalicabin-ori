@@ -655,25 +655,24 @@ function WhyStay() {
   const { t } = useLanguage();
   return (
     <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
-      <div className="grid items-stretch gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+      <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
+      <h2 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">
+        {t.why.title1}<br />{t.why.title2}
+      </h2>
+
+      <div className="grid items-stretch gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         {/* Left: reasons */}
-        <div>
-          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
-          <h2 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">
-            {t.why.title1}<br />{t.why.title2}
-          </h2>
-          <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2">
-            {t.why.reasons.map((r, i) => (
-              <div key={r.title} className="border-t border-border pt-5">
-                <p className="text-xs text-stone">0{i + 1}</p>
-                <h3 className="mt-2 font-display text-lg text-forest">{r.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-foreground/70">{r.body}</p>
-              </div>
-            ))}
-          </div>
+        <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2">
+          {t.why.reasons.map((r, i) => (
+            <div key={r.title} className="border-t border-border pt-5">
+              <p className="text-xs text-stone">0{i + 1}</p>
+              <h3 className="mt-2 font-display text-lg text-forest">{r.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-foreground/70">{r.body}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Right: two stacked gallery boxes, height matched to reasons column */}
+        {/* Right: two stacked gallery boxes, matched to reasons grid height */}
         <aside className="flex min-h-0 flex-col gap-4 lg:pl-4">
           <Link
             to="/gallery"
@@ -691,7 +690,7 @@ function WhyStay() {
             </span>
             <span className="absolute inset-0 flex items-center justify-center bg-forest/0 text-coconut opacity-0 transition duration-300 group-hover:bg-forest/30 group-hover:opacity-100">
               <span className="rounded-full bg-coconut px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-forest">
-                View gallery
+                View gallery →
               </span>
             </span>
           </Link>
@@ -711,15 +710,22 @@ function WhyStay() {
             </span>
             <span className="absolute inset-0 flex items-center justify-center bg-forest/0 text-coconut opacity-0 transition duration-300 group-hover:bg-forest/30 group-hover:opacity-100">
               <span className="rounded-full bg-coconut px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-forest">
-                View gallery
+                View gallery →
               </span>
             </span>
           </Link>
         </aside>
       </div>
+
+      <p className="mt-6 text-center text-sm text-stone lg:text-left">
+        <Link to="/gallery" className="inline-flex items-center gap-1 text-forest underline-offset-4 hover:underline">
+          Click to open the full gallery →
+        </Link>
+      </p>
     </section>
   );
 }
+
 
 
 /* ---------------- Nearby ---------------- */
