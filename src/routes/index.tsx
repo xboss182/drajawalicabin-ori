@@ -24,6 +24,11 @@ import nearbyCraftAsset from "@/assets/nearby-craft.jpg.asset.json";
 import toilet2paxAsset from "@/assets/toilet-2pax.png.asset.json";
 import toilet3paxAsset from "@/assets/toilet-3pax.png.asset.json";
 import toilet4paxAsset from "@/assets/toilet-4pax.png.asset.json";
+import galleryCabin from "@/assets/gallery/cabin-exterior-01.jpg.asset.json";
+import galleryBbq from "@/assets/gallery/bbq-pavilion-01.jpg.asset.json";
+import galleryPool from "@/assets/gallery/pool-01.jpg.asset.json";
+import galleryCommon from "@/assets/gallery/common-area-01.jpg.asset.json";
+import galleryInterior from "@/assets/gallery/cabin-interior-03.jpg.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
