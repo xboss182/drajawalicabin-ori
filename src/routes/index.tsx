@@ -676,7 +676,7 @@ function WhyStay() {
         <aside className="flex min-h-0 flex-col gap-4 lg:pl-4">
           <Link
             to="/gallery"
-            className="group relative flex min-h-0 flex-1 overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+            className="group relative flex min-h-[200px] flex-1 overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest lg:min-h-0"
             aria-label="View pool in gallery"
           >
             <img
@@ -696,7 +696,7 @@ function WhyStay() {
           </Link>
           <Link
             to="/gallery"
-            className="group relative flex min-h-0 flex-1 overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+            className="group relative flex min-h-[200px] flex-1 overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest lg:min-h-0"
             aria-label="View BBQ area in gallery"
           >
             <img
@@ -715,6 +715,7 @@ function WhyStay() {
             </span>
           </Link>
         </aside>
+
       </div>
 
       <p className="mt-6 text-center text-sm text-stone lg:text-left">
