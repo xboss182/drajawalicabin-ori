@@ -24,6 +24,11 @@ import nearbyCraftAsset from "@/assets/nearby-craft.jpg.asset.json";
 import toilet2paxAsset from "@/assets/toilet-2pax.png.asset.json";
 import toilet3paxAsset from "@/assets/toilet-3pax.png.asset.json";
 import toilet4paxAsset from "@/assets/toilet-4pax.png.asset.json";
+import galleryCabin from "@/assets/gallery/cabin-exterior-01.jpg.asset.json";
+import galleryBbq from "@/assets/gallery/bbq-pavilion-01.jpg.asset.json";
+import galleryPool from "@/assets/gallery/pool-01.jpg.asset.json";
+import galleryCommon from "@/assets/gallery/common-area-01.jpg.asset.json";
+import galleryInterior from "@/assets/gallery/cabin-interior-03.jpg.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
@@ -653,18 +658,96 @@ function WhyStay() {
   const { t } = useLanguage();
   return (
     <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
-      <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
-      <h2 className="mb-10 max-w-3xl font-display text-4xl leading-tight sm:text-5xl">
-        {t.why.title1}<br />{t.why.title2}
-      </h2>
-      <div className="grid gap-x-10 gap-y-10 sm:grid-cols-2 md:grid-cols-3">
-        {t.why.reasons.map((r, i) => (
-          <div key={r.title} className="border-t border-border pt-6">
-            <p className="text-xs text-stone">0{i + 1}</p>
-            <h3 className="mt-3 font-display text-xl text-forest">{r.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-foreground/70">{r.body}</p>
+      <div className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+        {/* Left: reasons */}
+        <div>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
+          <h2 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">
+            {t.why.title1}<br />{t.why.title2}
+          </h2>
+          <div className="grid gap-x-8 gap-y-8 sm:grid-cols-2">
+            {t.why.reasons.map((r, i) => (
+              <div key={r.title} className="border-t border-border pt-5">
+                <p className="text-xs text-stone">0{i + 1}</p>
+                <h3 className="mt-2 font-display text-lg text-forest">{r.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/70">{r.body}</p>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {/* Right: gallery mosaic teaser */}
+        <aside className="lg:pl-4">
+          <div className="grid h-full grid-cols-4 grid-rows-6 gap-2 sm:gap-3">
+            <Link
+              to="/gallery"
+              className="group relative col-span-3 row-span-4 overflow-hidden rounded-lg bg-muted"
+              aria-label="View full gallery"
+            >
+              <img
+                src={galleryCabin.url}
+                alt="Cabin exterior with tropical landscaping"
+                loading="lazy"
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              />
+              <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
+                Cabins
+              </span>
+            </Link>
+            <Link
+              to="/gallery"
+              className="group relative col-span-1 row-span-2 overflow-hidden rounded-lg bg-muted"
+              aria-label="View full gallery"
+            >
+              <img
+                src={galleryPool.url}
+                alt="Splash pool"
+                loading="lazy"
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              />
+            </Link>
+            <Link
+              to="/gallery"
+              className="group relative col-span-1 row-span-2 overflow-hidden rounded-lg bg-muted"
+              aria-label="View full gallery"
+            >
+              <img
+                src={galleryInterior.url}
+                alt="Cabin interior"
+                loading="lazy"
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              />
+            </Link>
+            <Link
+              to="/gallery"
+              className="group relative col-span-2 row-span-2 overflow-hidden rounded-lg bg-muted"
+              aria-label="View full gallery"
+            >
+              <img
+                src={galleryBbq.url}
+                alt="BBQ pavilion"
+                loading="lazy"
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+              />
+            </Link>
+            <Link
+              to="/gallery"
+              className="group relative col-span-2 row-span-2 overflow-hidden rounded-lg bg-forest text-coconut"
+              aria-label="View full gallery"
+            >
+              <img
+                src={galleryCommon.url}
+                alt="Common area"
+                loading="lazy"
+                className="h-full w-full object-cover opacity-40 transition duration-700 group-hover:opacity-50"
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <p className="text-[10px] uppercase tracking-[0.3em] opacity-80">Gallery</p>
+                <p className="mt-1 font-display text-lg leading-tight">View all photos →</p>
+              </div>
+            </Link>
+          </div>
+        </aside>
       </div>
     </section>
   );
