@@ -24,11 +24,6 @@ import landmark02 from "@/assets/gallery/landmark-02.jpg.asset.json";
 import guests01 from "@/assets/gallery/guests-01.jpg.asset.json";
 import guests02 from "@/assets/gallery/guests-02.jpg.asset.json";
 import guests03 from "@/assets/gallery/guests-03.jpg.asset.json";
-import tour01 from "@/assets/gallery/tour-01.mp4.asset.json";
-import tour02 from "@/assets/gallery/tour-02.mp4.asset.json";
-import tour03 from "@/assets/gallery/tour-03.mp4.asset.json";
-import tour04 from "@/assets/gallery/tour-04.mp4.asset.json";
-import tour05 from "@/assets/gallery/tour-05.mp4.asset.json";
 
 type Category = {
   id: string;
@@ -103,13 +98,6 @@ const CATEGORIES: Category[] = [
   },
 ];
 
-const VIDEOS = [
-  { url: tour01.url, label: "Chalet walkthrough" },
-  { url: tour02.url, label: "Short clip" },
-  { url: tour03.url, label: "Grounds tour" },
-  { url: tour04.url, label: "Cabins overview" },
-  { url: tour05.url, label: "Full property tour" },
-];
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
@@ -118,7 +106,7 @@ export const Route = createFileRoute("/gallery")({
       {
         name: "description",
         content:
-          "Photos and videos of Rajawali D'Cabin Chalet in Chendering, Kuala Terengganu — cabins, BBQ pavilion, pool, parking and nearby landmarks.",
+          "Photos of Rajawali D'Cabin Chalet in Chendering, Kuala Terengganu — cabins, BBQ pavilion, pool, parking and nearby landmarks.",
       },
       { property: "og:title", content: "Gallery — Rajawali D'Cabin Chalet" },
       {
@@ -189,53 +177,29 @@ function GalleryPage() {
               {c.label}
             </Chip>
           ))}
-          <Chip active={active === "videos"} onClick={() => setActive("videos")}>
-            Videos
-          </Chip>
         </div>
 
         {/* Content */}
-        {active === "videos" ? (
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {VIDEOS.map((v) => (
-              <figure
-                key={v.url}
-                className="overflow-hidden rounded-lg border border-border bg-card"
-              >
-                <video
-                  src={v.url}
-                  controls
-                  preload="metadata"
-                  className="aspect-video w-full bg-black object-contain"
-                />
-                <figcaption className="px-3 py-2 text-xs text-muted-foreground">
-                  {v.label}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {visible.map((p, i) => (
-              <button
-                key={`${p.url}-${i}`}
-                type="button"
-                onClick={() => setLightbox(p)}
-                className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              >
-                <img
-                  src={p.url}
-                  alt={p.alt}
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
-                  {p.cat}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {visible.map((p, i) => (
+            <button
+              key={`${p.url}-${i}`}
+              type="button"
+              onClick={() => setLightbox(p)}
+              className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <img
+                src={p.url}
+                alt={p.alt}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
+                {p.cat}
+              </span>
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* Lightbox */}

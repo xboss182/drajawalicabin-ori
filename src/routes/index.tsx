@@ -722,11 +722,6 @@ function WhyStay() {
         </aside>
       </div>
 
-      <p className="mt-6 text-center text-sm text-stone lg:text-left">
-        <Link to="/gallery" className="inline-flex items-center gap-1 text-forest underline-offset-4 hover:underline">
-          Click to open the full gallery →
-        </Link>
-      </p>
     </section>
   );
 }
