@@ -115,7 +115,7 @@ export const Route = createFileRoute("/gallery")({
       {
         name: "description",
         content:
-          "Photos of Rajawali D'Cabin Chalet in Chendering, Kuala Terengganu — cabins, BBQ pavilion, pool, parking and nearby landmarks.",
+          "Photos and videos of Rajawali D'Cabin Chalet in Chendering, Kuala Terengganu — cabins, BBQ pavilion, pool, parking and nearby landmarks.",
       },
       { property: "og:title", content: "Gallery — Rajawali D'Cabin Chalet" },
       {
@@ -136,15 +136,30 @@ export const Route = createFileRoute("/gallery")({
 
 function GalleryPage() {
   const [active, setActive] = useState<string>("all");
-  const [lightbox, setLightbox] = useState<{ url: string; alt: string } | null>(null);
+  const [lightbox, setLightbox] = useState<
+    { url: string; alt: string; type: "photo" | "video" } | null
+  >(null);
 
-  const visible =
-    active === "all"
-      ? CATEGORIES.flatMap((c) => c.photos.map((p) => ({ ...p, cat: c.label })))
-      : CATEGORIES.find((c) => c.id === active)?.photos.map((p) => ({
-          ...p,
-          cat: CATEGORIES.find((c) => c.id === active)!.label,
-        })) ?? [];
+  const visible: MediaItem[] = (() => {
+    if (active === "all") {
+      return [
+        ...CATEGORIES.flatMap((c) =>
+          c.photos.map((p) => ({ type: "photo" as const, ...p, cat: c.label }))
+        ),
+        ...VIDEOS.map((v) => ({ type: "video" as const, ...v, cat: "Videos" })),
+      ];
+    }
+    if (active === "videos") {
+      return VIDEOS.map((v) => ({ type: "video" as const, ...v, cat: "Videos" }));
+    }
+    return (
+      CATEGORIES.find((c) => c.id === active)?.photos.map((p) => ({
+        type: "photo" as const,
+        ...p,
+        cat: CATEGORIES.find((c) => c.id === active)!.label,
+      })) ?? []
+    );
+  })();
 
   return (
     <main className="min-h-screen bg-background">
