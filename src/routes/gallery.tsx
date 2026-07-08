@@ -24,6 +24,7 @@ import landmark02 from "@/assets/gallery/landmark-02.jpg.asset.json";
 import guests01 from "@/assets/gallery/guests-01.jpg.asset.json";
 import guests02 from "@/assets/gallery/guests-02.jpg.asset.json";
 import guests03 from "@/assets/gallery/guests-03.jpg.asset.json";
+import review01 from "@/assets/gallery/review-01.mp4.asset.json";
 
 type Category = {
   id: string;
