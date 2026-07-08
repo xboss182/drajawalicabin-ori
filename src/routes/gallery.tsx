@@ -33,6 +33,14 @@ type Category = {
   photos: { url: string; alt: string }[];
 };
 
+type MediaItem =
+  | { type: "photo"; url: string; alt: string; cat: string }
+  | { type: "video"; url: string; alt: string; cat: string };
+
+const VIDEOS: { url: string; alt: string }[] = [
+  { url: review01.url, alt: "Guest video at Rajawali D'Cabin" },
+];
+
 const CATEGORIES: Category[] = [
   {
     id: "cabins",
