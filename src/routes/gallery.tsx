@@ -270,11 +270,20 @@ function GalleryPage() {
           >
             ✕
           </button>
-          <img
-            src={lightbox.url}
-            alt={lightbox.alt}
-            className="max-h-[90vh] max-w-full object-contain"
-          />
+          {lightbox.type === "video" ? (
+            <video
+              src={lightbox.url}
+              controls
+              autoPlay
+              className="max-h-[90vh] max-w-full rounded-lg"
+            />
+          ) : (
+            <img
+              src={lightbox.url}
+              alt={lightbox.alt}
+              className="max-h-[90vh] max-w-full object-contain"
+            />
+          )}
         </div>
       )}
     </main>
