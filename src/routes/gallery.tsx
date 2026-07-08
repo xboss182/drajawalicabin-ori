@@ -187,8 +187,8 @@ function GalleryPage() {
           A look inside Rajawali D'Cabin
         </h1>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-          Photos of our cabins, BBQ pavilion, pool, parking and the surroundings in Chendering,
-          Kuala Terengganu.
+          Photos and videos of our cabins, BBQ pavilion, pool, parking and the surroundings in
+          Chendering, Kuala Terengganu.
         </p>
 
         {/* Category chips */}
@@ -201,28 +201,56 @@ function GalleryPage() {
               {c.label}
             </Chip>
           ))}
+          <Chip active={active === "videos"} onClick={() => setActive("videos")}>
+            Videos
+          </Chip>
         </div>
 
         {/* Content */}
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {visible.map((p, i) => (
-            <button
-              key={`${p.url}-${i}`}
-              type="button"
-              onClick={() => setLightbox(p)}
-              className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <img
-                src={p.url}
-                alt={p.alt}
-                loading="lazy"
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
-                {p.cat}
-              </span>
-            </button>
-          ))}
+          {visible.map((item, i) =>
+            item.type === "video" ? (
+              <button
+                key={`${item.url}-${i}`}
+                type="button"
+                onClick={() => setLightbox({ ...item, type: "video" })}
+                className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <video
+                  src={item.url}
+                  preload="metadata"
+                  muted
+                  playsInline
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-sm text-white transition group-hover:bg-black/60">
+                    ▶
+                  </span>
+                </div>
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  {item.cat}
+                </span>
+              </button>
+            ) : (
+              <button
+                key={`${item.url}-${i}`}
+                type="button"
+                onClick={() => setLightbox({ ...item, type: "photo" })}
+                className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <img
+                  src={item.url}
+                  alt={item.alt}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  {item.cat}
+                </span>
+              </button>
+            )
+          )}
         </div>
       </section>
 
