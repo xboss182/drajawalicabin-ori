@@ -214,6 +214,7 @@ function BookPage() {
       setDiscount(null);
       return;
     }
+    let cancelled = false;
     (async () => {
       try {
         let nights = 0;
@@ -244,6 +245,7 @@ function BookPage() {
           });
           breakdownByType.set(it.cabinType, det.nights);
         }
+        if (cancelled) return;
         setPrice({ nights, subtotal, comforter_total, total });
         setPriceByType(byType);
 
@@ -265,13 +267,18 @@ function BookPage() {
           couponRow,
         );
         const first = apps[0];
+        if (cancelled) return;
         setDiscount(first ? { label: first.code ?? first.name, amount: first.amountOff } : null);
       } catch {
+        if (cancelled) return;
         setPrice(null);
         setPriceByType({});
         setDiscount(null);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [cart, checkin, checkout, comforter, groupByType, autoDiscounts, couponRow]);
 
   // Load active automatic discounts once.
