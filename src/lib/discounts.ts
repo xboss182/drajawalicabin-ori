@@ -1,7 +1,9 @@
 // Pure discount-engine logic. No I/O — safe to import anywhere.
 // Rules (per user):
 //  - Applies to room rate only (not comforter, not security deposit).
-//  - Best-one-wins: if a coupon and an automatic rule both qualify, we keep the larger discount.
+//  - Stacking: automatic rules AND a coupon code can both apply on the same
+//    booking. The final discount is the sum of every qualifying automatic
+//    rule plus the coupon (if any).
 //  - Nth-night discounts count nights PER ROOM (a 2-room 2-night booking gets 2 discounted nights).
 
 export type DiscountType = "percent" | "fixed" | "nth_night" | "nth_night_onwards";
@@ -127,24 +129,14 @@ export function computeDiscountAmount(d: DiscountRow, cart: PricingCart): number
 }
 
 /**
- * Best-one-wins: pick the single highest-value applicable discount from `pool`,
- * plus optionally an explicit coupon (if provided AND qualifies).
- * If both exist we keep the larger one (unless the coupon is marked stackable).
+ * Stack every qualifying automatic rule in `pool` with the optional coupon.
+ * Each returned application represents one discount line the guest sees.
  */
 export function pickBestDiscount(
   cart: PricingCart,
   pool: DiscountRow[],
   coupon?: DiscountRow | null,
 ): DiscountApplication[] {
-  const scored = pool
-    .filter((d) => !d.code) // automatic rules only in the pool
-    .map((d) => ({ d, amount: computeDiscountAmount(d, cart) }))
-    .filter((x) => x.amount > 0)
-    .sort((a, b) => b.amount - a.amount);
-  const bestAuto = scored[0] ?? null;
-
-  const couponAmount = coupon ? computeDiscountAmount(coupon, cart) : 0;
-
   const asApp = (d: DiscountRow, amount: number): DiscountApplication => ({
     discountId: d.id,
     code: d.code,
@@ -152,14 +144,22 @@ export function pickBestDiscount(
     amountOff: amount,
   });
 
-  if (coupon && couponAmount > 0 && coupon.stackable && bestAuto) {
-    return [asApp(coupon, couponAmount), asApp(bestAuto.d, bestAuto.amount)];
+  const apps: DiscountApplication[] = [];
+
+  // Every qualifying automatic rule stacks.
+  for (const d of pool) {
+    if (d.code) continue; // automatic rules only in the pool
+    const amount = computeDiscountAmount(d, cart);
+    if (amount > 0) apps.push(asApp(d, amount));
   }
-  if (coupon && couponAmount > 0 && (!bestAuto || couponAmount >= bestAuto.amount)) {
-    return [asApp(coupon, couponAmount)];
+
+  // Coupon stacks on top when it qualifies.
+  if (coupon) {
+    const amount = computeDiscountAmount(coupon, cart);
+    if (amount > 0) apps.push(asApp(coupon, amount));
   }
-  if (bestAuto) return [asApp(bestAuto.d, bestAuto.amount)];
-  return [];
+
+  return apps;
 }
 
 function round2(n: number) {
