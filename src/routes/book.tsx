@@ -552,6 +552,7 @@ function BookPage() {
             couponInput, setCouponInput,
             couponRow, couponError, couponApplying,
             applyCoupon, clearCoupon,
+            couponAmount,
           }}
         />
       )}
@@ -632,6 +633,7 @@ function DetailsStep(props: {
   couponApplying: boolean;
   applyCoupon: () => void;
   clearCoupon: () => void;
+  couponAmount: number;
 }) {
   const { t } = useLanguage();
   const bt = t.book;
@@ -647,6 +649,7 @@ function DetailsStep(props: {
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
     discount,
     couponInput, setCouponInput, couponRow, couponError, couponApplying, applyCoupon, clearCoupon,
+    couponAmount,
   } = props;
 
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
