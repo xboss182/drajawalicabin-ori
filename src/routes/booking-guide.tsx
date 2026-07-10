@@ -190,14 +190,12 @@ function BookingGuidePage() {
                   i % 2 === 1 ? "md:[&>*:first-child]:order-2" : ""
                 }`}
               >
-                <div className="flex items-center justify-center bg-muted/40 p-6">
+                <div className="flex items-center justify-center bg-muted/40 p-4">
                   <img
                     src={step.image}
                     alt={`Step ${step.n}: ${step.title}`}
-                    width={1024}
-                    height={1024}
                     loading="lazy"
-                    className="h-auto w-full max-w-sm rounded-xl"
+                    className="h-auto w-full max-w-lg rounded-xl border border-border object-contain shadow-sm"
                   />
                 </div>
                 <div className="p-6 sm:p-8">
