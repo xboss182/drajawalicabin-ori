@@ -417,6 +417,29 @@ export const previewPrice = createServerFn({ method: "POST" })
     };
   });
 
+// Per-night breakdown used by the discount engine on the guest booking page.
+const previewDetailedSchema = z.object({
+  cabinId: z.string().uuid(),
+  checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+export const previewPriceDetailed = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => previewDetailedSchema.parse(d))
+  .handler(async ({ data }) => {
+    if (new Date(data.checkOut) <= new Date(data.checkIn)) {
+      return { nights: [] as NightBreakdown[], subtotal: 0 };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const nights = await buildNightBreakdown(
+      supabaseAdmin,
+      data.cabinId,
+      data.checkIn,
+      data.checkOut,
+    );
+    const subtotal = nights.reduce((s, n) => s + n.rate, 0);
+    return { nights, subtotal };
+  });
+
 // ============== ADMIN ==============
 
 export const listBookings = createServerFn({ method: "GET" })
