@@ -8,7 +8,7 @@ const upsertSchema = z.object({
   code: z.string().trim().min(1).max(40).nullable().optional(),
   name: z.string().trim().min(1).max(120),
   description: z.string().max(500).nullable().optional(),
-  type: z.enum(["percent", "fixed", "nth_night"]),
+  type: z.enum(["percent", "fixed", "nth_night", "nth_night_onwards"]),
   value: z.number().min(0),
   nth_night_percent: z.number().min(0).max(100).nullable().optional(),
   active: z.boolean(),
