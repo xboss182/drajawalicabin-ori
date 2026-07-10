@@ -10,7 +10,7 @@ import {
   recommendCabins,
 } from "@/lib/booking.functions";
 import { listActiveAutoDiscounts, validateCoupon } from "@/lib/discounts.functions";
-import { pickBestDiscount, type DiscountRow, type PricingCart } from "@/lib/discounts";
+import { computeDiscountAmount, pickBestDiscount, type DiscountRow, type PricingCart } from "@/lib/discounts";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinQueenImg from "@/assets/cabin-queen.jpg";
 import cabinTwinImg from "@/assets/cabin-twin.jpg";
@@ -142,6 +142,7 @@ function BookPage() {
   const [couponRow, setCouponRow] = useState<DiscountRow | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [couponApplying, setCouponApplying] = useState(false);
+  const [couponAmount, setCouponAmount] = useState(0);
   const [takenByCabin, setTakenByCabin] = useState<Record<string, string[]>>({});
 
   const [step, setStep] = useState<Step>("details");
