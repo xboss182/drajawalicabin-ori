@@ -547,7 +547,7 @@ function BookPage() {
             paymentType, setPaymentType,
             recommendations, pickRecommendation, isAnyCabin,
             pickComboRecommendation,
-            discount,
+            discounts,
             couponInput, setCouponInput,
             couponRow, couponError, couponApplying,
             applyCoupon, clearCoupon,
@@ -624,7 +624,7 @@ function DetailsStep(props: {
   pickRecommendation: (type: string) => void;
   pickComboRecommendation: (types: string[]) => void;
   isAnyCabin: boolean;
-  discount: { label: string; amount: number } | null;
+  discounts: { label: string; amount: number }[];
   couponInput: string;
   setCouponInput: (s: string) => void;
   couponRow: DiscountRow | null;
@@ -646,7 +646,7 @@ function DetailsStep(props: {
     price, priceByType, previewCabin, blockedDates, blockedReasonByDate, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
-    discount,
+    discounts,
     couponInput, setCouponInput, couponRow, couponError, couponApplying, applyCoupon, clearCoupon,
     couponAmount,
   } = props;
