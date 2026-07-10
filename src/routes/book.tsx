@@ -270,6 +270,15 @@ function BookPage() {
         const first = apps[0];
         if (cancelled) return;
         setDiscount(first ? { label: first.code ?? first.name, amount: first.amountOff } : null);
+        setCouponAmount(
+          couponRow
+            ? computeDiscountAmount(couponRow, {
+                checkIn: checkin,
+                rooms: roomsExpanded,
+                subtotalRoomOnly,
+              })
+            : 0,
+        );
       } catch {
         if (cancelled) return;
         setPrice(null);
