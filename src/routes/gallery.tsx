@@ -19,11 +19,6 @@ import cabinInt05 from "@/assets/gallery/cabin-interior-05.jpg.asset.json";
 import parking01 from "@/assets/gallery/parking-01.jpg.asset.json";
 import parking02 from "@/assets/gallery/parking-02.jpg.asset.json";
 import motoParking from "@/assets/gallery/motorcycle-parking-01.jpg.asset.json";
-import landmark01 from "@/assets/gallery/landmark-01.jpg.asset.json";
-import landmark02 from "@/assets/gallery/landmark-02.jpg.asset.json";
-import guests01 from "@/assets/gallery/guests-01.jpg.asset.json";
-import guests02 from "@/assets/gallery/guests-02.jpg.asset.json";
-import guests03 from "@/assets/gallery/guests-03.jpg.asset.json";
 import review01 from "@/assets/gallery/review-01.mp4.asset.json";
 
 type Category = {
@@ -84,25 +79,6 @@ const CATEGORIES: Category[] = [
       { url: parking01.url, alt: "On-site car parking" },
       { url: parking02.url, alt: "Parking area with guest vehicles" },
       { url: motoParking.url, alt: "Motorcycle parking bay" },
-    ],
-  },
-  {
-    id: "nearby",
-    label: "Nearby",
-    description: "Landmarks a short drive from the chalet.",
-    photos: [
-      { url: landmark01.url, alt: "Traditional Terengganu landmark building" },
-      { url: landmark02.url, alt: "Heritage building near Chendering" },
-    ],
-  },
-  {
-    id: "guests",
-    label: "Guests & Events",
-    description: "Groups and families who have stayed with us.",
-    photos: [
-      { url: guests01.url, alt: "Guest group photo at the chalet" },
-      { url: guests02.url, alt: "Guests enjoying a meal together" },
-      { url: guests03.url, alt: "Family gathering at the chalet" },
     ],
   },
 ];
