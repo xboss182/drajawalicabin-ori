@@ -608,6 +608,13 @@ function DetailsStep(props: {
   pickComboRecommendation: (types: string[]) => void;
   isAnyCabin: boolean;
   discount: { label: string; amount: number } | null;
+  couponInput: string;
+  setCouponInput: (s: string) => void;
+  couponRow: DiscountRow | null;
+  couponError: string | null;
+  couponApplying: boolean;
+  applyCoupon: () => void;
+  clearCoupon: () => void;
 }) {
   const { t } = useLanguage();
   const bt = t.book;
@@ -622,6 +629,7 @@ function DetailsStep(props: {
     submit, submitting, error, agreed, setAgreed,
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
     discount,
+    couponInput, setCouponInput, couponRow, couponError, couponApplying, applyCoupon, clearCoupon,
   } = props;
 
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
