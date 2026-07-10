@@ -1,73 +1,51 @@
-## Late check-out fee — RM10/hour after 12:00 PM
+# Booking Guide Page
 
-### Rules (agreed)
-- Standard check-out: **12:00 PM** local time (Asia/Kuala_Lumpur).
-- Any minute past 12:00 is charged; **round up per hour** (e.g. 12:05 = 1h = RM10; 1:30 PM = 2h = RM20).
-- **Admin manually logs** the actual check-out date/time in the dashboard.
-- Refund handling: **display only** — dashboard shows the deduction breakdown; admin refunds the remainder manually via bank/DuitNow.
+Add a new route `/booking-guide` with a visual, 4-step walkthrough for booking (with emphasis on 20+ guest groups) and a "Download as PDF" action.
 
-### 1. Database (migration)
-Add to `booking_requests`:
-- `actual_check_out_at timestamptz` — admin-entered actual departure.
-- `late_checkout_hours integer` — rounded-up hours past noon (0 if on time).
-- `late_checkout_fee numeric(10,2)` — hours × RM10.
-- `deposit_refunded_amount numeric(10,2)` — auto-computed suggestion (deposit − fee); admin can override.
-- `deposit_refund_note text` — free-text note (e.g. damages).
-- `deposit_refunded_at timestamptz` — set when admin marks refund as sent.
+## Route & Navigation
 
-Plus `app_settings` keys (defaults, editable in Admin → Settings):
-- `late_checkout_hourly_fee` = 10
-- `late_checkout_grace_minutes` = 0
-- `standard_checkout_hour` = 12 (24h)
+- New file: `src/routes/booking-guide.tsx`
+- Add "Booking Guide" link to the main nav in `src/routes/index.tsx` (and any shared header) next to "Gallery".
+- Route `head()` metadata: title "How to Book — Rajawali D'Cabin Chalet", description mentioning step-by-step booking and large group instructions, matching og:title/og:description. No og:image required.
 
-### 2. Fee calculation (shared helper)
-`src/lib/late-checkout.ts` — pure function:
-```
-computeLateCheckout(checkOutDate, actualCheckOutAt, { hour=12, grace=0, hourly=10 })
-  → { hoursLate, feeRM }
-```
-Rounds up per hour past noon MYT, ignores anything ≤ standard time.
+## Page Layout
 
-### 3. Admin dashboard UI
-In the booking detail drawer (`admin.index.tsx`), add a **Check-out & Deposit** section shown once booking is `confirmed`/`fully_paid` and check-in has passed:
-- Date+time picker: "Actual check-out time" (defaults to now).
-- Live-computed breakdown card:
-  - `Scheduled check-out: 12:00 PM, 15 Jul 2026`
-  - `Actual check-out: 2:20 PM, 15 Jul 2026`
-  - `Late check-out fee: 3 hrs × RM10 = RM30`
-  - `Security deposit: RM50`
-  - `Refund due: RM20`
-  - Optional damages/notes textarea (further deducts from refund).
-- "Save & mark checked out" button → persists fields.
-- After save: shows "Refund pending — pay RM X manually" with a "Mark refunded" button.
+Sections (top to bottom):
 
-### 4. Guest-facing terms updates
-Update visible terms/notices with the late-checkout clause:
-- `src/routes/book.tsx` — terms list on booking form (both deposit and pay-in-full variants).
-- `src/routes/manage-booking.tsx` — description + a small "Check-out policy" note near the check-out row.
-- `src/routes/checkout.tsx` — subtitle where deposit is explained.
-- `src/lib/i18n.tsx` — new EN + MS strings for the clause (used across pages).
+1. **Hero** — Title "How to Book", subtitle "A visual, step-by-step guide — perfect for groups of 20+ guests." Primary button: **Download Guide as PDF**.
+2. **Steps** — 4 vertically stacked cards, each with:
+   - Large numbered badge (01–04)
+   - Screenshot/illustration on one side, text on the other (alternating left/right on desktop, stacked on mobile)
+   - Step title, short description, bullet list of actions
+3. **Large-group callout** — Highlighted tip box inside Step 2 (amber/primary tint) with the exact wording:
+   > "Booking for a large group? If you have more than 20 guests, use the 'Add Room' feature to select multiple rooms until your total guest count is accommodated. Our cabins fit different capacities — combine Queen and Twin rooms to cover everyone."
+4. **Footer CTA** — "Ready to book?" with two buttons: **Start Booking** (→ `/book`) and **Download Guide as PDF** (repeat).
 
-Clause wording (EN):
-> **Check-out is by 12:00 PM.** Late check-out is charged at **RM10 per hour** (rounded up per hour) and will be deducted from your refundable security deposit.
+### Step Content
 
-MS:
-> **Daftar keluar sebelum 12:00 tengah hari.** Lewat daftar keluar dikenakan caj **RM10 sejam** (dibundarkan ke atas) dan akan ditolak daripada deposit keselamatan anda.
+- **Step 1 — Select Dates & Initial Guests**: pick check-in/check-out on the calendar, enter adults + children under 12.
+- **Step 2 — Add Multiple Rooms**: choose a cabin, click **Add Room**, repeat with **Add Another Room** until capacity ≥ total guests. Includes the large-group callout.
+- **Step 3 — Review & Guest Details**: verify cart (all rooms/dates/price), fill primary guest name, IC, phone, vehicle info; add remarks.
+- **Step 4 — Secure Booking**: choose deposit or full payment, accept T&Cs (incl. late check-out RM10/hr), continue to Stripe checkout, receive confirmation email + manage-booking link.
 
-### 5. Email (optional, small)
-Append the same clause line to the booking-summary email template (`src/lib/email-templates/booking-summary.tsx`) under the existing policy list so guests see it in their confirmation.
+## Illustrations
 
-### 6. Admin Settings
-Add fields under Admin → Settings for hourly fee, grace minutes, standard check-out hour (writes to `app_settings`). Defaults RM10 / 0 min / 12:00.
+Reuse existing preview screenshots where possible; otherwise generate 4 lightweight illustrations (flat, brand-tone) via imagegen and save under `src/assets/booking-guide/`:
+- `step-1-dates.jpg` — calendar + guests
+- `step-2-add-room.jpg` — cart with multiple rooms + Add Room button highlighted
+- `step-3-details.jpg` — guest details form
+- `step-4-checkout.jpg` — payment/checkout screen
 
-### Out of scope (explicit)
-- No automated Stripe refund — admin refunds manually.
-- No auto check-out detection — admin logs the time.
-- CSV export can gain the two new columns (`Late fee`, `Deposit refunded`) in a follow-up if you want.
+## PDF Export
 
-### Files touched
-- new: migration; `src/lib/late-checkout.ts`
-- edit: `src/routes/_authenticated/admin.index.tsx`, `src/routes/_authenticated/admin.settings.tsx`
-- edit: `src/routes/book.tsx`, `src/routes/manage-booking.tsx`, `src/routes/checkout.tsx`
-- edit: `src/lib/i18n.tsx`, `src/lib/email-templates/booking-summary.tsx`
-- edit: `src/lib/booking.functions.ts` (server fn to save actual check-out + fee)
+- Library: **html2pdf.js** (bundles html2canvas + jsPDF, simplest DOM → PDF).
+- Install: `bun add html2pdf.js`.
+- Implementation: wrap the printable content in a `ref`ed `<div id="guide-printable">`. `downloadPdf()` dynamically imports html2pdf (client-only), calls it with A4 portrait, 10mm margins, filename `Rajawali-DCabin-Booking-Guide.pdf`.
+- Hide the two "Download PDF" buttons and any nav during capture via a `.pdf-hide` class removed on the cloned node.
+- Ensure fonts and images finish loading (use `await document.fonts.ready` and `img.decode()`) before invoking html2pdf so the export isn't blank.
+
+## Constraints
+
+- No changes to booking logic, admin, or DB.
+- Follow design tokens in `src/styles.css` (no hardcoded colors).
+- Fully responsive; steps stack on mobile.

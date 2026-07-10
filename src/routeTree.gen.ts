@@ -15,6 +15,7 @@ import { Route as ManageBookingRouteImport } from './routes/manage-booking'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FindBookingRouteImport } from './routes/find-booking'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as BookingGuideRouteImport } from './routes/booking-guide'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -66,6 +67,11 @@ const FindBookingRoute = FindBookingRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookingGuideRoute = BookingGuideRouteImport.update({
+  id: '/booking-guide',
+  path: '/booking-guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookRoute = BookRouteImport.update({
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
+  '/booking-guide': typeof BookingGuideRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/find-booking': typeof FindBookingRoute
   '/gallery': typeof GalleryRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
+  '/booking-guide': typeof BookingGuideRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/find-booking': typeof FindBookingRoute
   '/gallery': typeof GalleryRoute
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/book': typeof BookRoute
+  '/booking-guide': typeof BookingGuideRoute
   '/checkout': typeof CheckoutRouteWithChildren
   '/find-booking': typeof FindBookingRoute
   '/gallery': typeof GalleryRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/book'
+    | '/booking-guide'
     | '/checkout'
     | '/find-booking'
     | '/gallery'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/book'
+    | '/booking-guide'
     | '/checkout'
     | '/find-booking'
     | '/gallery'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/book'
+    | '/booking-guide'
     | '/checkout'
     | '/find-booking'
     | '/gallery'
@@ -373,6 +385,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   BookRoute: typeof BookRoute
+  BookingGuideRoute: typeof BookingGuideRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
   FindBookingRoute: typeof FindBookingRoute
   GalleryRoute: typeof GalleryRoute
@@ -431,6 +444,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/booking-guide': {
+      id: '/booking-guide'
+      path: '/booking-guide'
+      fullPath: '/booking-guide'
+      preLoaderRoute: typeof BookingGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/book': {
@@ -643,6 +663,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   BookRoute: BookRoute,
+  BookingGuideRoute: BookingGuideRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
   FindBookingRoute: FindBookingRoute,
   GalleryRoute: GalleryRoute,
