@@ -10,7 +10,7 @@ import {
   recommendCabins,
 } from "@/lib/booking.functions";
 import { listActiveAutoDiscounts, validateCoupon } from "@/lib/discounts.functions";
-import { pickBestDiscount, type DiscountRow, type PricingCart } from "@/lib/discounts";
+import { computeDiscountAmount, pickBestDiscount, type DiscountRow, type PricingCart } from "@/lib/discounts";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinQueenImg from "@/assets/cabin-queen.jpg";
 import cabinTwinImg from "@/assets/cabin-twin.jpg";
@@ -142,6 +142,7 @@ function BookPage() {
   const [couponRow, setCouponRow] = useState<DiscountRow | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [couponApplying, setCouponApplying] = useState(false);
+  const [couponAmount, setCouponAmount] = useState(0);
   const [takenByCabin, setTakenByCabin] = useState<Record<string, string[]>>({});
 
   const [step, setStep] = useState<Step>("details");
@@ -269,6 +270,15 @@ function BookPage() {
         const first = apps[0];
         if (cancelled) return;
         setDiscount(first ? { label: first.code ?? first.name, amount: first.amountOff } : null);
+        setCouponAmount(
+          couponRow
+            ? computeDiscountAmount(couponRow, {
+                checkIn: checkin,
+                rooms: roomsExpanded,
+                subtotalRoomOnly,
+              })
+            : 0,
+        );
       } catch {
         if (cancelled) return;
         setPrice(null);
@@ -542,6 +552,7 @@ function BookPage() {
             couponInput, setCouponInput,
             couponRow, couponError, couponApplying,
             applyCoupon, clearCoupon,
+            couponAmount,
           }}
         />
       )}
@@ -622,6 +633,7 @@ function DetailsStep(props: {
   couponApplying: boolean;
   applyCoupon: () => void;
   clearCoupon: () => void;
+  couponAmount: number;
 }) {
   const { t } = useLanguage();
   const bt = t.book;
@@ -637,6 +649,7 @@ function DetailsStep(props: {
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
     discount,
     couponInput, setCouponInput, couponRow, couponError, couponApplying, applyCoupon, clearCoupon,
+    couponAmount,
   } = props;
 
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
@@ -1121,9 +1134,16 @@ function DetailsStep(props: {
                     {couponError && (
                       <p className="mt-1 text-xs text-red-600">{couponError}</p>
                     )}
-                    {couponRow && discount && discount.amount === 0 && (
+                    {couponRow && couponAmount === 0 && (
                       <p className="mt-1 text-xs text-amber-700">
                         Code accepted but doesn't apply to this stay (check minimum nights or dates).
+                      </p>
+                    )}
+                    {couponRow && couponAmount > 0 && discount && discount.label !== couponRow.code && (
+                      <p className="mt-1 text-xs text-amber-700">
+                        Code gives −RM {couponAmount.toFixed(2)}, but the automatic{" "}
+                        <span className="font-medium">{discount.label}</span> discount
+                        (−RM {discount.amount.toFixed(2)}) is bigger and was applied instead.
                       </p>
                     )}
                   </div>
