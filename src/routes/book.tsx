@@ -964,7 +964,7 @@ function DetailsStep(props: {
               <div className="flex items-start gap-3">
                 <input type="radio" name="payment-type" checked={paymentType === "full"} onChange={() => setPaymentType("full")} className="mt-1 h-4 w-4 accent-forest" />
                 <div>
-                  <p className="font-medium text-forest">Pay in full now{price ? ` (RM ${(price.total + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)})` : ""}</p>
+                  <p className="font-medium text-forest">Pay in full now{price ? ` (RM ${(price.total - (discount?.amount ?? 0) + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)})` : ""}</p>
                   <p className="mt-1 text-xs text-stone">Settle the full room rate plus a refundable RM{SECURITY_DEPOSIT_PER_ROOM}/room security deposit upfront.</p>
                 </div>
               </div>
