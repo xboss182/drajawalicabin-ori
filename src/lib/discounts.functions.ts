@@ -129,3 +129,22 @@ export const listRedemptions = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return (data ?? []) as RedemptionRow[];
   });
+
+// Public: automatic-rule discounts only (no coupon code), currently active.
+// Used by the guest booking page to preview auto discounts on the price card.
+export const listActiveAutoDiscounts = createServerFn({ method: "GET" })
+  .handler(async (): Promise<DiscountRow[]> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const nowIso = new Date().toISOString();
+    const { data, error } = await supabaseAdmin
+      .from("discounts")
+      .select("*")
+      .eq("active", true)
+      .is("code", null);
+    if (error) throw new Error(error.message);
+    return (data ?? []).filter((d: any) => {
+      if (d.starts_at && d.starts_at > nowIso) return false;
+      if (d.ends_at && d.ends_at < nowIso) return false;
+      return true;
+    }) as DiscountRow[];
+  });

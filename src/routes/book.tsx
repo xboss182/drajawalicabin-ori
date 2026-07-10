@@ -4,10 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   createBooking,
   previewPrice,
+  previewPriceDetailed,
   attachPaymentProof,
   getTakenDates,
   recommendCabins,
 } from "@/lib/booking.functions";
+import { listActiveAutoDiscounts } from "@/lib/discounts.functions";
+import { pickBestDiscount, type DiscountRow, type PricingCart } from "@/lib/discounts";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinQueenImg from "@/assets/cabin-queen.jpg";
 import cabinTwinImg from "@/assets/cabin-twin.jpg";
@@ -133,13 +136,15 @@ function BookPage() {
 
   const [price, setPrice] = useState<{ nights: number; subtotal: number; comforter_total: number; total: number } | null>(null);
   const [priceByType, setPriceByType] = useState<Record<string, { nights: number; subtotal: number; total: number; perNight: number }>>({});
+  const [discount, setDiscount] = useState<{ label: string; amount: number } | null>(null);
+  const [autoDiscounts, setAutoDiscounts] = useState<DiscountRow[]>([]);
   const [takenByCabin, setTakenByCabin] = useState<Record<string, string[]>>({});
 
   const [step, setStep] = useState<Step>("details");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [booking, setBooking] = useState<{ bookingId: string; reference: string; total: number; securityDeposit: number; holdExpiresAt: string; guestToken: string } | null>(null);
+  const [booking, setBooking] = useState<{ bookingId: string; reference: string; total: number; securityDeposit: number; holdExpiresAt: string; guestToken: string; discount?: { label: string; amount: number } | null } | null>(null);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -197,10 +202,12 @@ function BookPage() {
   useEffect(() => {
     if (cart.length === 0 || !checkin || !checkout) {
       setPrice(null);
+      setDiscount(null);
       return;
     }
     if (checkout <= checkin) {
       setPrice(null);
+      setDiscount(null);
       return;
     }
     (async () => {
@@ -210,6 +217,7 @@ function BookPage() {
         let comforter_total = 0;
         let total = 0;
         const byType: Record<string, { nights: number; subtotal: number; total: number; perNight: number }> = {};
+        const breakdownByType = new Map<string, Awaited<ReturnType<typeof previewPriceDetailed>>["nights"]>();
         for (const it of cart) {
           const g = groupByType.get(it.cabinType);
           const sample = g?.rooms[0];
@@ -227,15 +235,51 @@ function BookPage() {
             total: p.total,
             perNight: p.nights > 0 ? p.subtotal / p.nights : 0,
           };
+          const det = await previewPriceDetailed({
+            data: { cabinId: sample.id, checkIn: checkin, checkOut: checkout },
+          });
+          breakdownByType.set(it.cabinType, det.nights);
         }
         setPrice({ nights, subtotal, comforter_total, total });
         setPriceByType(byType);
+
+        // Build PricingCart with one entry per booked room and compute discount.
+        const roomsExpanded: PricingCart["rooms"] = [];
+        for (const it of cart) {
+          const bd = breakdownByType.get(it.cabinType) ?? [];
+          for (let i = 0; i < it.qty; i++) {
+            roomsExpanded.push({ cabinType: it.cabinType, nights: bd });
+          }
+        }
+        const subtotalRoomOnly = roomsExpanded.reduce(
+          (s, r) => s + r.nights.reduce((ss, n) => ss + n.rate, 0),
+          0,
+        );
+        const apps = pickBestDiscount(
+          { checkIn: checkin, rooms: roomsExpanded, subtotalRoomOnly },
+          autoDiscounts,
+        );
+        const first = apps[0];
+        setDiscount(first ? { label: first.code ?? first.name, amount: first.amountOff } : null);
       } catch {
         setPrice(null);
         setPriceByType({});
+        setDiscount(null);
       }
     })();
-  }, [cart, checkin, checkout, comforter, groupByType]);
+  }, [cart, checkin, checkout, comforter, groupByType, autoDiscounts]);
+
+  // Load active automatic discounts once.
+  useEffect(() => {
+    (async () => {
+      try {
+        const rows = await listActiveAutoDiscounts();
+        setAutoDiscounts(rows);
+      } catch {
+        setAutoDiscounts([]);
+      }
+    })();
+  }, []);
 
   // Availability for every cabin (next 90 days) — needed across mixed types
   const refreshAvailability = useCallback(async () => {
@@ -451,6 +495,7 @@ function BookPage() {
             paymentType, setPaymentType,
             recommendations, pickRecommendation, isAnyCabin,
             pickComboRecommendation,
+            discount,
           }}
         />
       )}
@@ -523,6 +568,7 @@ function DetailsStep(props: {
   pickRecommendation: (type: string) => void;
   pickComboRecommendation: (types: string[]) => void;
   isAnyCabin: boolean;
+  discount: { label: string; amount: number } | null;
 }) {
   const { t } = useLanguage();
   const bt = t.book;
@@ -536,6 +582,7 @@ function DetailsStep(props: {
     price, priceByType, previewCabin, blockedDates, blockedReasonByDate, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
+    discount,
   } = props;
 
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
@@ -976,6 +1023,12 @@ function DetailsStep(props: {
                   {price.comforter_total > 0 && (
                     <Row label={bt.summary.comforterLabel} value={`RM ${price.comforter_total.toFixed(2)}`} />
                   )}
+                  {discount && discount.amount > 0 && (
+                    <div className="flex items-center justify-between py-2 text-sm">
+                      <span className="text-emerald-700">Discount · {discount.label}</span>
+                      <span className="font-medium text-emerald-700">−RM {discount.amount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <Row label={bt.summary.securityDeposit} value={`RM ${(totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}`} />
                 </>
               )}
@@ -983,7 +1036,7 @@ function DetailsStep(props: {
             {price && (
               <div className="mt-4 flex items-baseline justify-between rounded-xl bg-coconut px-4 py-3">
                 <span className="text-xs uppercase tracking-widest text-stone">{bt.summary.totalPayable}</span>
-                <span className="font-display text-2xl text-forest">RM {(price.total + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}</span>
+                <span className="font-display text-2xl text-forest">RM {(price.total - (discount?.amount ?? 0) + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}</span>
               </div>
             )}
             <p className="mt-4 text-xs text-stone">{bt.summary.priceNote}</p>
@@ -999,6 +1052,7 @@ function PaymentStep({
   booking, paymentType, proofFile, setProofFile, uploadProof, uploading, error, name, cabinName, checkin, checkout,
 }: {
   booking: { bookingId: string; reference: string; total: number; securityDeposit: number; holdExpiresAt: string; guestToken: string };
+  // discount attached on server response (optional)
   paymentType: "deposit" | "full";
   proofFile: File | null;
   setProofFile: (f: File | null) => void;

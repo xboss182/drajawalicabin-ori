@@ -3,8 +3,61 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeLateCheckout } from "@/lib/late-checkout";
+import {
+  pickBestDiscount,
+  type DiscountRow,
+  type DiscountScope,
+  type NightBreakdown,
+  type PricingCart,
+} from "@/lib/discounts";
 
 const SECURITY_DEPOSIT_PER_ROOM = 50;
+
+/** Build per-night rate breakdown for a cabin over [checkIn, checkOut). */
+async function buildNightBreakdown(
+  admin: any,
+  cabinId: string,
+  checkIn: string,
+  checkOut: string,
+): Promise<NightBreakdown[]> {
+  const { data: cabin } = await admin
+    .from("cabins")
+    .select("weekday_rate, weekend_rate, school_holiday_rate")
+    .eq("id", cabinId)
+    .single();
+  if (!cabin) return [];
+  const { data: holidays } = await admin
+    .from("school_holidays")
+    .select("kind, starts_on, ends_on");
+  const publicH = (holidays ?? []).filter((h: any) => h.kind === "public_holiday");
+  const school = (holidays ?? []).filter((h: any) => h.kind === "school_break");
+  const nights: NightBreakdown[] = [];
+  const start = new Date(checkIn + "T00:00:00Z");
+  const end = new Date(checkOut + "T00:00:00Z");
+  for (let d = new Date(start); d < end; d.setUTCDate(d.getUTCDate() + 1)) {
+    const iso = d.toISOString().slice(0, 10);
+    const isSchool = school.some((h: any) => iso >= h.starts_on && iso <= h.ends_on);
+    const isPublic = publicH.some((h: any) => iso >= h.starts_on && iso <= h.ends_on);
+    const dow = d.getUTCDay(); // 0=Sun … 6=Sat
+    let rate: number;
+    let scope: DiscountScope;
+    if (isSchool) {
+      rate = Number(cabin.school_holiday_rate);
+      scope = "holiday";
+    } else if (isPublic) {
+      rate = Number(cabin.weekend_rate);
+      scope = "holiday";
+    } else if (dow === 5 || dow === 6 || dow === 0) {
+      rate = Number(cabin.weekend_rate);
+      scope = "weekend";
+    } else {
+      rate = Number(cabin.weekday_rate);
+      scope = "weekday";
+    }
+    nights.push({ date: iso, rate, scope });
+  }
+  return nights;
+}
 
 function securityDepositForRooms(numRooms: number) {
   return SECURITY_DEPOSIT_PER_ROOM * numRooms;
@@ -167,6 +220,37 @@ export const createBooking = createServerFn({ method: "POST" })
     const isFull = (data.paymentType ?? "deposit") === "full";
     const securityDeposit = securityDepositForRooms(totalRooms);
 
+    // ---- Apply automatic discounts (best-one-wins) ----
+    // Build per-room night breakdowns (rooms in the same type share dates+rates).
+    const breakdownByType = new Map<string, NightBreakdown[]>();
+    for (const it of items) {
+      const sampleRow = assigned.find((a) => a.cabinType === it.cabinType);
+      if (!sampleRow) continue;
+      const nights = await buildNightBreakdown(
+        supabaseAdmin,
+        sampleRow.cabinId,
+        data.checkIn,
+        data.checkOut,
+      );
+      breakdownByType.set(it.cabinType, nights);
+    }
+    const cart: PricingCart = {
+      checkIn: data.checkIn,
+      rooms: assigned.map((a) => ({
+        cabinType: a.cabinType,
+        nights: breakdownByType.get(a.cabinType) ?? [],
+      })),
+      subtotalRoomOnly: assigned.reduce((s, a) => s + a.subtotal, 0),
+    };
+    const { data: activeAutos } = await supabaseAdmin
+      .from("discounts")
+      .select("*")
+      .eq("active", true)
+      .is("code", null);
+    const applications = pickBestDiscount(cart, (activeAutos ?? []) as DiscountRow[]);
+    const discountApp = applications[0] ?? null;
+    const discountAmount = discountApp ? discountApp.amountOff : 0;
+
     const sharedBase = {
       guest_name: data.guestName,
       email: data.email,
@@ -200,6 +284,19 @@ export const createBooking = createServerFn({ method: "POST" })
       ...(guestToken ? { guest_token: guestToken } : {}),
     }));
 
+    // Attach discount to the lead (first) row and reduce its totals so
+    // sum(total_amount) across the group equals discounted grand total.
+    if (discountApp && rows.length > 0 && discountAmount > 0) {
+      const capped = Math.min(discountAmount, Number(rows[0].total_amount ?? 0));
+      (rows[0] as any).discount_id = discountApp.discountId;
+      (rows[0] as any).discount_code = discountApp.code ?? discountApp.name;
+      (rows[0] as any).discount_amount = capped;
+      rows[0].total_amount = Number(rows[0].total_amount ?? 0) - capped;
+      if (!isFull) {
+        rows[0].balance_amount = Number(rows[0].balance_amount ?? 0) - capped;
+      }
+    }
+
     const { data: inserted, error: insErr } = await supabaseAdmin
       .from("booking_requests")
       .insert(rows as any)
@@ -211,6 +308,17 @@ export const createBooking = createServerFn({ method: "POST" })
     const lead = inserted[0];
     const total = inserted.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
 
+    // Record redemption (best effort — do not block booking on failure).
+    if (discountApp && discountAmount > 0) {
+      const gid = (lead.booking_group_id as string) ?? (lead.id as string);
+      await supabaseAdmin.from("discount_redemptions").insert({
+        discount_id: discountApp.discountId,
+        booking_group_id: gid,
+        email: data.email,
+        amount_off: discountAmount,
+      } as any);
+    }
+
     return {
       bookingId: lead.id as string,
       groupId: (lead.booking_group_id as string) ?? lead.id,
@@ -220,6 +328,9 @@ export const createBooking = createServerFn({ method: "POST" })
       holdExpiresAt: lead.hold_expires_at as string,
       guestToken: lead.guest_token as string,
       paymentType: (data.paymentType ?? "deposit") as "deposit" | "full",
+      discount: discountApp
+        ? { label: discountApp.code ?? discountApp.name, amount: discountAmount }
+        : null,
     };
   });
 
@@ -362,6 +473,29 @@ export const previewPrice = createServerFn({ method: "POST" })
       comforter_total: Number(r?.comforter_total ?? 0),
       total: Number(r?.total ?? 0),
     };
+  });
+
+// Per-night breakdown used by the discount engine on the guest booking page.
+const previewDetailedSchema = z.object({
+  cabinId: z.string().uuid(),
+  checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+export const previewPriceDetailed = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => previewDetailedSchema.parse(d))
+  .handler(async ({ data }) => {
+    if (new Date(data.checkOut) <= new Date(data.checkIn)) {
+      return { nights: [] as NightBreakdown[], subtotal: 0 };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const nights = await buildNightBreakdown(
+      supabaseAdmin,
+      data.cabinId,
+      data.checkIn,
+      data.checkOut,
+    );
+    const subtotal = nights.reduce((s, n) => s + n.rate, 0);
+    return { nights, subtotal };
   });
 
 // ============== ADMIN ==============
