@@ -70,6 +70,7 @@ export type Database = {
       }
       booking_requests: {
         Row: {
+          actual_check_out_at: string | null
           balance_amount: number | null
           balance_due_at: string | null
           balance_paid_at: string | null
@@ -86,12 +87,17 @@ export type Database = {
           confirmed_by: string | null
           created_at: string
           deposit_amount: number
+          deposit_refund_note: string | null
+          deposit_refunded_amount: number | null
+          deposit_refunded_at: string | null
           email: string
           guest_name: string
           guest_token: string
           guests: number
           hold_expires_at: string | null
           id: string
+          late_checkout_fee: number
+          late_checkout_hours: number
           locker_code: string | null
           nights: number | null
           notes: string | null
@@ -114,6 +120,7 @@ export type Database = {
           vehicle_type: string | null
         }
         Insert: {
+          actual_check_out_at?: string | null
           balance_amount?: number | null
           balance_due_at?: string | null
           balance_paid_at?: string | null
@@ -130,12 +137,17 @@ export type Database = {
           confirmed_by?: string | null
           created_at?: string
           deposit_amount?: number
+          deposit_refund_note?: string | null
+          deposit_refunded_amount?: number | null
+          deposit_refunded_at?: string | null
           email: string
           guest_name: string
           guest_token?: string
           guests: number
           hold_expires_at?: string | null
           id?: string
+          late_checkout_fee?: number
+          late_checkout_hours?: number
           locker_code?: string | null
           nights?: number | null
           notes?: string | null
@@ -158,6 +170,7 @@ export type Database = {
           vehicle_type?: string | null
         }
         Update: {
+          actual_check_out_at?: string | null
           balance_amount?: number | null
           balance_due_at?: string | null
           balance_paid_at?: string | null
@@ -174,12 +187,17 @@ export type Database = {
           confirmed_by?: string | null
           created_at?: string
           deposit_amount?: number
+          deposit_refund_note?: string | null
+          deposit_refunded_amount?: number | null
+          deposit_refunded_at?: string | null
           email?: string
           guest_name?: string
           guest_token?: string
           guests?: number
           hold_expires_at?: string | null
           id?: string
+          late_checkout_fee?: number
+          late_checkout_hours?: number
           locker_code?: string | null
           nights?: number | null
           notes?: string | null
