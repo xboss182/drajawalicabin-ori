@@ -1,28 +1,14 @@
-## Plan: Replace notice banner with one-time toast
+Remove both "Download guide as PDF" buttons from `/booking-guide` and clean up the now-unused PDF-related code in the route file.
 
-**Problem:** The green notice banner at the top overlaps the "Book" button and blocks interaction on smaller screens.
+**Scope:**
+- `src/routes/booking-guide.tsx`
 
-**Solution:** Show the "official website" disclaimer as a small sonner toast in the bottom-right on the first visit only. It won't block any content, auto-dismisses, and never shows again once dismissed.
+**Changes:**
+1. Remove the top "Download guide as PDF" button in the hero CTA row.
+2. Remove the bottom "Download guide as PDF" button in the bottom CTA section.
+3. Remove the `downloadPdf` function, `printRef`, and `busy` state since they will no longer be used.
+4. Remove unused `useRef` and `useState` imports.
+5. Keep the printable `print:block` header and page-break styling intact; it has no negative effect and preserves future PDF-friendliness.
 
-### Changes
-
-1. **`src/routes/__root.tsx`**
-   - Remove the `OfficialNoticeFooter` (banner) render.
-
-2. **New `src/components/official-notice-toast.tsx`**
-   - Client component mounted once in `__root.tsx`.
-   - On mount, check `localStorage.getItem("official-notice-dismissed")`.
-   - If not set, call `toast(...)` from sonner with:
-     - Title: "Official website"
-     - Description: short version — "This is the only official site for Rajawali D'Cabin. We're not affiliated with OYO, Agoda, Booking.com or Expedia."
-     - `duration: 10000`, action button "Got it" that sets the localStorage flag.
-   - Also set the flag in `onDismiss` / `onAutoClose` so it never reappears.
-   - Skip on admin routes (same rule as before).
-
-3. **Optional cleanup**
-   - Keep `official-notice-banner.tsx` file for now (unused) or delete it. Recommend delete to keep tree clean.
-
-### Result
-- Book button and hero fully visible on load.
-- Guests still see the disclaimer once, then never again on that browser.
-- No layout shift, no persistent bar.
+**Not in scope:**
+- Uninstalling `html2pdf.js` from dependencies (leave it in case it's needed elsewhere or re-added later).

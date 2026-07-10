@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
 
 import step1 from "@/assets/booking-guide/step-1-dates.jpg.asset.json";
 import step2 from "@/assets/booking-guide/step-2-add-room.jpg.asset.json";
@@ -13,7 +12,7 @@ export const Route = createFileRoute("/booking-guide")({
       {
         name: "description",
         content:
-          "Step-by-step visual guide to booking your stay at Rajawali D'Cabin, with tips for large groups of 12+ guests. Download as PDF.",
+          "Step-by-step visual guide to booking your stay at Rajawali D'Cabin, with tips for large groups of 12+ guests.",
       },
       { property: "og:title", content: "How to Book — Rajawali D'Cabin Chalet" },
       {
@@ -89,43 +88,6 @@ const STEPS: Step[] = [
 ];
 
 function BookingGuidePage() {
-  const printRef = useRef<HTMLDivElement>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function downloadPdf() {
-    if (!printRef.current || busy) return;
-    setBusy(true);
-    try {
-      await (document as any).fonts?.ready;
-      const imgs = Array.from(printRef.current.querySelectorAll("img"));
-      await Promise.all(
-        imgs.map((img) =>
-          img.complete
-            ? Promise.resolve()
-            : new Promise((res) => {
-                img.addEventListener("load", () => res(null), { once: true });
-                img.addEventListener("error", () => res(null), { once: true });
-              }),
-        ),
-      );
-      const mod = await import("html2pdf.js");
-      const html2pdf = (mod as any).default ?? mod;
-      await html2pdf()
-        .set({
-          margin: [10, 10, 10, 10],
-          filename: "Rajawali-DCabin-Booking-Guide.pdf",
-          image: { type: "jpeg", quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-          pagebreak: { mode: ["css", "legacy"] },
-        })
-        .from(printRef.current)
-        .save();
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
@@ -154,17 +116,10 @@ function BookingGuidePage() {
           multiple cabins in one reservation.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <button
-            onClick={downloadPdf}
-            disabled={busy}
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:opacity-90 disabled:opacity-60"
-          >
-            {busy ? "Preparing PDF…" : "⬇  Download guide as PDF"}
-          </button>
           <Link
             to="/book"
             search={{}}
-            className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-semibold hover:bg-muted"
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow transition hover:opacity-90"
           >
             Start booking →
           </Link>
@@ -172,7 +127,7 @@ function BookingGuidePage() {
       </section>
 
       {/* Printable content */}
-      <div ref={printRef} className="mx-auto max-w-4xl px-6 py-10">
+      <div className="mx-auto max-w-4xl px-6 py-10">
         <div className="mb-10 hidden text-center print:block">
           <h1 className="text-2xl font-bold">Rajawali D'Cabin — Booking Guide</h1>
           <p className="text-sm text-muted-foreground">drajawalicabin.com</p>
@@ -241,22 +196,13 @@ function BookingGuidePage() {
 
       {/* Bottom CTA */}
       <section className="mx-auto max-w-4xl px-6 pb-16 text-center">
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link
-            to="/book"
-            search={{}}
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
-          >
-            Start booking →
-          </Link>
-          <button
-            onClick={downloadPdf}
-            disabled={busy}
-            className="inline-flex items-center gap-2 rounded-full border border-border px-6 py-3 text-sm font-semibold hover:bg-muted disabled:opacity-60"
-          >
-            {busy ? "Preparing PDF…" : "⬇  Download guide as PDF"}
-          </button>
-        </div>
+        <Link
+          to="/book"
+          search={{}}
+          className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow hover:opacity-90"
+        >
+          Start booking →
+        </Link>
       </section>
     </div>
   );
