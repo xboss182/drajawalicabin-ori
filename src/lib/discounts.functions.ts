@@ -8,7 +8,7 @@ const upsertSchema = z.object({
   code: z.string().trim().min(1).max(40).nullable().optional(),
   name: z.string().trim().min(1).max(120),
   description: z.string().max(500).nullable().optional(),
-  type: z.enum(["percent", "fixed", "nth_night"]),
+  type: z.enum(["percent", "fixed", "nth_night", "nth_night_onwards"]),
   value: z.number().min(0),
   nth_night_percent: z.number().min(0).max(100).nullable().optional(),
   active: z.boolean(),
@@ -50,7 +50,7 @@ export const upsertDiscount = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ id: string }> => {
     await assertAdmin(context.supabase, context.userId);
     const code = data.code ? data.code.trim().toUpperCase() : null;
-    const row = {
+    const row: any = {
       code,
       name: data.name,
       description: data.description ?? null,

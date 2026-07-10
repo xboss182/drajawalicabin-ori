@@ -4,7 +4,7 @@
 //  - Best-one-wins: if a coupon and an automatic rule both qualify, we keep the larger discount.
 //  - Nth-night discounts count nights PER ROOM (a 2-room 2-night booking gets 2 discounted nights).
 
-export type DiscountType = "percent" | "fixed" | "nth_night";
+export type DiscountType = "percent" | "fixed" | "nth_night" | "nth_night_onwards";
 export type DiscountScope = "any" | "weekday" | "weekend" | "holiday";
 
 export type DiscountRow = {
@@ -105,6 +105,21 @@ export function computeDiscountAmount(d: DiscountRow, cart: PricingCart): number
       if (!target) continue;
       if (d.applies_to !== "any" && target.scope !== d.applies_to) continue;
       off += (target.rate * pct) / 100;
+    }
+    return round2(off);
+  }
+  if (d.type === "nth_night_onwards") {
+    // Per room: apply pct off to every night from the Nth night onwards.
+    const startIdx = Math.max(1, Math.floor(Number(d.value) || 2));
+    const pct = Math.max(0, Math.min(100, Number(d.nth_night_percent) || 0));
+    if (pct === 0) return 0;
+    let off = 0;
+    for (const r of cart.rooms) {
+      for (let i = startIdx - 1; i < r.nights.length; i++) {
+        const n = r.nights[i];
+        if (d.applies_to !== "any" && n.scope !== d.applies_to) continue;
+        off += (n.rate * pct) / 100;
+      }
     }
     return round2(off);
   }
