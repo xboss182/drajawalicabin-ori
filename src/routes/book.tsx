@@ -1017,7 +1017,7 @@ function DetailsStep(props: {
             )}
             <dl className="mt-6 divide-y divide-border text-sm">
               <Row label={bt.summary.checkin} value={fmt(checkin, bt.locale)} />
-              <Row label={bt.summary.checkout} value={fmt(addDaysISO(checkout, -1), bt.locale)} />
+              <Row label={bt.summary.checkout} value={fmt(checkout, bt.locale)} />
               <Row label={bt.summary.nights} value={String(price?.nights ?? "—")} />
               <Row label={bt.summary.guests} value={`${guests} adult${Number(guests) === 1 ? "" : "s"}${Number(kids) > 0 ? ` + ${kids} child${Number(kids) === 1 ? "" : "ren"} <12` : ""}`} />
               <Row label={bt.summary.rooms} value={String(totalRooms)} />
