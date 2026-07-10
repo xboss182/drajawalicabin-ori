@@ -1093,12 +1093,12 @@ function DetailsStep(props: {
                   {price.comforter_total > 0 && (
                     <Row label={bt.summary.comforterLabel} value={`RM ${price.comforter_total.toFixed(2)}`} />
                   )}
-                  <div className="py-2">
-                    <label className="mb-1 block text-[10px] uppercase tracking-widest text-stone">
+                  <div className="py-1.5">
+                    <label className="mb-0.5 block text-[10px] uppercase tracking-widest text-stone">
                       Promo code
                     </label>
                     {couponRow ? (
-                      <div className="flex items-center justify-between rounded-md bg-emerald-50 px-2 py-1 text-xs text-emerald-800">
+                      <div className="flex items-center justify-between rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-800">
                         <span>
                           ✓ <span className="font-medium">{couponRow.code}</span> applied
                         </span>
@@ -1111,30 +1111,30 @@ function DetailsStep(props: {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex gap-1.5">
+                      <div className="flex gap-1">
                         <input
                           type="text"
                           value={couponInput}
                           onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                           placeholder="Enter code"
                           maxLength={40}
-                          className="h-8 flex-1 rounded-md border border-border bg-background px-2 text-xs uppercase tracking-wide focus:border-forest focus:outline-none"
+                          className="h-7 flex-1 rounded-md border border-border bg-background px-2 text-[11px] uppercase tracking-wide focus:border-forest focus:outline-none"
                         />
                         <button
                           type="button"
                           onClick={applyCoupon}
                           disabled={couponApplying || !couponInput.trim()}
-                          className="h-8 rounded-md bg-forest px-2.5 text-[10px] font-medium uppercase tracking-widest text-white transition hover:bg-forest/90 disabled:opacity-50"
+                          className="h-7 rounded-md bg-forest px-2 text-[10px] font-medium uppercase tracking-wider text-white transition hover:bg-forest/90 disabled:opacity-50"
                         >
                           {couponApplying ? "…" : "Apply"}
                         </button>
                       </div>
                     )}
                     {couponError && (
-                      <p className="mt-1 text-[11px] text-red-600">{couponError}</p>
+                      <p className="mt-0.5 text-[10px] text-red-600">{couponError}</p>
                     )}
                     {couponRow && couponAmount === 0 && (
-                      <p className="mt-1 text-[11px] text-amber-700">
+                      <p className="mt-0.5 text-[10px] text-amber-700 leading-tight">
                         Code accepted but doesn't apply to this stay (check minimum nights or dates).
                       </p>
                     )}
