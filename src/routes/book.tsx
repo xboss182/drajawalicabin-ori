@@ -9,7 +9,7 @@ import {
   getTakenDates,
   recommendCabins,
 } from "@/lib/booking.functions";
-import { listActiveAutoDiscounts } from "@/lib/discounts.functions";
+import { listActiveAutoDiscounts, validateCoupon } from "@/lib/discounts.functions";
 import { pickBestDiscount, type DiscountRow, type PricingCart } from "@/lib/discounts";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinQueenImg from "@/assets/cabin-queen.jpg";
