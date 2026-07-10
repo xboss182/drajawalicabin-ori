@@ -50,7 +50,7 @@ export const upsertDiscount = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ id: string }> => {
     await assertAdmin(context.supabase, context.userId);
     const code = data.code ? data.code.trim().toUpperCase() : null;
-    const row = {
+    const row: any = {
       code,
       name: data.name,
       description: data.description ?? null,
