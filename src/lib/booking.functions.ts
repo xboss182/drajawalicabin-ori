@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { computeLateCheckout } from "@/lib/late-checkout";
 
 const SECURITY_DEPOSIT_PER_ROOM = 50;
 
@@ -2161,4 +2162,71 @@ export const recommendCabins = createServerFn({ method: "POST" })
     }
 
     return { picks };
+  });
+
+// ────────────────────────────────────────────────────────────────────────────
+// Late check-out + deposit refund (admin-only)
+// ────────────────────────────────────────────────────────────────────────────
+
+const saveLateCheckoutSchema = z.object({
+  bookingId: z.string().uuid(),
+  actualCheckOutAt: z.string().min(1), // ISO datetime
+  refundNote: z.string().max(1000).optional(),
+  refundOverrideRM: z.number().finite().nonnegative().optional(),
+});
+
+export const saveLateCheckout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => saveLateCheckoutSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+
+    const { data: rows } = await supabaseAdmin
+      .from("booking_requests")
+      .select("check_out, deposit_amount")
+      .eq("booking_group_id", gid);
+    const lead = rows?.[0];
+    if (!lead) throw new Error("Booking not found");
+    const totalDeposit = (rows ?? []).reduce((s, r) => s + Number(r.deposit_amount ?? 0), 0);
+    const { hoursLate, feeRM } = computeLateCheckout(lead.check_out as string, data.actualCheckOutAt);
+    const suggestedRefund = Math.max(0, totalDeposit - feeRM);
+    const refund = data.refundOverrideRM != null ? data.refundOverrideRM : suggestedRefund;
+
+    const { error } = await supabaseAdmin
+      .from("booking_requests")
+      .update({
+        actual_check_out_at: data.actualCheckOutAt,
+        late_checkout_hours: hoursLate,
+        late_checkout_fee: feeRM,
+        deposit_refunded_amount: refund,
+        deposit_refund_note: data.refundNote ?? null,
+      })
+      .eq("booking_group_id", gid);
+    if (error) throw new Error(error.message);
+    return { ok: true, hoursLate, feeRM, suggestedRefund, totalDeposit };
+  });
+
+export const markDepositRefunded = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ bookingId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+    const { error } = await supabaseAdmin
+      .from("booking_requests")
+      .update({ deposit_refunded_at: new Date().toISOString() })
+      .eq("booking_group_id", gid);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });

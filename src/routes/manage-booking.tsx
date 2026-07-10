@@ -189,6 +189,10 @@ function ManagePage() {
                 <dt className="text-stone font-medium">Room balance due</dt>
                 <dd className="font-medium text-forest">RM {b.remaining.toFixed(2)}</dd>
               </dl>
+              <p className="mt-3 text-xs text-stone">
+                <strong>Check-out policy:</strong> Check-out is by 12:00 PM. Late check-out is charged at
+                <strong> RM10 per hour</strong> (rounded up) and deducted from your refundable security deposit.
+              </p>
             </div>
 
             {b.status === "fully_paid" ? (

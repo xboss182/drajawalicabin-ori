@@ -1,65 +1,73 @@
-# Sync bookings to local Excel via Power Query
+## Late check-out fee — RM10/hour after 12:00 PM
 
-Goal: give you a single URL that Excel's Power Query can refresh on demand to pull all bookings, mapped exactly to your column list.
+### Rules (agreed)
+- Standard check-out: **12:00 PM** local time (Asia/Kuala_Lumpur).
+- Any minute past 12:00 is charged; **round up per hour** (e.g. 12:05 = 1h = RM10; 1:30 PM = 2h = RM20).
+- **Admin manually logs** the actual check-out date/time in the dashboard.
+- Refund handling: **display only** — dashboard shows the deduction breakdown; admin refunds the remainder manually via bank/DuitNow.
 
-## How it will work
+### 1. Database (migration)
+Add to `booking_requests`:
+- `actual_check_out_at timestamptz` — admin-entered actual departure.
+- `late_checkout_hours integer` — rounded-up hours past noon (0 if on time).
+- `late_checkout_fee numeric(10,2)` — hours × RM10.
+- `deposit_refunded_amount numeric(10,2)` — auto-computed suggestion (deposit − fee); admin can override.
+- `deposit_refund_note text` — free-text note (e.g. damages).
+- `deposit_refunded_at timestamptz` — set when admin marks refund as sent.
 
-1. Add a new secure public endpoint that returns booking data as **CSV** (Power Query's most reliable format).
-2. Endpoint is protected by a **secret token** in the URL query string — only someone with the token can read the data.
-3. In Excel: **Data → Get Data → From Web** → paste the URL. Power Query loads it as a refreshable table. Click **Refresh All** anytime to re-pull the latest data.
+Plus `app_settings` keys (defaults, editable in Admin → Settings):
+- `late_checkout_hourly_fee` = 10
+- `late_checkout_grace_minutes` = 0
+- `standard_checkout_hour` = 12 (24h)
 
-## Endpoint
+### 2. Fee calculation (shared helper)
+`src/lib/late-checkout.ts` — pure function:
+```
+computeLateCheckout(checkOutDate, actualCheckOutAt, { hour=12, grace=0, hourly=10 })
+  → { hoursLate, feeRM }
+```
+Rounds up per hour past noon MYT, ignores anything ≤ standard time.
 
-- URL: `https://drajawalicabin.com/api/public/exports/bookings.csv?token=<SECRET>`
-- Method: GET, returns `text/csv`
-- Rows: one row **per cabin/room** within a booking group (so "Room No" and "Occupancy" make sense when a guest books multiple rooms)
-- Optional filters: `?from=YYYY-MM-DD&to=YYYY-MM-DD` on check-in date
+### 3. Admin dashboard UI
+In the booking detail drawer (`admin.index.tsx`), add a **Check-out & Deposit** section shown once booking is `confirmed`/`fully_paid` and check-in has passed:
+- Date+time picker: "Actual check-out time" (defaults to now).
+- Live-computed breakdown card:
+  - `Scheduled check-out: 12:00 PM, 15 Jul 2026`
+  - `Actual check-out: 2:20 PM, 15 Jul 2026`
+  - `Late check-out fee: 3 hrs × RM10 = RM30`
+  - `Security deposit: RM50`
+  - `Refund due: RM20`
+  - Optional damages/notes textarea (further deducts from refund).
+- "Save & mark checked out" button → persists fields.
+- After save: shows "Refund pending — pay RM X manually" with a "Mark refunded" button.
 
-## Columns (in this exact order)
+### 4. Guest-facing terms updates
+Update visible terms/notices with the late-checkout clause:
+- `src/routes/book.tsx` — terms list on booking form (both deposit and pay-in-full variants).
+- `src/routes/manage-booking.tsx` — description + a small "Check-out policy" note near the check-out row.
+- `src/routes/checkout.tsx` — subtitle where deposit is explained.
+- `src/lib/i18n.tsx` — new EN + MS strings for the clause (used across pages).
 
-| Excel column          | Source                                                          |
-|-----------------------|-----------------------------------------------------------------|
-| Booking Ref           | `payment_reference` (e.g. RJW-1234)                             |
-| Date Booking          | `created_at` (date only)                                        |
-| Name                  | `guest_name`                                                    |
-| IC                    | ⚠️ **not currently collected** — see below                      |
-| Contact / Tel         | `phone`                                                         |
-| Vehicle Model         | `vehicle_type`                                                  |
-| Veh Reg No            | `vehicle_number`                                                |
-| No of Pax             | `guests`                                                        |
-| Deposit Status        | Paid / Unpaid (derived from status + `deposit_amount`)          |
-| Total Payment Status  | Deposit only / Fully paid / Awaiting review / Pending           |
-| No of Nite Stay       | `nights`                                                        |
-| No of Rooms           | `num_rooms`                                                     |
-| Room No               | Cabin name/number for that row (e.g. "1", "2")                  |
-| Comforter No          | `comforter_total` ÷ (20 × nights) — count of comforters         |
-| Occupancy (room×stay) | `num_rooms × nights`                                            |
-| Date Check In         | `check_in`                                                      |
-| Date Check Out        | `check_out`                                                     |
-| Security Deposit      | `deposit_amount`                                                |
-| Room Payment Amount   | `total_amount`                                                  |
-| Remarks               | `notes`                                                         |
-| Relation              | `relationship`                                                  |
+Clause wording (EN):
+> **Check-out is by 12:00 PM.** Late check-out is charged at **RM10 per hour** (rounded up per hour) and will be deducted from your refundable security deposit.
 
-## One decision needed from you
+MS:
+> **Daftar keluar sebelum 12:00 tengah hari.** Lewat daftar keluar dikenakan caj **RM10 sejam** (dibundarkan ke atas) dan akan ditolak daripada deposit keselamatan anda.
 
-**IC (NRIC) is not captured anywhere today** — the booking form only collects name, email, phone, vehicle, etc. Two options:
+### 5. Email (optional, small)
+Append the same clause line to the booking-summary email template (`src/lib/email-templates/booking-summary.tsx`) under the existing policy list so guests see it in their confirmation.
 
-- **A. Leave the IC column blank in the export** (ship now, no form changes).
-- **B. Add an IC field to the booking form + admin edit screen** first, then include it in the export (bigger change, needs a DB migration + form UI update).
+### 6. Admin Settings
+Add fields under Admin → Settings for hourly fee, grace minutes, standard check-out hour (writes to `app_settings`). Defaults RM10 / 0 min / 12:00.
 
-Tell me A or B and I'll build it.
+### Out of scope (explicit)
+- No automated Stripe refund — admin refunds manually.
+- No auto check-out detection — admin logs the time.
+- CSV export can gain the two new columns (`Late fee`, `Deposit refunded`) in a follow-up if you want.
 
-## Excel side (once endpoint exists)
-
-1. Excel → **Data → From Web** → paste the URL with token.
-2. In the Power Query preview, click **Load**.
-3. To refresh: **Data → Refresh All** (or right-click table → Refresh). Set auto-refresh interval under Query Properties if you want.
-
-## Technical details
-
-- New route: `src/routes/api/public/exports/bookings.csv.ts` (server route, public path so no auth wall).
-- Auth: compare `?token=` against a new secret `BOOKINGS_EXPORT_TOKEN` (stored in Cloud). No token = 401.
-- Uses `supabaseAdmin` (service role) inside the handler to read `booking_requests` joined with `cabins` for the room name.
-- CSV built manually (no dep) with proper quoting so commas in `notes` don't break columns.
-- One booking row expands to N rows when `num_rooms > 1`, so "Room No" column is meaningful.
+### Files touched
+- new: migration; `src/lib/late-checkout.ts`
+- edit: `src/routes/_authenticated/admin.index.tsx`, `src/routes/_authenticated/admin.settings.tsx`
+- edit: `src/routes/book.tsx`, `src/routes/manage-booking.tsx`, `src/routes/checkout.tsx`
+- edit: `src/lib/i18n.tsx`, `src/lib/email-templates/booking-summary.tsx`
+- edit: `src/lib/booking.functions.ts` (server fn to save actual check-out + fee)

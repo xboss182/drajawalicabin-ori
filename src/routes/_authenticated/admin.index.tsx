@@ -14,7 +14,10 @@ import {
   cancelAndRefundBooking,
   quoteRoomPrices,
   updateBookingRoomPrices,
+  saveLateCheckout,
+  markDepositRefunded,
 } from "@/lib/booking.functions";
+import { computeLateCheckout, LATE_CHECKOUT_HOURLY_FEE } from "@/lib/late-checkout";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { syncBookingsToOneDrive } from "@/lib/excel-sync.functions";
 import { Calendar } from "@/components/ui/calendar";
@@ -70,6 +73,12 @@ type Booking = {
   deposit_amount?: number | null;
   num_rooms?: number;
   payment_method?: string | null;
+  actual_check_out_at?: string | null;
+  late_checkout_hours?: number | null;
+  late_checkout_fee?: number | null;
+  deposit_refunded_amount?: number | null;
+  deposit_refund_note?: string | null;
+  deposit_refunded_at?: string | null;
   rooms?: Array<{ id: string; cabinId: string | null; name: string; nights: number | null; total: number }>;
 };
 
@@ -535,6 +544,9 @@ function Card({
       {b.status === "fully_paid" && b.locker_code && (
         <p className="mt-4 text-xs text-forest">Locker code: <span className="font-mono">{b.locker_code}</span></p>
       )}
+      {(b.status === "confirmed" || b.status === "fully_paid") && (
+        <LateCheckoutSection b={b} onRefresh={onRefresh} />
+      )}
       {onDelete && (
         <div className="mt-4 border-t border-border/60 pt-3">
           {onCancelRefund &&
@@ -561,6 +573,154 @@ function Card({
 }
 
 function ManualBookingForm({
+  cabins,
+  onDone,
+}: {
+  cabins: Array<{ id: string; name: string; cabin_type: string }>;
+  onDone: () => void;
+}) {
+  return _ManualBookingForm({ cabins, onDone });
+}
+
+function LateCheckoutSection({ b, onRefresh }: { b: Booking; onRefresh?: () => void }) {
+  const totalDeposit = (b.rooms?.length ?? b.num_rooms ?? 1) * 50;
+  const alreadyRefunded = !!b.deposit_refunded_at;
+  const nowLocalInput = () => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  };
+  const initialActual = b.actual_check_out_at
+    ? new Date(b.actual_check_out_at).toISOString().slice(0, 16)
+    : nowLocalInput();
+  const [actual, setActual] = useState(initialActual);
+  const [note, setNote] = useState(b.deposit_refund_note ?? "");
+  const [override, setOverride] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [refunding, setRefunding] = useState(false);
+
+  const actualIso = actual ? new Date(actual).toISOString() : null;
+  const { hoursLate, feeRM } = computeLateCheckout(b.check_out, actualIso);
+  const suggested = Math.max(0, totalDeposit - feeRM);
+  const refundValue = override !== "" ? Number(override) || 0 : suggested;
+
+  async function save() {
+    setSaving(true);
+    try {
+      await saveLateCheckout({
+        data: {
+          bookingId: b.id,
+          actualCheckOutAt: actualIso!,
+          refundNote: note || undefined,
+          refundOverrideRM: override !== "" ? Number(override) || 0 : undefined,
+        },
+      });
+      onRefresh?.();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }
+  async function markRefunded() {
+    if (!confirm(`Mark RM ${(b.deposit_refunded_amount ?? refundValue).toFixed(2)} as refunded to the guest?`)) return;
+    setRefunding(true);
+    try {
+      await markDepositRefunded({ data: { bookingId: b.id } });
+      onRefresh?.();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setRefunding(false);
+    }
+  }
+
+  return (
+    <div className="mt-5 rounded-lg border border-border bg-coconut/40 p-4">
+      <p className="text-[10px] uppercase tracking-widest text-forest">Check-out &amp; deposit</p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+        <label className="text-xs text-stone">
+          Actual check-out (local time)
+          <input
+            type="datetime-local"
+            value={actual}
+            onChange={(e) => setActual(e.target.value)}
+            disabled={alreadyRefunded}
+            className="mt-1 block w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground disabled:opacity-60"
+          />
+        </label>
+        <div className="text-xs text-stone sm:text-right">
+          Scheduled: <span className="text-foreground">12:00 PM, {b.check_out}</span>
+        </div>
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
+        <dt className="text-stone">Late check-out</dt>
+        <dd className="text-right text-foreground">
+          {hoursLate > 0 ? `${hoursLate} hr × RM${LATE_CHECKOUT_HOURLY_FEE} = RM ${feeRM.toFixed(2)}` : "On time — no fee"}
+        </dd>
+        <dt className="text-stone">Security deposit held</dt>
+        <dd className="text-right text-foreground">RM {totalDeposit.toFixed(2)}</dd>
+        <dt className="text-stone">Suggested refund</dt>
+        <dd className="text-right text-foreground">RM {suggested.toFixed(2)}</dd>
+      </dl>
+      <label className="mt-3 block text-xs text-stone">
+        Damages / adjustment (RM, leave blank to use suggested)
+        <input
+          type="number"
+          min={0}
+          step="0.01"
+          placeholder={suggested.toFixed(2)}
+          value={override}
+          onChange={(e) => setOverride(e.target.value)}
+          disabled={alreadyRefunded}
+          className="mt-1 block w-40 rounded-md border border-border bg-white px-3 py-1.5 text-sm text-foreground disabled:opacity-60"
+        />
+      </label>
+      <label className="mt-2 block text-xs text-stone">
+        Notes (visible in admin only)
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          disabled={alreadyRefunded}
+          rows={2}
+          className="mt-1 block w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground disabled:opacity-60"
+        />
+      </label>
+      <p className="mt-3 text-sm font-medium text-forest">
+        Refund to guest: RM {refundValue.toFixed(2)}
+      </p>
+      {!alreadyRefunded ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving || !actualIso}
+            className="rounded-full bg-forest px-4 py-1.5 text-[11px] uppercase tracking-widest text-coconut hover:bg-forest/90 disabled:opacity-60"
+          >
+            {saving ? "Saving…" : b.actual_check_out_at ? "Update check-out" : "Save & mark checked out"}
+          </button>
+          {b.actual_check_out_at != null && (
+            <button
+              type="button"
+              onClick={markRefunded}
+              disabled={refunding}
+              className="rounded-full border border-forest px-4 py-1.5 text-[11px] uppercase tracking-widest text-forest hover:bg-forest hover:text-coconut disabled:opacity-60"
+            >
+              {refunding ? "…" : "Mark deposit refunded"}
+            </button>
+          )}
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-emerald-700">
+          Deposit refunded RM {Number(b.deposit_refunded_amount ?? 0).toFixed(2)} on{" "}
+          {new Date(b.deposit_refunded_at!).toLocaleString()}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function _ManualBookingForm({
   cabins,
   onDone,
 }: {

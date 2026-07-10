@@ -84,6 +84,9 @@ function CheckoutPage() {
             ? "This payment covers the remaining room rate. The security deposit is separate and refundable after check-out."
             : "Payments are processed securely. Your booking is auto-confirmed on success. The security deposit is refundable after check-out, subject to room inspection."}
         </p>
+        <p className="mt-2 text-xs text-stone">
+          Check-out is by 12:00 PM. Late check-out is charged at RM10 per hour (rounded up) and deducted from your security deposit.
+        </p>
 
         {error && (
           <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">

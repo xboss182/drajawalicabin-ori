@@ -883,6 +883,7 @@ function DetailsStep(props: {
               <li>This deposit is not part of the room rate and will be refunded after check-out, subject to room inspection.</li>
               <li>The full room rate is due 7 days before check-in; we'll email a reminder.</li>
               <li>Up to 2 children under 12 years old stay free per room (sharing existing bedding).</li>
+              <li><strong>Check-out is by 12:00 PM.</strong> Late check-out is charged at <strong>RM10 per hour</strong> (rounded up) and deducted from your security deposit.</li>
               <li>Cancellations within 7 days of check-in are strictly non-refundable.</li>
               <li>Refunds for earlier cancellations are processed within 7 working days.</li>
             </ul>
@@ -892,6 +893,7 @@ function DetailsStep(props: {
               <li>The security deposit is not part of the room rate and will be refunded after check-out, subject to room inspection.</li>
               <li>Locker code is issued on WhatsApp once we verify your receipt.</li>
               <li>Up to 2 children under 12 years old stay free per room (sharing existing bedding).</li>
+              <li><strong>Check-out is by 12:00 PM.</strong> Late check-out is charged at <strong>RM10 per hour</strong> (rounded up) and deducted from your security deposit.</li>
               <li>Cancellations within 7 days of check-in are strictly non-refundable.</li>
               <li>Refunds for earlier cancellations are processed within 7 working days.</li>
             </ul>
