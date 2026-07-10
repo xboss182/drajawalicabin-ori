@@ -1131,9 +1131,16 @@ function DetailsStep(props: {
                     {couponError && (
                       <p className="mt-1 text-xs text-red-600">{couponError}</p>
                     )}
-                    {couponRow && discount && discount.amount === 0 && (
+                    {couponRow && couponAmount === 0 && (
                       <p className="mt-1 text-xs text-amber-700">
                         Code accepted but doesn't apply to this stay (check minimum nights or dates).
+                      </p>
+                    )}
+                    {couponRow && couponAmount > 0 && discount && discount.label !== couponRow.code && (
+                      <p className="mt-1 text-xs text-amber-700">
+                        Code gives −RM {couponAmount.toFixed(2)}, but the automatic{" "}
+                        <span className="font-medium">{discount.label}</span> discount
+                        (−RM {discount.amount.toFixed(2)}) is bigger and was applied instead.
                       </p>
                     )}
                   </div>
