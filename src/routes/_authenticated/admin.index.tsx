@@ -73,6 +73,12 @@ type Booking = {
   deposit_amount?: number | null;
   num_rooms?: number;
   payment_method?: string | null;
+  actual_check_out_at?: string | null;
+  late_checkout_hours?: number | null;
+  late_checkout_fee?: number | null;
+  deposit_refunded_amount?: number | null;
+  deposit_refund_note?: string | null;
+  deposit_refunded_at?: string | null;
   rooms?: Array<{ id: string; cabinId: string | null; name: string; nights: number | null; total: number }>;
 };
 
