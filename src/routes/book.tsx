@@ -1074,6 +1074,52 @@ function DetailsStep(props: {
                   {price.comforter_total > 0 && (
                     <Row label={bt.summary.comforterLabel} value={`RM ${price.comforter_total.toFixed(2)}`} />
                   )}
+                  <div className="py-3">
+                    <label className="mb-1 block text-xs uppercase tracking-widest text-stone">
+                      Promo code
+                    </label>
+                    {couponRow ? (
+                      <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                        <span>
+                          ✓ <span className="font-medium">{couponRow.code}</span> applied
+                        </span>
+                        <button
+                          type="button"
+                          onClick={clearCoupon}
+                          className="text-xs underline underline-offset-2 hover:text-emerald-900"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                          placeholder="Enter code"
+                          maxLength={40}
+                          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm uppercase tracking-wide focus:border-forest focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={applyCoupon}
+                          disabled={couponApplying || !couponInput.trim()}
+                          className="rounded-lg bg-forest px-3 py-2 text-xs font-medium uppercase tracking-widest text-white transition hover:bg-forest/90 disabled:opacity-50"
+                        >
+                          {couponApplying ? "…" : "Apply"}
+                        </button>
+                      </div>
+                    )}
+                    {couponError && (
+                      <p className="mt-1 text-xs text-red-600">{couponError}</p>
+                    )}
+                    {couponRow && discount && discount.amount === 0 && (
+                      <p className="mt-1 text-xs text-amber-700">
+                        Code accepted but doesn't apply to this stay (check minimum nights or dates).
+                      </p>
+                    )}
+                  </div>
                   {discount && discount.amount > 0 && (
                     <>
                       <div className="flex items-center justify-between py-2 text-sm">
