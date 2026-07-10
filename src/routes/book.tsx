@@ -202,10 +202,12 @@ function BookPage() {
   useEffect(() => {
     if (cart.length === 0 || !checkin || !checkout) {
       setPrice(null);
+      setDiscount(null);
       return;
     }
     if (checkout <= checkin) {
       setPrice(null);
+      setDiscount(null);
       return;
     }
     (async () => {
@@ -215,6 +217,7 @@ function BookPage() {
         let comforter_total = 0;
         let total = 0;
         const byType: Record<string, { nights: number; subtotal: number; total: number; perNight: number }> = {};
+        const breakdownByType = new Map<string, Awaited<ReturnType<typeof previewPriceDetailed>>["nights"]>();
         for (const it of cart) {
           const g = groupByType.get(it.cabinType);
           const sample = g?.rooms[0];
@@ -232,15 +235,51 @@ function BookPage() {
             total: p.total,
             perNight: p.nights > 0 ? p.subtotal / p.nights : 0,
           };
+          const det = await previewPriceDetailed({
+            data: { cabinId: sample.id, checkIn: checkin, checkOut: checkout },
+          });
+          breakdownByType.set(it.cabinType, det.nights);
         }
         setPrice({ nights, subtotal, comforter_total, total });
         setPriceByType(byType);
+
+        // Build PricingCart with one entry per booked room and compute discount.
+        const roomsExpanded: PricingCart["rooms"] = [];
+        for (const it of cart) {
+          const bd = breakdownByType.get(it.cabinType) ?? [];
+          for (let i = 0; i < it.qty; i++) {
+            roomsExpanded.push({ cabinType: it.cabinType, nights: bd });
+          }
+        }
+        const subtotalRoomOnly = roomsExpanded.reduce(
+          (s, r) => s + r.nights.reduce((ss, n) => ss + n.rate, 0),
+          0,
+        );
+        const apps = pickBestDiscount(
+          { checkIn: checkin, rooms: roomsExpanded, subtotalRoomOnly },
+          autoDiscounts,
+        );
+        const first = apps[0];
+        setDiscount(first ? { label: first.code ?? first.name, amount: first.amountOff } : null);
       } catch {
         setPrice(null);
         setPriceByType({});
+        setDiscount(null);
       }
     })();
-  }, [cart, checkin, checkout, comforter, groupByType]);
+  }, [cart, checkin, checkout, comforter, groupByType, autoDiscounts]);
+
+  // Load active automatic discounts once.
+  useEffect(() => {
+    (async () => {
+      try {
+        const rows = await listActiveAutoDiscounts();
+        setAutoDiscounts(rows);
+      } catch {
+        setAutoDiscounts([]);
+      }
+    })();
+  }, []);
 
   // Availability for every cabin (next 90 days) — needed across mixed types
   const refreshAvailability = useCallback(async () => {
