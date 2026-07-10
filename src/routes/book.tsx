@@ -703,15 +703,19 @@ function DetailsStep(props: {
               showOutsideDays={false}
               selected={
                 checkin && checkout && checkout > checkin
-                  ? { from: parseLocalDate(checkin), to: parseLocalDate(addDaysISO(checkout, -1)) }
+                  ? { from: parseLocalDate(checkin), to: parseLocalDate(checkout) }
                   : undefined
               }
               onSelect={(r) => {
                 if (!r?.from) return;
                 const from = r.from;
-                const to = r.to && r.to.getTime() !== from.getTime() ? r.to : from;
                 setCheckin(formatLocalDate(from));
-                setCheckout(addDaysISO(formatLocalDate(to), 1));
+                // Range: `to` is the check-out day (exclusive night). Single-day click → 1 night.
+                const checkoutIso =
+                  r.to && r.to.getTime() !== from.getTime()
+                    ? formatLocalDate(r.to)
+                    : addDaysISO(formatLocalDate(from), 1);
+                setCheckout(checkoutIso);
               }}
               disabled={[{ before: parseLocalDate(todayStr) }, ...blockedDates.map((d) => parseLocalDate(d))]}
               modifiers={{ booked: blockedDates.map((d) => parseLocalDate(d)) }}
