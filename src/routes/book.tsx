@@ -495,6 +495,7 @@ function BookPage() {
             paymentType, setPaymentType,
             recommendations, pickRecommendation, isAnyCabin,
             pickComboRecommendation,
+            discount,
           }}
         />
       )}
@@ -567,6 +568,7 @@ function DetailsStep(props: {
   pickRecommendation: (type: string) => void;
   pickComboRecommendation: (types: string[]) => void;
   isAnyCabin: boolean;
+  discount: { label: string; amount: number } | null;
 }) {
   const { t } = useLanguage();
   const bt = t.book;
