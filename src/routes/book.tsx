@@ -582,6 +582,7 @@ function DetailsStep(props: {
     price, priceByType, previewCabin, blockedDates, blockedReasonByDate, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
+    discount,
   } = props;
 
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
