@@ -138,6 +138,10 @@ function BookPage() {
   const [priceByType, setPriceByType] = useState<Record<string, { nights: number; subtotal: number; total: number; perNight: number }>>({});
   const [discount, setDiscount] = useState<{ label: string; amount: number } | null>(null);
   const [autoDiscounts, setAutoDiscounts] = useState<DiscountRow[]>([]);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponRow, setCouponRow] = useState<DiscountRow | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponApplying, setCouponApplying] = useState(false);
   const [takenByCabin, setTakenByCabin] = useState<Record<string, string[]>>({});
 
   const [step, setStep] = useState<Step>("details");
