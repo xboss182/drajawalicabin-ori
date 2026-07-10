@@ -9,7 +9,7 @@ import {
   getTakenDates,
   recommendCabins,
 } from "@/lib/booking.functions";
-import { listActiveAutoDiscounts } from "@/lib/discounts.functions";
+import { listActiveAutoDiscounts, validateCoupon } from "@/lib/discounts.functions";
 import { pickBestDiscount, type DiscountRow, type PricingCart } from "@/lib/discounts";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinQueenImg from "@/assets/cabin-queen.jpg";
@@ -138,6 +138,10 @@ function BookPage() {
   const [priceByType, setPriceByType] = useState<Record<string, { nights: number; subtotal: number; total: number; perNight: number }>>({});
   const [discount, setDiscount] = useState<{ label: string; amount: number } | null>(null);
   const [autoDiscounts, setAutoDiscounts] = useState<DiscountRow[]>([]);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponRow, setCouponRow] = useState<DiscountRow | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponApplying, setCouponApplying] = useState(false);
   const [takenByCabin, setTakenByCabin] = useState<Record<string, string[]>>({});
 
   const [step, setStep] = useState<Step>("details");
@@ -258,6 +262,7 @@ function BookPage() {
         const apps = pickBestDiscount(
           { checkIn: checkin, rooms: roomsExpanded, subtotalRoomOnly },
           autoDiscounts,
+          couponRow,
         );
         const first = apps[0];
         setDiscount(first ? { label: first.code ?? first.name, amount: first.amountOff } : null);
@@ -267,7 +272,7 @@ function BookPage() {
         setDiscount(null);
       }
     })();
-  }, [cart, checkin, checkout, comforter, groupByType, autoDiscounts]);
+  }, [cart, checkin, checkout, comforter, groupByType, autoDiscounts, couponRow]);
 
   // Load active automatic discounts once.
   useEffect(() => {
@@ -280,6 +285,36 @@ function BookPage() {
       }
     })();
   }, []);
+
+  async function applyCoupon() {
+    const code = couponInput.trim();
+    setCouponError(null);
+    if (!code) {
+      setCouponRow(null);
+      return;
+    }
+    setCouponApplying(true);
+    try {
+      const row = await validateCoupon({ data: { code } });
+      if (!row) {
+        setCouponRow(null);
+        setCouponError("Invalid or expired code.");
+        return;
+      }
+      setCouponRow(row);
+    } catch {
+      setCouponRow(null);
+      setCouponError("Could not verify code. Try again.");
+    } finally {
+      setCouponApplying(false);
+    }
+  }
+
+  function clearCoupon() {
+    setCouponInput("");
+    setCouponRow(null);
+    setCouponError(null);
+  }
 
   // Availability for every cabin (next 90 days) — needed across mixed types
   const refreshAvailability = useCallback(async () => {
@@ -432,6 +467,7 @@ function BookPage() {
             return parts.length ? parts.join("\n") : undefined;
           })(),
           paymentType,
+          ...(couponRow?.code ? { couponCode: couponRow.code } : {}),
         },
       });
       setBooking(res);
@@ -496,6 +532,9 @@ function BookPage() {
             recommendations, pickRecommendation, isAnyCabin,
             pickComboRecommendation,
             discount,
+            couponInput, setCouponInput,
+            couponRow, couponError, couponApplying,
+            applyCoupon, clearCoupon,
           }}
         />
       )}
@@ -569,6 +608,13 @@ function DetailsStep(props: {
   pickComboRecommendation: (types: string[]) => void;
   isAnyCabin: boolean;
   discount: { label: string; amount: number } | null;
+  couponInput: string;
+  setCouponInput: (s: string) => void;
+  couponRow: DiscountRow | null;
+  couponError: string | null;
+  couponApplying: boolean;
+  applyCoupon: () => void;
+  clearCoupon: () => void;
 }) {
   const { t } = useLanguage();
   const bt = t.book;
@@ -583,6 +629,7 @@ function DetailsStep(props: {
     submit, submitting, error, agreed, setAgreed,
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
     discount,
+    couponInput, setCouponInput, couponRow, couponError, couponApplying, applyCoupon, clearCoupon,
   } = props;
 
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
@@ -1027,6 +1074,52 @@ function DetailsStep(props: {
                   {price.comforter_total > 0 && (
                     <Row label={bt.summary.comforterLabel} value={`RM ${price.comforter_total.toFixed(2)}`} />
                   )}
+                  <div className="py-3">
+                    <label className="mb-1 block text-xs uppercase tracking-widest text-stone">
+                      Promo code
+                    </label>
+                    {couponRow ? (
+                      <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                        <span>
+                          ✓ <span className="font-medium">{couponRow.code}</span> applied
+                        </span>
+                        <button
+                          type="button"
+                          onClick={clearCoupon}
+                          className="text-xs underline underline-offset-2 hover:text-emerald-900"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                          placeholder="Enter code"
+                          maxLength={40}
+                          className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm uppercase tracking-wide focus:border-forest focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={applyCoupon}
+                          disabled={couponApplying || !couponInput.trim()}
+                          className="rounded-lg bg-forest px-3 py-2 text-xs font-medium uppercase tracking-widest text-white transition hover:bg-forest/90 disabled:opacity-50"
+                        >
+                          {couponApplying ? "…" : "Apply"}
+                        </button>
+                      </div>
+                    )}
+                    {couponError && (
+                      <p className="mt-1 text-xs text-red-600">{couponError}</p>
+                    )}
+                    {couponRow && discount && discount.amount === 0 && (
+                      <p className="mt-1 text-xs text-amber-700">
+                        Code accepted but doesn't apply to this stay (check minimum nights or dates).
+                      </p>
+                    )}
+                  </div>
                   {discount && discount.amount > 0 && (
                     <>
                       <div className="flex items-center justify-between py-2 text-sm">
