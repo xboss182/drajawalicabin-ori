@@ -67,10 +67,16 @@ const EMPTY: FormState = {
   stackable: false,
 };
 
+const EMPTY_AUTO: FormState = { ...EMPTY, code: "" };
+const EMPTY_COUPON: FormState = { ...EMPTY, code: "" };
+
+type Mode = "coupon" | "auto";
+
 function DiscountsPage() {
   const [rows, setRows] = useState<DiscountRow[]>([]);
   const [redemptions, setRedemptions] = useState<RedemptionRow[]>([]);
-  const [form, setForm] = useState<FormState>(EMPTY);
+  const [mode, setMode] = useState<Mode>("coupon");
+  const [form, setForm] = useState<FormState>(EMPTY_COUPON);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -100,6 +106,7 @@ function DiscountsPage() {
   }, [redemptions]);
 
   function editRow(row: DiscountRow) {
+    setMode(row.code ? "coupon" : "auto");
     setForm({
       id: row.id,
       code: row.code ?? "",
@@ -127,6 +134,13 @@ function DiscountsPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function resetForm(nextMode: Mode = mode) {
+    setMode(nextMode);
+    setForm({ ...(nextMode === "coupon" ? EMPTY_COUPON : EMPTY_AUTO) });
+    setErr(null);
+    setMsg(null);
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -135,7 +149,7 @@ function DiscountsPage() {
     try {
       const payload = {
         id: form.id ?? undefined,
-        code: form.code.trim() || null,
+        code: mode === "coupon" ? (form.code.trim() || null) : null,
         name: form.name.trim(),
         description: form.description.trim() || null,
         type: form.type,
@@ -158,8 +172,11 @@ function DiscountsPage() {
         max_uses_per_email: form.max_uses_per_email === "" ? null : Number(form.max_uses_per_email),
         stackable: form.stackable,
       };
+      if (mode === "coupon" && !payload.code) {
+        throw new Error("Coupon code is required for a coupon. Switch to Automatic rule if you want it auto-applied.");
+      }
       await upsertDiscount({ data: payload });
-      setForm(EMPTY);
+      resetForm(mode);
       setMsg("Saved");
       await load();
       setTimeout(() => setMsg(null), 1500);
@@ -211,21 +228,48 @@ function DiscountsPage() {
         {err && <p className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{err}</p>}
         {msg && <p className="mt-4 rounded border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">{msg}</p>}
 
+        {/* Mode switcher */}
+        <div className="mt-6 inline-flex rounded-full border border-border bg-card p-1 text-xs">
+          <button
+            type="button"
+            onClick={() => { if (!form.id) resetForm("coupon"); else setMode("coupon"); }}
+            className={`rounded-full px-4 py-1.5 uppercase tracking-widest ${mode === "coupon" ? "bg-forest text-coconut" : "text-stone"}`}
+          >
+            Coupon code
+          </button>
+          <button
+            type="button"
+            onClick={() => { if (!form.id) resetForm("auto"); else setMode("auto"); }}
+            className={`rounded-full px-4 py-1.5 uppercase tracking-widest ${mode === "auto" ? "bg-forest text-coconut" : "text-stone"}`}
+          >
+            Automatic rule
+          </button>
+        </div>
+
         {/* Form */}
-        <form onSubmit={submit} className="mt-6 rounded-xl border border-border bg-card p-5">
+        <form onSubmit={submit} className="mt-4 rounded-xl border border-border bg-card p-5">
           <h2 className="font-display text-lg text-forest">
-            {form.id ? "Edit discount" : "New discount"}
+            {form.id
+              ? mode === "coupon" ? "Edit coupon code" : "Edit automatic rule"
+              : mode === "coupon" ? "New coupon code" : "New automatic rule"}
           </h2>
+          <p className="mt-1 text-xs text-stone">
+            {mode === "coupon"
+              ? "Guests type this code at checkout. Requires a code."
+              : "Silently applied when the booking qualifies. No code needed."}
+          </p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <Field label="Name (internal)">
               <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="input" placeholder="Merdeka 15%" />
             </Field>
-            <Field label="Code (leave blank = automatic rule)">
-              <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                className="input" placeholder="RAYA25" />
-            </Field>
+            {mode === "coupon" && (
+              <Field label="Code (guest types this)">
+                <input required value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                  className="input" placeholder="RAYA25" />
+              </Field>
+            )}
 
             <Field label="Type">
               <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as DiscountType })}
@@ -305,18 +349,20 @@ function DiscountsPage() {
               <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
               Active
             </label>
-            <label className="inline-flex items-center gap-2">
-              <input type="checkbox" checked={form.stackable} onChange={(e) => setForm({ ...form, stackable: e.target.checked })} />
-              Stackable with automatic rule
-            </label>
+            {mode === "coupon" && (
+              <label className="inline-flex items-center gap-2">
+                <input type="checkbox" checked={form.stackable} onChange={(e) => setForm({ ...form, stackable: e.target.checked })} />
+                Stackable with automatic rule
+              </label>
+            )}
           </div>
 
           <div className="mt-5 flex gap-2">
             <button disabled={busy} className="rounded-full bg-forest px-5 py-2 text-xs uppercase tracking-widest text-coconut disabled:opacity-60">
-              {busy ? "Saving…" : form.id ? "Save changes" : "Create discount"}
+              {busy ? "Saving…" : form.id ? "Save changes" : mode === "coupon" ? "Create coupon" : "Create rule"}
             </button>
             {form.id && (
-              <button type="button" onClick={() => setForm(EMPTY)}
+              <button type="button" onClick={() => resetForm(mode)}
                 className="rounded-full border border-border px-5 py-2 text-xs uppercase tracking-widest text-stone">
                 Cancel edit
               </button>
@@ -324,64 +370,27 @@ function DiscountsPage() {
           </div>
         </form>
 
-        {/* Table */}
-        <div className="mt-10">
-          <h2 className="font-display text-xl text-forest">All discounts ({rows.length})</h2>
-          <div className="mt-3 overflow-x-auto rounded-xl border border-border">
-            <table className="min-w-full text-sm">
-              <thead className="bg-coconut text-xs uppercase tracking-wider text-stone">
-                <tr>
-                  <th className="px-3 py-2 text-left">Name</th>
-                  <th className="px-3 py-2 text-left">Code</th>
-                  <th className="px-3 py-2 text-left">Type / value</th>
-                  <th className="px-3 py-2 text-left">Window</th>
-                  <th className="px-3 py-2 text-right">Uses</th>
-                  <th className="px-3 py-2 text-right">Total off</th>
-                  <th className="px-3 py-2 text-center">Active</th>
-                  <th className="px-3 py-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.length === 0 && (
-                  <tr><td colSpan={8} className="px-3 py-6 text-center text-stone">No discounts yet.</td></tr>
-                )}
-                {rows.map((r) => {
-                  const usage = usageByDiscount.get(r.id) ?? { count: 0, total: 0 };
-                  return (
-                    <tr key={r.id} className="border-t border-border">
-                      <td className="px-3 py-2">{r.name}</td>
-                      <td className="px-3 py-2 font-mono text-xs">{r.code ?? <span className="text-stone">— auto —</span>}</td>
-                      <td className="px-3 py-2">
-                        {r.type === "percent" && `${r.value}% off`}
-                        {r.type === "fixed" && `RM${r.value} off`}
-                        {r.type === "nth_night" && `Night #${r.value}: ${r.nth_night_percent}% off`}
-                        <div className="text-xs text-stone">{r.applies_to !== "any" ? r.applies_to : ""}</div>
-                      </td>
-                      <td className="px-3 py-2 text-xs text-stone">
-                        {r.starts_at?.slice(0, 10) ?? "—"} → {r.ends_at?.slice(0, 10) ?? "—"}
-                        {(r.stay_from || r.stay_to) && (
-                          <div>stay {r.stay_from ?? "—"} → {r.stay_to ?? "—"}</div>
-                        )}
-                      </td>
-                      <td className="px-3 py-2 text-right">{usage.count}{r.max_uses ? ` / ${r.max_uses}` : ""}</td>
-                      <td className="px-3 py-2 text-right">RM{usage.total.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-center">
-                        <button onClick={() => toggle(r.id, !r.active)}
-                          className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest ${r.active ? "bg-forest text-coconut" : "bg-stone/20 text-stone"}`}>
-                          {r.active ? "On" : "Off"}
-                        </button>
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <button onClick={() => editRow(r)} className="text-xs text-forest underline">Edit</button>{" "}
-                        <button onClick={() => remove(r.id)} className="ml-2 text-xs text-red-700 underline">Delete</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* Coupon codes table */}
+        <DiscountTable
+          title="Coupon codes"
+          rows={rows.filter((r) => !!r.code)}
+          usageByDiscount={usageByDiscount}
+          onEdit={editRow}
+          onRemove={remove}
+          onToggle={toggle}
+          showCodeCol
+        />
+
+        {/* Automatic rules table */}
+        <DiscountTable
+          title="Automatic rules"
+          rows={rows.filter((r) => !r.code)}
+          usageByDiscount={usageByDiscount}
+          onEdit={editRow}
+          onRemove={remove}
+          onToggle={toggle}
+          showCodeCol={false}
+        />
 
         <p className="mt-6 text-xs text-stone">
           Note: creating a discount here saves it, but the guest checkout flow needs to be wired next
@@ -402,6 +411,84 @@ function DiscountsPage() {
         }
       `}</style>
     </main>
+  );
+}
+
+function DiscountTable({
+  title,
+  rows,
+  usageByDiscount,
+  onEdit,
+  onRemove,
+  onToggle,
+  showCodeCol,
+}: {
+  title: string;
+  rows: DiscountRow[];
+  usageByDiscount: Map<string, { count: number; total: number }>;
+  onEdit: (r: DiscountRow) => void;
+  onRemove: (id: string) => void;
+  onToggle: (id: string, active: boolean) => void;
+  showCodeCol: boolean;
+}) {
+  return (
+    <div className="mt-10">
+      <h2 className="font-display text-xl text-forest">{title} ({rows.length})</h2>
+      <div className="mt-3 overflow-x-auto rounded-xl border border-border">
+        <table className="min-w-full text-sm">
+          <thead className="bg-coconut text-xs uppercase tracking-wider text-stone">
+            <tr>
+              <th className="px-3 py-2 text-left">Name</th>
+              {showCodeCol && <th className="px-3 py-2 text-left">Code</th>}
+              <th className="px-3 py-2 text-left">Type / value</th>
+              <th className="px-3 py-2 text-left">Window</th>
+              <th className="px-3 py-2 text-right">Uses</th>
+              <th className="px-3 py-2 text-right">Total off</th>
+              <th className="px-3 py-2 text-center">Active</th>
+              <th className="px-3 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <tr><td colSpan={showCodeCol ? 8 : 7} className="px-3 py-6 text-center text-stone">None yet.</td></tr>
+            )}
+            {rows.map((r) => {
+              const usage = usageByDiscount.get(r.id) ?? { count: 0, total: 0 };
+              return (
+                <tr key={r.id} className="border-t border-border">
+                  <td className="px-3 py-2">{r.name}</td>
+                  {showCodeCol && <td className="px-3 py-2 font-mono text-xs">{r.code}</td>}
+                  <td className="px-3 py-2">
+                    {r.type === "percent" && `${r.value}% off`}
+                    {r.type === "fixed" && `RM${r.value} off`}
+                    {r.type === "nth_night" && `Night #${r.value}: ${r.nth_night_percent}% off`}
+                    <div className="text-xs text-stone">{r.applies_to !== "any" ? r.applies_to : ""}</div>
+                  </td>
+                  <td className="px-3 py-2 text-xs text-stone">
+                    {r.starts_at?.slice(0, 10) ?? "—"} → {r.ends_at?.slice(0, 10) ?? "—"}
+                    {(r.stay_from || r.stay_to) && (
+                      <div>stay {r.stay_from ?? "—"} → {r.stay_to ?? "—"}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right">{usage.count}{r.max_uses ? ` / ${r.max_uses}` : ""}</td>
+                  <td className="px-3 py-2 text-right">RM{usage.total.toFixed(2)}</td>
+                  <td className="px-3 py-2 text-center">
+                    <button onClick={() => onToggle(r.id, !r.active)}
+                      className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-widest ${r.active ? "bg-forest text-coconut" : "bg-stone/20 text-stone"}`}>
+                      {r.active ? "On" : "Off"}
+                    </button>
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    <button onClick={() => onEdit(r)} className="text-xs text-forest underline">Edit</button>{" "}
+                    <button onClick={() => onRemove(r.id)} className="ml-2 text-xs text-red-700 underline">Delete</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
