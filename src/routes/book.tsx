@@ -532,6 +532,9 @@ function BookPage() {
             recommendations, pickRecommendation, isAnyCabin,
             pickComboRecommendation,
             discount,
+            couponInput, setCouponInput,
+            couponRow, couponError, couponApplying,
+            applyCoupon, clearCoupon,
           }}
         />
       )}
