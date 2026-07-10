@@ -467,6 +467,7 @@ function BookPage() {
             return parts.length ? parts.join("\n") : undefined;
           })(),
           paymentType,
+          ...(couponRow?.code ? { couponCode: couponRow.code } : {}),
         },
       });
       setBooking(res);
