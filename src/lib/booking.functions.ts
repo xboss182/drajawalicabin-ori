@@ -220,6 +220,37 @@ export const createBooking = createServerFn({ method: "POST" })
     const isFull = (data.paymentType ?? "deposit") === "full";
     const securityDeposit = securityDepositForRooms(totalRooms);
 
+    // ---- Apply automatic discounts (best-one-wins) ----
+    // Build per-room night breakdowns (rooms in the same type share dates+rates).
+    const breakdownByType = new Map<string, NightBreakdown[]>();
+    for (const it of items) {
+      const sampleRow = assigned.find((a) => a.cabinType === it.cabinType);
+      if (!sampleRow) continue;
+      const nights = await buildNightBreakdown(
+        supabaseAdmin,
+        sampleRow.cabinId,
+        data.checkIn,
+        data.checkOut,
+      );
+      breakdownByType.set(it.cabinType, nights);
+    }
+    const cart: PricingCart = {
+      checkIn: data.checkIn,
+      rooms: assigned.map((a) => ({
+        cabinType: a.cabinType,
+        nights: breakdownByType.get(a.cabinType) ?? [],
+      })),
+      subtotalRoomOnly: assigned.reduce((s, a) => s + a.subtotal, 0),
+    };
+    const { data: activeAutos } = await supabaseAdmin
+      .from("discounts")
+      .select("*")
+      .eq("active", true)
+      .is("code", null);
+    const applications = pickBestDiscount(cart, (activeAutos ?? []) as DiscountRow[]);
+    const discountApp = applications[0] ?? null;
+    const discountAmount = discountApp ? discountApp.amountOff : 0;
+
     const sharedBase = {
       guest_name: data.guestName,
       email: data.email,
@@ -253,6 +284,19 @@ export const createBooking = createServerFn({ method: "POST" })
       ...(guestToken ? { guest_token: guestToken } : {}),
     }));
 
+    // Attach discount to the lead (first) row and reduce its totals so
+    // sum(total_amount) across the group equals discounted grand total.
+    if (discountApp && rows.length > 0 && discountAmount > 0) {
+      const capped = Math.min(discountAmount, Number(rows[0].total_amount ?? 0));
+      (rows[0] as any).discount_id = discountApp.discountId;
+      (rows[0] as any).discount_code = discountApp.code ?? discountApp.name;
+      (rows[0] as any).discount_amount = capped;
+      rows[0].total_amount = Number(rows[0].total_amount ?? 0) - capped;
+      if (!isFull) {
+        rows[0].balance_amount = Number(rows[0].balance_amount ?? 0) - capped;
+      }
+    }
+
     const { data: inserted, error: insErr } = await supabaseAdmin
       .from("booking_requests")
       .insert(rows as any)
@@ -264,6 +308,17 @@ export const createBooking = createServerFn({ method: "POST" })
     const lead = inserted[0];
     const total = inserted.reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
 
+    // Record redemption (best effort — do not block booking on failure).
+    if (discountApp && discountAmount > 0) {
+      const gid = (lead.booking_group_id as string) ?? (lead.id as string);
+      await supabaseAdmin.from("discount_redemptions").insert({
+        discount_id: discountApp.discountId,
+        booking_group_id: gid,
+        email: data.email,
+        amount_off: discountAmount,
+      } as any);
+    }
+
     return {
       bookingId: lead.id as string,
       groupId: (lead.booking_group_id as string) ?? lead.id,
@@ -273,6 +328,9 @@ export const createBooking = createServerFn({ method: "POST" })
       holdExpiresAt: lead.hold_expires_at as string,
       guestToken: lead.guest_token as string,
       paymentType: (data.paymentType ?? "deposit") as "deposit" | "full",
+      discount: discountApp
+        ? { label: discountApp.code ?? discountApp.name, amount: discountAmount }
+        : null,
     };
   });
 
