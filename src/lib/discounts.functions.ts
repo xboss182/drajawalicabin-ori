@@ -171,5 +171,13 @@ export const validateCoupon = createServerFn({ method: "POST" })
     const nowIso = new Date().toISOString();
     if (row.starts_at && row.starts_at > nowIso) return null;
     if (row.ends_at && row.ends_at < nowIso) return null;
+    if (row.max_uses && row.max_uses > 0) {
+      const { count, error: cErr } = await supabaseAdmin
+        .from("discount_redemptions")
+        .select("id", { count: "exact", head: true })
+        .eq("discount_id", row.id);
+      if (cErr) throw new Error(cErr.message);
+      if ((count ?? 0) >= row.max_uses) return null;
+    }
     return row as DiscountRow;
   });
