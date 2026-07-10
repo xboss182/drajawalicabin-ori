@@ -1111,32 +1111,56 @@ function DetailsStep(props: {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex gap-1">
-                        <input
-                          type="text"
-                          value={couponInput}
-                          onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                          placeholder="Enter code"
-                          maxLength={40}
-                          className="h-7 flex-1 rounded-md border border-border bg-background px-2 text-[11px] uppercase tracking-wide focus:border-forest focus:outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={applyCoupon}
-                          disabled={couponApplying || !couponInput.trim()}
-                          className="h-7 rounded-md bg-forest px-2 text-[10px] font-medium uppercase tracking-wider text-white transition hover:bg-forest/90 disabled:opacity-50"
-                        >
-                          {couponApplying ? "…" : "Apply"}
-                        </button>
-                      </div>
-                    )}
-                    {couponError && (
-                      <p className="mt-0.5 text-[10px] text-red-600">{couponError}</p>
-                    )}
-                    {couponRow && couponAmount === 0 && (
-                      <p className="mt-0.5 text-[10px] text-amber-700 leading-tight">
-                        Code accepted but doesn't apply to this stay (check minimum nights or dates).
-                      </p>
+                      <>
+                        <div className="flex gap-1">
+                          <input
+                            type="text"
+                            value={couponInput}
+                            onChange={(e) =>
+                              setCouponInput(
+                                e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 24),
+                              )
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && couponInput.trim() && !couponApplying) {
+                                e.preventDefault();
+                                applyCoupon();
+                              }
+                            }}
+                            placeholder="Enter code"
+                            maxLength={24}
+                            aria-invalid={couponError ? true : undefined}
+                            aria-describedby={couponError ? "coupon-error" : undefined}
+                            className={`h-7 flex-1 rounded-md border bg-background px-2 text-[11px] uppercase tracking-wide outline-none transition focus:ring-2 focus:ring-forest/30 ${
+                              couponError
+                                ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                                : "border-border focus:border-forest"
+                            }`}
+                          />
+                          <button
+                            type="button"
+                            onClick={applyCoupon}
+                            disabled={couponApplying || !couponInput.trim()}
+                            className="h-7 rounded-md bg-forest px-2 text-[10px] font-medium uppercase tracking-wider text-white transition hover:bg-forest/90 focus:outline-none focus:ring-2 focus:ring-forest/40 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {couponApplying ? "…" : "Apply"}
+                          </button>
+                        </div>
+                        {couponError && (
+                          <p
+                            id="coupon-error"
+                            role="alert"
+                            className="mt-0.5 text-[10px] leading-tight text-red-600"
+                          >
+                            {couponError}
+                          </p>
+                        )}
+                        {!couponError && couponRow && couponAmount === 0 && (
+                          <p className="mt-0.5 text-[10px] leading-tight text-amber-700">
+                            Code accepted but doesn't apply to this stay (check minimum nights or dates).
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                   {discounts.length > 0 && (
