@@ -1138,23 +1138,18 @@ function DetailsStep(props: {
                         Code accepted but doesn't apply to this stay (check minimum nights or dates).
                       </p>
                     )}
-                    {couponRow && couponAmount > 0 && discount && discount.label !== couponRow.code && (
-                      <p className="mt-1 text-xs text-amber-700">
-                        Code gives −RM {couponAmount.toFixed(2)}, but the automatic{" "}
-                        <span className="font-medium">{discount.label}</span> discount
-                        (−RM {discount.amount.toFixed(2)}) is bigger and was applied instead.
-                      </p>
-                    )}
                   </div>
-                  {discount && discount.amount > 0 && (
+                  {discounts.length > 0 && (
                     <>
-                      <div className="flex items-center justify-between py-2 text-sm">
-                        <span className="text-emerald-700">Discount · {discount.label}</span>
-                        <span className="font-medium text-emerald-700">−RM {discount.amount.toFixed(2)}</span>
-                      </div>
+                      {discounts.map((d, i) => (
+                        <div key={i} className="flex items-center justify-between py-2 text-sm">
+                          <span className="text-emerald-700">Discount · {d.label}</span>
+                          <span className="font-medium text-emerald-700">−RM {d.amount.toFixed(2)}</span>
+                        </div>
+                      ))}
                       <Row
                         label="Room subtotal after discount"
-                        value={`RM ${Math.max(0, price.subtotal - discount.amount).toFixed(2)}`}
+                        value={`RM ${Math.max(0, price.subtotal - discounts.reduce((s, d) => s + d.amount, 0)).toFixed(2)}`}
                       />
                     </>
                   )}
@@ -1165,7 +1160,7 @@ function DetailsStep(props: {
             {price && (
               <div className="mt-4 flex items-baseline justify-between rounded-xl bg-coconut px-4 py-3">
                 <span className="text-xs uppercase tracking-widest text-stone">{bt.summary.totalPayable}</span>
-                <span className="font-display text-2xl text-forest">RM {(price.total - (discount?.amount ?? 0) + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}</span>
+                <span className="font-display text-2xl text-forest">RM {(price.total - discounts.reduce((s, d) => s + d.amount, 0) + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}</span>
               </div>
             )}
             <p className="mt-4 text-xs text-stone">{bt.summary.priceNote}</p>
