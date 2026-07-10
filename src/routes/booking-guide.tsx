@@ -12,7 +12,7 @@ export const Route = createFileRoute("/booking-guide")({
       {
         name: "description",
         content:
-          "Step-by-step visual guide to booking your stay at Rajawali D'Cabin, with tips for large groups of 12+ guests. Download as PDF.",
+          "Step-by-step visual guide to booking your stay at Rajawali D'Cabin, with tips for large groups of 12+ guests.",
       },
       { property: "og:title", content: "How to Book — Rajawali D'Cabin Chalet" },
       {
