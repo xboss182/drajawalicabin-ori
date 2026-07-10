@@ -1,51 +1,35 @@
-# Booking Guide Page
+# Real annotated screenshots for the Booking Guide
 
-Add a new route `/booking-guide` with a visual, 4-step walkthrough for booking (with emphasis on 20+ guest groups) and a "Download as PDF" action.
+Replace the 4 AI illustrations in `/booking-guide` with real screenshots of the live booking flow, each overlaid with a red arrow + label pointing to the exact element to click.
 
-## Route & Navigation
+## Capture
 
-- New file: `src/routes/booking-guide.tsx`
-- Add "Booking Guide" link to the main nav in `src/routes/index.tsx` (and any shared header) next to "Gallery".
-- Route `head()` metadata: title "How to Book — Rajawali D'Cabin Chalet", description mentioning step-by-step booking and large group instructions, matching og:title/og:description. No og:image required.
+Use Playwright (headless Chromium, 1280x1800) against `http://localhost:8080` to capture each step from the real app:
 
-## Page Layout
+1. **Step 1 — Dates & guests**: navigate to `/book`, screenshot the date-picker + adults/children fields region.
+2. **Step 2 — Add rooms**: pick dates, select a cabin, screenshot the cart panel showing an added room and the "Add Another Room" button.
+3. **Step 3 — Guest details**: scroll to the guest info form, screenshot the primary guest fields (name, IC, phone, vehicle, remarks).
+4. **Step 4 — Secure booking**: screenshot the payment option + T&C checkbox + "Continue to payment" button.
 
-Sections (top to bottom):
+Each capture is an element-level screenshot (not full page) so text stays legible in the PDF.
 
-1. **Hero** — Title "How to Book", subtitle "A visual, step-by-step guide — perfect for groups of 20+ guests." Primary button: **Download Guide as PDF**.
-2. **Steps** — 4 vertically stacked cards, each with:
-   - Large numbered badge (01–04)
-   - Screenshot/illustration on one side, text on the other (alternating left/right on desktop, stacked on mobile)
-   - Step title, short description, bullet list of actions
-3. **Large-group callout** — Highlighted tip box inside Step 2 (amber/primary tint) with the exact wording:
-   > "Booking for a large group? If you have more than 20 guests, use the 'Add Room' feature to select multiple rooms until your total guest count is accommodated. Our cabins fit different capacities — combine Queen and Twin rooms to cover everyone."
-4. **Footer CTA** — "Ready to book?" with two buttons: **Start Booking** (→ `/book`) and **Download Guide as PDF** (repeat).
+## Annotation
 
-### Step Content
+After capture, overlay each PNG with a red arrow + short label (e.g. "Pick dates", "Click Add Another Room", "Fill guest info", "Click Continue") using Python + PIL in the same script. Arrow: solid red (#E11D48), thick stroke, slight drop shadow, label in bold sans-serif with white background pill for legibility.
 
-- **Step 1 — Select Dates & Initial Guests**: pick check-in/check-out on the calendar, enter adults + children under 12.
-- **Step 2 — Add Multiple Rooms**: choose a cabin, click **Add Room**, repeat with **Add Another Room** until capacity ≥ total guests. Includes the large-group callout.
-- **Step 3 — Review & Guest Details**: verify cart (all rooms/dates/price), fill primary guest name, IC, phone, vehicle info; add remarks.
-- **Step 4 — Secure Booking**: choose deposit or full payment, accept T&Cs (incl. late check-out RM10/hr), continue to Stripe checkout, receive confirmation email + manage-booking link.
+Save the 4 annotated images to:
+- `src/assets/booking-guide/step-1-dates.jpg`
+- `src/assets/booking-guide/step-2-add-room.jpg`
+- `src/assets/booking-guide/step-3-details.jpg`
+- `src/assets/booking-guide/step-4-checkout.jpg`
 
-## Illustrations
+(Same filenames → `booking-guide.tsx` picks them up automatically via the existing `.asset.json` imports, no code changes needed.)
 
-Reuse existing preview screenshots where possible; otherwise generate 4 lightweight illustrations (flat, brand-tone) via imagegen and save under `src/assets/booking-guide/`:
-- `step-1-dates.jpg` — calendar + guests
-- `step-2-add-room.jpg` — cart with multiple rooms + Add Room button highlighted
-- `step-3-details.jpg` — guest details form
-- `step-4-checkout.jpg` — payment/checkout screen
+## UI tweak
 
-## PDF Export
+In `src/routes/booking-guide.tsx`, widen the image column slightly (`max-w-md` → `max-w-lg`) and switch `object-fit` to `contain` so the wider real screenshots aren't cropped. No other logic changes.
 
-- Library: **html2pdf.js** (bundles html2canvas + jsPDF, simplest DOM → PDF).
-- Install: `bun add html2pdf.js`.
-- Implementation: wrap the printable content in a `ref`ed `<div id="guide-printable">`. `downloadPdf()` dynamically imports html2pdf (client-only), calls it with A4 portrait, 10mm margins, filename `Rajawali-DCabin-Booking-Guide.pdf`.
-- Hide the two "Download PDF" buttons and any nav during capture via a `.pdf-hide` class removed on the cloned node.
-- Ensure fonts and images finish loading (use `await document.fonts.ready` and `img.decode()`) before invoking html2pdf so the export isn't blank.
+## Out of scope
 
-## Constraints
-
-- No changes to booking logic, admin, or DB.
-- Follow design tokens in `src/styles.css` (no hardcoded colors).
-- Fully responsive; steps stack on mobile.
+- No changes to booking flow, PDF export logic, routes, or step text.
+- No new dependencies (PIL is already available in the sandbox).
