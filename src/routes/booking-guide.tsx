@@ -13,13 +13,13 @@ export const Route = createFileRoute("/booking-guide")({
       {
         name: "description",
         content:
-          "Step-by-step visual guide to booking your stay at Rajawali D'Cabin, with tips for large groups of 20+ guests. Download as PDF.",
+          "Step-by-step visual guide to booking your stay at Rajawali D'Cabin, with tips for large groups of 12+ guests. Download as PDF.",
       },
       { property: "og:title", content: "How to Book — Rajawali D'Cabin Chalet" },
       {
         property: "og:description",
         content:
-          "Step-by-step visual guide to booking rooms, plus large-group tips (20+ guests).",
+          "Step-by-step visual guide to booking rooms, plus large-group tips (12+ guests).",
       },
     ],
   }),
@@ -60,7 +60,7 @@ const STEPS: Step[] = [
     image: step2.url,
     callout: {
       title: "Booking for a large group?",
-      body: "If you have more than 20 guests, use the Add Room feature to select multiple rooms until your total guest count is accommodated. Our cabins fit different capacities — combine Queen and Twin rooms to cover everyone.",
+      body: "If you have more than 12 guests, use the Add Room feature to select multiple rooms until your total guest count is accommodated. Our cabins fit different capacities — combine Queen and Twin rooms to cover everyone.",
     },
   },
   {
@@ -150,7 +150,7 @@ function BookingGuidePage() {
           How to book your stay
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
-          A visual, step-by-step guide — perfect for groups of 20+ guests booking
+          A visual, step-by-step guide — perfect for groups of 12+ guests booking
           multiple cabins in one reservation.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
