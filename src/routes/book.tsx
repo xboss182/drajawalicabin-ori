@@ -136,7 +136,7 @@ function BookPage() {
 
   const [price, setPrice] = useState<{ nights: number; subtotal: number; comforter_total: number; total: number } | null>(null);
   const [priceByType, setPriceByType] = useState<Record<string, { nights: number; subtotal: number; total: number; perNight: number }>>({});
-  const [discount, setDiscount] = useState<{ label: string; amount: number } | null>(null);
+  const [discounts, setDiscounts] = useState<{ label: string; amount: number }[]>([]);
   const [autoDiscounts, setAutoDiscounts] = useState<DiscountRow[]>([]);
   const [couponInput, setCouponInput] = useState("");
   const [couponRow, setCouponRow] = useState<DiscountRow | null>(null);
@@ -207,12 +207,12 @@ function BookPage() {
   useEffect(() => {
     if (cart.length === 0 || !checkin || !checkout) {
       setPrice(null);
-      setDiscount(null);
+      setDiscounts([]);
       return;
     }
     if (checkout <= checkin) {
       setPrice(null);
-      setDiscount(null);
+      setDiscounts([]);
       return;
     }
     let cancelled = false;
@@ -267,9 +267,8 @@ function BookPage() {
           autoDiscounts,
           couponRow,
         );
-        const first = apps[0];
         if (cancelled) return;
-        setDiscount(first ? { label: first.code ?? first.name, amount: first.amountOff } : null);
+        setDiscounts(apps.map((a) => ({ label: a.code ?? a.name, amount: a.amountOff })));
         setCouponAmount(
           couponRow
             ? computeDiscountAmount(couponRow, {
@@ -283,7 +282,7 @@ function BookPage() {
         if (cancelled) return;
         setPrice(null);
         setPriceByType({});
-        setDiscount(null);
+        setDiscounts([]);
       }
     })();
     return () => {
@@ -548,7 +547,7 @@ function BookPage() {
             paymentType, setPaymentType,
             recommendations, pickRecommendation, isAnyCabin,
             pickComboRecommendation,
-            discount,
+            discounts,
             couponInput, setCouponInput,
             couponRow, couponError, couponApplying,
             applyCoupon, clearCoupon,
@@ -625,7 +624,7 @@ function DetailsStep(props: {
   pickRecommendation: (type: string) => void;
   pickComboRecommendation: (types: string[]) => void;
   isAnyCabin: boolean;
-  discount: { label: string; amount: number } | null;
+  discounts: { label: string; amount: number }[];
   couponInput: string;
   setCouponInput: (s: string) => void;
   couponRow: DiscountRow | null;
@@ -647,7 +646,7 @@ function DetailsStep(props: {
     price, priceByType, previewCabin, blockedDates, blockedReasonByDate, totalRooms, freeCabinsForType,
     submit, submitting, error, agreed, setAgreed,
     paymentType, setPaymentType, recommendations, pickRecommendation, pickComboRecommendation, isAnyCabin,
-    discount,
+    discounts,
     couponInput, setCouponInput, couponRow, couponError, couponApplying, applyCoupon, clearCoupon,
     couponAmount,
   } = props;
@@ -984,7 +983,7 @@ function DetailsStep(props: {
               <div className="flex items-start gap-3">
                 <input type="radio" name="payment-type" checked={paymentType === "full"} onChange={() => setPaymentType("full")} className="mt-1 h-4 w-4 accent-forest" />
                 <div>
-                  <p className="font-medium text-forest">Pay in full now{price ? ` (RM ${(price.total - (discount?.amount ?? 0) + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)})` : ""}</p>
+                  <p className="font-medium text-forest">Pay in full now{price ? ` (RM ${(price.total - discounts.reduce((s, d) => s + d.amount, 0) + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)})` : ""}</p>
                   <p className="mt-1 text-xs text-stone">Settle the full room rate plus a refundable RM{SECURITY_DEPOSIT_PER_ROOM}/room security deposit upfront.</p>
                 </div>
               </div>
@@ -1139,23 +1138,18 @@ function DetailsStep(props: {
                         Code accepted but doesn't apply to this stay (check minimum nights or dates).
                       </p>
                     )}
-                    {couponRow && couponAmount > 0 && discount && discount.label !== couponRow.code && (
-                      <p className="mt-1 text-xs text-amber-700">
-                        Code gives −RM {couponAmount.toFixed(2)}, but the automatic{" "}
-                        <span className="font-medium">{discount.label}</span> discount
-                        (−RM {discount.amount.toFixed(2)}) is bigger and was applied instead.
-                      </p>
-                    )}
                   </div>
-                  {discount && discount.amount > 0 && (
+                  {discounts.length > 0 && (
                     <>
-                      <div className="flex items-center justify-between py-2 text-sm">
-                        <span className="text-emerald-700">Discount · {discount.label}</span>
-                        <span className="font-medium text-emerald-700">−RM {discount.amount.toFixed(2)}</span>
-                      </div>
+                      {discounts.map((d, i) => (
+                        <div key={i} className="flex items-center justify-between py-2 text-sm">
+                          <span className="text-emerald-700">Discount · {d.label}</span>
+                          <span className="font-medium text-emerald-700">−RM {d.amount.toFixed(2)}</span>
+                        </div>
+                      ))}
                       <Row
                         label="Room subtotal after discount"
-                        value={`RM ${Math.max(0, price.subtotal - discount.amount).toFixed(2)}`}
+                        value={`RM ${Math.max(0, price.subtotal - discounts.reduce((s, d) => s + d.amount, 0)).toFixed(2)}`}
                       />
                     </>
                   )}
@@ -1166,7 +1160,7 @@ function DetailsStep(props: {
             {price && (
               <div className="mt-4 flex items-baseline justify-between rounded-xl bg-coconut px-4 py-3">
                 <span className="text-xs uppercase tracking-widest text-stone">{bt.summary.totalPayable}</span>
-                <span className="font-display text-2xl text-forest">RM {(price.total - (discount?.amount ?? 0) + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}</span>
+                <span className="font-display text-2xl text-forest">RM {(price.total - discounts.reduce((s, d) => s + d.amount, 0) + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}</span>
               </div>
             )}
             <p className="mt-4 text-xs text-stone">{bt.summary.priceNote}</p>
