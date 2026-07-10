@@ -203,7 +203,28 @@ export const createBooking = createServerFn({ method: "POST" })
       .select("*")
       .eq("active", true)
       .is("code", null);
-    const applications = pickBestDiscount(cart, (activeAutos ?? []) as DiscountRow[]);
+    // Optional coupon: look up when guest provided a code.
+    let couponRow: DiscountRow | null = null;
+    if (data.couponCode) {
+      const code = data.couponCode.trim().toUpperCase();
+      const nowIso = new Date().toISOString();
+      const { data: cRow } = await supabaseAdmin
+        .from("discounts")
+        .select("*")
+        .eq("active", true)
+        .eq("code", code)
+        .maybeSingle();
+      if (cRow) {
+        const okStart = !cRow.starts_at || cRow.starts_at <= nowIso;
+        const okEnd = !cRow.ends_at || cRow.ends_at >= nowIso;
+        if (okStart && okEnd) couponRow = cRow as DiscountRow;
+      }
+    }
+    const applications = pickBestDiscount(
+      cart,
+      (activeAutos ?? []) as DiscountRow[],
+      couponRow,
+    );
     const discountApp = applications[0] ?? null;
     const discountAmount = discountApp ? discountApp.amountOff : 0;
 
