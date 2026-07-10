@@ -1052,6 +1052,7 @@ function PaymentStep({
   booking, paymentType, proofFile, setProofFile, uploadProof, uploading, error, name, cabinName, checkin, checkout,
 }: {
   booking: { bookingId: string; reference: string; total: number; securityDeposit: number; holdExpiresAt: string; guestToken: string };
+  // discount attached on server response (optional)
   paymentType: "deposit" | "full";
   proofFile: File | null;
   setProofFile: (f: File | null) => void;
