@@ -697,7 +697,7 @@ export type Database = {
         | "expired"
         | "fully_paid"
       discount_scope: "any" | "weekday" | "weekend" | "holiday"
-      discount_type: "percent" | "fixed" | "nth_night"
+      discount_type: "percent" | "fixed" | "nth_night" | "nth_night_onwards"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -835,7 +835,7 @@ export const Constants = {
         "fully_paid",
       ],
       discount_scope: ["any", "weekday", "weekend", "holiday"],
-      discount_type: ["percent", "fixed", "nth_night"],
+      discount_type: ["percent", "fixed", "nth_night", "nth_night_onwards"],
     },
   },
 } as const
