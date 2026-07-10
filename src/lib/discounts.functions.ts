@@ -148,3 +148,28 @@ export const listActiveAutoDiscounts = createServerFn({ method: "GET" })
       return true;
     }) as DiscountRow[];
   });
+
+// Public: validate a coupon code entered by a guest. Returns the row when the
+// code exists, is active, and is inside its starts_at/ends_at validity window.
+// Cart-level qualification (min_nights / stay window / etc.) is applied later
+// by the pricing engine via pickBestDiscount.
+export const validateCoupon = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({ code: z.string().trim().min(1).max(40) }).parse(d),
+  )
+  .handler(async ({ data }): Promise<DiscountRow | null> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const code = data.code.trim().toUpperCase();
+    const { data: row, error } = await supabaseAdmin
+      .from("discounts")
+      .select("*")
+      .eq("active", true)
+      .eq("code", code)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!row) return null;
+    const nowIso = new Date().toISOString();
+    if (row.starts_at && row.starts_at > nowIso) return null;
+    if (row.ends_at && row.ends_at < nowIso) return null;
+    return row as DiscountRow;
+  });
