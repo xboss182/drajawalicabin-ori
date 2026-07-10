@@ -56,6 +56,7 @@ type CouponForm = {
   type: "percent" | "fixed";
   value: number;
   active: boolean;
+  max_uses: number | null;
 };
 
 const EMPTY_COUPON: CouponForm = {
@@ -65,6 +66,7 @@ const EMPTY_COUPON: CouponForm = {
   type: "percent",
   value: 10,
   active: true,
+  max_uses: null,
 };
 
 function DiscountsPage() {
@@ -112,6 +114,7 @@ function DiscountsPage() {
       type: row.type === "fixed" ? "fixed" : "percent",
       value: Number(row.value),
       active: row.active,
+      max_uses: row.max_uses ?? null,
     });
     setErr(null);
     setMsg(null);
@@ -145,7 +148,7 @@ function DiscountsPage() {
           min_subtotal: 0,
           cabin_types: [],
           applies_to: "any",
-          max_uses: null,
+          max_uses: form.max_uses && form.max_uses > 0 ? form.max_uses : null,
           max_uses_per_email: null,
           stackable: false,
         },
@@ -248,6 +251,12 @@ function DiscountsPage() {
                   <input type="number" step="0.01" min={0} value={form.value}
                     onChange={(e) => setForm({ ...form, value: Number(e.target.value) })} className="input" />
                 </Field>
+                <Field label="Usage limit (blank = unlimited)">
+                  <input type="number" min={0} step={1}
+                    value={form.max_uses ?? ""}
+                    onChange={(e) => setForm({ ...form, max_uses: e.target.value === "" ? null : Math.max(0, Math.floor(Number(e.target.value))) })}
+                    className="input" placeholder="e.g. 50" />
+                </Field>
               </div>
               <label className="mt-4 inline-flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
@@ -276,6 +285,7 @@ function DiscountsPage() {
                       <th className="px-3 py-2 text-left">Code</th>
                       <th className="px-3 py-2 text-left">Value</th>
                       <th className="px-3 py-2 text-right">Uses</th>
+                      <th className="px-3 py-2 text-right">Limit</th>
                       <th className="px-3 py-2 text-right">Total off</th>
                       <th className="px-3 py-2 text-center">Active</th>
                       <th className="px-3 py-2"></th>
@@ -283,16 +293,21 @@ function DiscountsPage() {
                   </thead>
                   <tbody>
                     {coupons.length === 0 && (
-                      <tr><td colSpan={7} className="px-3 py-6 text-center text-stone">No coupons yet.</td></tr>
+                      <tr><td colSpan={8} className="px-3 py-6 text-center text-stone">No coupons yet.</td></tr>
                     )}
                     {coupons.map((r) => {
                       const u = usageByDiscount.get(r.id) ?? { count: 0, total: 0 };
+                      const limit = r.max_uses ?? null;
+                      const reached = limit != null && u.count >= limit;
                       return (
                         <tr key={r.id} className="border-t border-border">
                           <td className="px-3 py-2">{r.name}</td>
                           <td className="px-3 py-2 font-mono text-xs">{r.code}</td>
                           <td className="px-3 py-2">{r.type === "percent" ? `${r.value}% off` : `RM${r.value} off`}</td>
-                          <td className="px-3 py-2 text-right">{u.count}</td>
+                          <td className="px-3 py-2 text-right">
+                            <span className={reached ? "text-red-700 font-medium" : ""}>{u.count}</span>
+                          </td>
+                          <td className="px-3 py-2 text-right">{limit ?? "∞"}</td>
                           <td className="px-3 py-2 text-right">RM{u.total.toFixed(2)}</td>
                           <td className="px-3 py-2 text-center">
                             <button onClick={() => toggle(r.id, !r.active)}
