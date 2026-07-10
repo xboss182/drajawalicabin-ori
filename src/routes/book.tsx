@@ -207,12 +207,12 @@ function BookPage() {
   useEffect(() => {
     if (cart.length === 0 || !checkin || !checkout) {
       setPrice(null);
-      setDiscount(null);
+      setDiscounts([]);
       return;
     }
     if (checkout <= checkin) {
       setPrice(null);
-      setDiscount(null);
+      setDiscounts([]);
       return;
     }
     let cancelled = false;
@@ -267,9 +267,8 @@ function BookPage() {
           autoDiscounts,
           couponRow,
         );
-        const first = apps[0];
         if (cancelled) return;
-        setDiscount(first ? { label: first.code ?? first.name, amount: first.amountOff } : null);
+        setDiscounts(apps.map((a) => ({ label: a.code ?? a.name, amount: a.amountOff })));
         setCouponAmount(
           couponRow
             ? computeDiscountAmount(couponRow, {
@@ -283,7 +282,7 @@ function BookPage() {
         if (cancelled) return;
         setPrice(null);
         setPriceByType({});
-        setDiscount(null);
+        setDiscounts([]);
       }
     })();
     return () => {
