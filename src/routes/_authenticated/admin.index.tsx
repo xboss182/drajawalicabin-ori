@@ -544,6 +544,9 @@ function Card({
       {b.status === "fully_paid" && b.locker_code && (
         <p className="mt-4 text-xs text-forest">Locker code: <span className="font-mono">{b.locker_code}</span></p>
       )}
+      {(b.status === "confirmed" || b.status === "fully_paid") && (
+        <LateCheckoutSection b={b} onRefresh={onRefresh} />
+      )}
       {onDelete && (
         <div className="mt-4 border-t border-border/60 pt-3">
           {onCancelRefund &&
