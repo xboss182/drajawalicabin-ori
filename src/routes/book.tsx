@@ -262,6 +262,7 @@ function BookPage() {
         const apps = pickBestDiscount(
           { checkIn: checkin, rooms: roomsExpanded, subtotalRoomOnly },
           autoDiscounts,
+          couponRow,
         );
         const first = apps[0];
         setDiscount(first ? { label: first.code ?? first.name, amount: first.amountOff } : null);
@@ -271,7 +272,7 @@ function BookPage() {
         setDiscount(null);
       }
     })();
-  }, [cart, checkin, checkout, comforter, groupByType, autoDiscounts]);
+  }, [cart, checkin, checkout, comforter, groupByType, autoDiscounts, couponRow]);
 
   // Load active automatic discounts once.
   useEffect(() => {
