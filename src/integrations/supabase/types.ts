@@ -90,6 +90,9 @@ export type Database = {
           deposit_refund_note: string | null
           deposit_refunded_amount: number | null
           deposit_refunded_at: string | null
+          discount_amount: number
+          discount_code: string | null
+          discount_id: string | null
           email: string
           guest_name: string
           guest_token: string
@@ -140,6 +143,9 @@ export type Database = {
           deposit_refund_note?: string | null
           deposit_refunded_amount?: number | null
           deposit_refunded_at?: string | null
+          discount_amount?: number
+          discount_code?: string | null
+          discount_id?: string | null
           email: string
           guest_name: string
           guest_token?: string
@@ -190,6 +196,9 @@ export type Database = {
           deposit_refund_note?: string | null
           deposit_refunded_amount?: number | null
           deposit_refunded_at?: string | null
+          discount_amount?: number
+          discount_code?: string | null
+          discount_id?: string | null
           email?: string
           guest_name?: string
           guest_token?: string
@@ -225,6 +234,13 @@ export type Database = {
             columns: ["cabin_id"]
             isOneToOne: false
             referencedRelation: "cabins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
             referencedColumns: ["id"]
           },
         ]
@@ -271,6 +287,116 @@ export type Database = {
           slug?: string
           weekday_rate?: number
           weekend_rate?: number
+        }
+        Relationships: []
+      }
+      discount_redemptions: {
+        Row: {
+          amount_off: number
+          booking_group_id: string
+          created_at: string
+          discount_id: string
+          email: string | null
+          id: string
+        }
+        Insert: {
+          amount_off?: number
+          booking_group_id: string
+          created_at?: string
+          discount_id: string
+          email?: string | null
+          id?: string
+        }
+        Update: {
+          amount_off?: number
+          booking_group_id?: string
+          created_at?: string
+          discount_id?: string
+          email?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_redemptions_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discounts: {
+        Row: {
+          active: boolean
+          applies_to: Database["public"]["Enums"]["discount_scope"]
+          cabin_types: string[]
+          code: string | null
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          max_uses: number | null
+          max_uses_per_email: number | null
+          min_nights: number
+          min_rooms: number
+          min_subtotal: number
+          name: string
+          nth_night_percent: number | null
+          stackable: boolean
+          starts_at: string | null
+          stay_from: string | null
+          stay_to: string | null
+          type: Database["public"]["Enums"]["discount_type"]
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          applies_to?: Database["public"]["Enums"]["discount_scope"]
+          cabin_types?: string[]
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          max_uses?: number | null
+          max_uses_per_email?: number | null
+          min_nights?: number
+          min_rooms?: number
+          min_subtotal?: number
+          name: string
+          nth_night_percent?: number | null
+          stackable?: boolean
+          starts_at?: string | null
+          stay_from?: string | null
+          stay_to?: string | null
+          type: Database["public"]["Enums"]["discount_type"]
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          active?: boolean
+          applies_to?: Database["public"]["Enums"]["discount_scope"]
+          cabin_types?: string[]
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          max_uses?: number | null
+          max_uses_per_email?: number | null
+          min_nights?: number
+          min_rooms?: number
+          min_subtotal?: number
+          name?: string
+          nth_night_percent?: number | null
+          stackable?: boolean
+          starts_at?: string | null
+          stay_from?: string | null
+          stay_to?: string | null
+          type?: Database["public"]["Enums"]["discount_type"]
+          updated_at?: string
+          value?: number
         }
         Relationships: []
       }
@@ -570,6 +696,8 @@ export type Database = {
         | "cancelled"
         | "expired"
         | "fully_paid"
+      discount_scope: "any" | "weekday" | "weekend" | "holiday"
+      discount_type: "percent" | "fixed" | "nth_night"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -706,6 +834,8 @@ export const Constants = {
         "expired",
         "fully_paid",
       ],
+      discount_scope: ["any", "weekday", "weekend", "holiday"],
+      discount_type: ["percent", "fixed", "nth_night"],
     },
   },
 } as const

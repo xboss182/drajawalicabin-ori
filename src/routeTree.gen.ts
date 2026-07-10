@@ -29,6 +29,7 @@ import { Route as AuthenticatedAdminStatsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminMembersRouteImport } from './routes/_authenticated/admin.members'
 import { Route as AuthenticatedAdminHolidaysRouteImport } from './routes/_authenticated/admin.holidays'
+import { Route as AuthenticatedAdminDiscountsRouteImport } from './routes/_authenticated/admin.discounts'
 import { Route as AuthenticatedAdminCalendarRouteImport } from './routes/_authenticated/admin.calendar'
 import { Route as AuthenticatedAdminCabinsRouteImport } from './routes/_authenticated/admin.cabins'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
@@ -141,6 +142,12 @@ const AuthenticatedAdminHolidaysRoute =
     path: '/holidays',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminDiscountsRoute =
+  AuthenticatedAdminDiscountsRouteImport.update({
+    id: '/discounts',
+    path: '/discounts',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminCalendarRoute =
   AuthenticatedAdminCalendarRouteImport.update({
     id: '/calendar',
@@ -212,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
+  '/admin/discounts': typeof AuthenticatedAdminDiscountsRoute
   '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/admin/members': typeof AuthenticatedAdminMembersRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -241,6 +249,7 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
+  '/admin/discounts': typeof AuthenticatedAdminDiscountsRoute
   '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/admin/members': typeof AuthenticatedAdminMembersRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -273,6 +282,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/admin/cabins': typeof AuthenticatedAdminCabinsRoute
   '/_authenticated/admin/calendar': typeof AuthenticatedAdminCalendarRoute
+  '/_authenticated/admin/discounts': typeof AuthenticatedAdminDiscountsRoute
   '/_authenticated/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/_authenticated/admin/members': typeof AuthenticatedAdminMembersRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/admin/cabins'
     | '/admin/calendar'
+    | '/admin/discounts'
     | '/admin/holidays'
     | '/admin/members'
     | '/admin/settings'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/admin/cabins'
     | '/admin/calendar'
+    | '/admin/discounts'
     | '/admin/holidays'
     | '/admin/members'
     | '/admin/settings'
@@ -365,6 +377,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/_authenticated/admin/cabins'
     | '/_authenticated/admin/calendar'
+    | '/_authenticated/admin/discounts'
     | '/_authenticated/admin/holidays'
     | '/_authenticated/admin/members'
     | '/_authenticated/admin/settings'
@@ -544,6 +557,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminHolidaysRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/discounts': {
+      id: '/_authenticated/admin/discounts'
+      path: '/discounts'
+      fullPath: '/admin/discounts'
+      preLoaderRoute: typeof AuthenticatedAdminDiscountsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/calendar': {
       id: '/_authenticated/admin/calendar'
       path: '/calendar'
@@ -613,6 +633,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCabinsRoute: typeof AuthenticatedAdminCabinsRoute
   AuthenticatedAdminCalendarRoute: typeof AuthenticatedAdminCalendarRoute
+  AuthenticatedAdminDiscountsRoute: typeof AuthenticatedAdminDiscountsRoute
   AuthenticatedAdminHolidaysRoute: typeof AuthenticatedAdminHolidaysRoute
   AuthenticatedAdminMembersRoute: typeof AuthenticatedAdminMembersRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
@@ -624,6 +645,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCabinsRoute: AuthenticatedAdminCabinsRoute,
   AuthenticatedAdminCalendarRoute: AuthenticatedAdminCalendarRoute,
+  AuthenticatedAdminDiscountsRoute: AuthenticatedAdminDiscountsRoute,
   AuthenticatedAdminHolidaysRoute: AuthenticatedAdminHolidaysRoute,
   AuthenticatedAdminMembersRoute: AuthenticatedAdminMembersRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
@@ -683,13 +705,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

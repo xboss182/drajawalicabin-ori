@@ -22,6 +22,7 @@ export function AdminTabs({ current }: { current: string }) {
     { id: "cabins", label: "Cabins", to: "/admin/cabins" },
     { id: "holidays", label: "Holidays", to: "/admin/holidays" },
     { id: "stats", label: "Stats", to: "/admin/stats" },
+    { id: "discounts", label: "Discounts", to: "/admin/discounts" },
     { id: "members", label: "Members", to: "/admin/members" },
     { id: "settings", label: "Settings", to: "/admin/settings" },
   ];
