@@ -286,6 +286,36 @@ function BookPage() {
     })();
   }, []);
 
+  async function applyCoupon() {
+    const code = couponInput.trim();
+    setCouponError(null);
+    if (!code) {
+      setCouponRow(null);
+      return;
+    }
+    setCouponApplying(true);
+    try {
+      const row = await validateCoupon({ data: { code } });
+      if (!row) {
+        setCouponRow(null);
+        setCouponError("Invalid or expired code.");
+        return;
+      }
+      setCouponRow(row);
+    } catch {
+      setCouponRow(null);
+      setCouponError("Could not verify code. Try again.");
+    } finally {
+      setCouponApplying(false);
+    }
+  }
+
+  function clearCoupon() {
+    setCouponInput("");
+    setCouponRow(null);
+    setCouponError(null);
+  }
+
   // Availability for every cabin (next 90 days) — needed across mixed types
   const refreshAvailability = useCallback(async () => {
     if (cabins.length === 0) return;
