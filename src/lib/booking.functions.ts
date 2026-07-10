@@ -60,6 +60,7 @@ const createSchema = z.object({
   vehicleNumber: z.string().trim().max(50).optional(),
   notes: z.string().trim().max(1000).optional(),
   paymentType: z.enum(["deposit", "full"]).optional(),
+  couponCode: z.string().trim().min(1).max(40).optional(),
 });
 
 export const createBooking = createServerFn({ method: "POST" })
