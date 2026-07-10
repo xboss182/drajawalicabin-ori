@@ -1023,6 +1023,12 @@ function DetailsStep(props: {
                   {price.comforter_total > 0 && (
                     <Row label={bt.summary.comforterLabel} value={`RM ${price.comforter_total.toFixed(2)}`} />
                   )}
+                  {discount && discount.amount > 0 && (
+                    <div className="flex items-center justify-between py-2 text-sm">
+                      <span className="text-emerald-700">Discount · {discount.label}</span>
+                      <span className="font-medium text-emerald-700">−RM {discount.amount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <Row label={bt.summary.securityDeposit} value={`RM ${(totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}`} />
                 </>
               )}
@@ -1030,7 +1036,7 @@ function DetailsStep(props: {
             {price && (
               <div className="mt-4 flex items-baseline justify-between rounded-xl bg-coconut px-4 py-3">
                 <span className="text-xs uppercase tracking-widest text-stone">{bt.summary.totalPayable}</span>
-                <span className="font-display text-2xl text-forest">RM {(price.total + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}</span>
+                <span className="font-display text-2xl text-forest">RM {(price.total - (discount?.amount ?? 0) + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}</span>
               </div>
             )}
             <p className="mt-4 text-xs text-stone">{bt.summary.priceNote}</p>
