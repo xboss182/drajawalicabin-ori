@@ -15,6 +15,10 @@ export const translations = {
       cta: "Check availability",
       view: "View our cabins →",
     },
+    promo: {
+      title: "Stay longer, save more",
+      body: "10% off from your 2nd night onwards. Auto-applied.",
+    },
     search: {
       checkin: "Check-in",
       checkout: "Check-out",
