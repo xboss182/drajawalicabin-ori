@@ -174,7 +174,7 @@ function Index() {
 function Nav() {
   const { t } = useLanguage();
   return (
-    <header className="absolute top-0 left-0 right-0 z-30">
+    <header className="absolute left-0 right-0 top-9 z-30 sm:top-8">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
         <a href="#top" className="flex items-center gap-2 text-coconut">
           <Leaf />
