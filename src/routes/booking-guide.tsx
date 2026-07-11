@@ -92,11 +92,11 @@ function BookingGuidePage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
       <header className="border-b border-border/60 bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="text-sm font-semibold uppercase tracking-widest">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link to="/" className="min-w-0 truncate text-xs font-semibold uppercase tracking-widest sm:text-sm">
             ← Rajawali D'Cabin
           </Link>
-          <nav className="flex items-center gap-6 text-sm">
+          <nav className="flex shrink-0 items-center gap-4 text-xs sm:gap-6 sm:text-sm">
             <Link to="/gallery" className="hover:underline">Gallery</Link>
             <Link to="/book" search={{}} className="hover:underline">Book</Link>
           </nav>
