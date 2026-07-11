@@ -472,7 +472,7 @@ function AvailabilitySearch() {
       </p>
       <p className="mx-auto mt-2 flex max-w-3xl items-center justify-center gap-1.5 text-center text-[11px] font-medium text-forest sm:text-xs">
         <span aria-hidden>✦</span>
-        Auto discount: 10% off from the 2nd night onwards.
+        {t.search.autoDiscount}
       </p>
       <p className="mx-auto mt-1.5 max-w-3xl text-center text-[11px] text-foreground/60 sm:text-xs">
         {t.search.childNote}

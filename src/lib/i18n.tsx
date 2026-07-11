@@ -24,6 +24,7 @@ export const translations = {
       submit: "Search",
       note: "We'll take your details on the next step. Your dates will be confirmed shortly.",
       childNote: "Up to 2 children under 12 stay free per room.",
+      autoDiscount: "Auto discount: 10% off from the 2nd night onwards.",
     },
     notice: {
       title: "Important Notice",
@@ -253,6 +254,7 @@ export const translations = {
       submit: "Cari",
       note: "Maklumat anda akan diambil pada langkah seterusnya. Tarikh anda akan disahkan secara peribadi — biasanya dalam masa beberapa jam.",
       childNote: "Sehingga 2 kanak-kanak bawah 12 tahun menginap percuma setiap bilik.",
+      autoDiscount: "Diskaun automatik: 10% mulai malam ke-2 dan seterusnya.",
     },
     notice: {
       title: "Notis Penting",
