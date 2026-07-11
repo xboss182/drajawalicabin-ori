@@ -153,10 +153,10 @@ function BookingGuidePage() {
                     className="h-auto w-full max-w-lg rounded-xl border border-border object-contain shadow-sm"
                   />
                 </div>
-                <div className="p-6 sm:p-8">
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-3xl font-bold text-primary">{step.n}</span>
-                    <h2 className="text-xl font-semibold sm:text-2xl">{step.title}</h2>
+                <div className="p-5 sm:p-8">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="text-2xl font-bold text-primary sm:text-3xl">{step.n}</span>
+                    <h2 className="text-lg font-semibold leading-snug sm:text-2xl">{step.title}</h2>
                   </div>
                   <p className="mt-3 text-sm text-muted-foreground sm:text-base">
                     {step.desc}
