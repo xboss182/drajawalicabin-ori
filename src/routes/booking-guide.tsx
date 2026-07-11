@@ -92,11 +92,11 @@ function BookingGuidePage() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
       <header className="border-b border-border/60 bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="text-sm font-semibold uppercase tracking-widest">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link to="/" className="min-w-0 truncate text-xs font-semibold uppercase tracking-widest sm:text-sm">
             ← Rajawali D'Cabin
           </Link>
-          <nav className="flex items-center gap-6 text-sm">
+          <nav className="flex shrink-0 items-center gap-4 text-xs sm:gap-6 sm:text-sm">
             <Link to="/gallery" className="hover:underline">Gallery</Link>
             <Link to="/book" search={{}} className="hover:underline">Book</Link>
           </nav>
@@ -153,10 +153,10 @@ function BookingGuidePage() {
                     className="h-auto w-full max-w-lg rounded-xl border border-border object-contain shadow-sm"
                   />
                 </div>
-                <div className="p-6 sm:p-8">
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-3xl font-bold text-primary">{step.n}</span>
-                    <h2 className="text-xl font-semibold sm:text-2xl">{step.title}</h2>
+                <div className="p-5 sm:p-8">
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span className="text-2xl font-bold text-primary sm:text-3xl">{step.n}</span>
+                    <h2 className="text-lg font-semibold leading-snug sm:text-2xl">{step.title}</h2>
                   </div>
                   <p className="mt-3 text-sm text-muted-foreground sm:text-base">
                     {step.desc}

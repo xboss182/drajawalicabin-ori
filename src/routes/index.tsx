@@ -174,12 +174,12 @@ function Nav() {
   const { t } = useLanguage();
   return (
     <header className="absolute left-0 right-0 top-0 z-30">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
-        <a href="#top" className="flex items-center gap-2 text-coconut">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-6 lg:px-10">
+        <a href="#top" className="flex min-w-0 items-center gap-2 text-coconut">
           <Leaf />
-          <span className="font-display text-lg leading-none">
-            Rajawali D'Cabin
-            <span className="block text-[10px] uppercase tracking-[0.25em] opacity-80">
+          <span className="min-w-0 font-display text-base leading-tight sm:text-lg sm:leading-none">
+            <span className="block whitespace-nowrap">Rajawali D'Cabin</span>
+            <span className="mt-0.5 hidden text-[10px] uppercase tracking-[0.25em] opacity-80 sm:block">
               Chalet · Chendering
             </span>
           </span>
@@ -199,14 +199,14 @@ function Nav() {
             Manage booking
           </Link>
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <LanguageToggle />
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="text-xs uppercase tracking-widest text-coconut/90 hover:text-coconut md:hidden"
+            className="whitespace-nowrap text-[11px] uppercase tracking-widest text-coconut/90 hover:text-coconut md:hidden"
           >
-            Manage booking
+            Manage
           </Link>
           <a
             href={waHref(t.whatsappMessage)}
