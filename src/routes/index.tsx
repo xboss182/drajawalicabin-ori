@@ -154,7 +154,7 @@ const nearbyImages = [nearbyMosqueAsset.url, nearbyBeachAsset.url, nearbyCraftAs
 
 function Index() {
   return (
-    <main className="bg-background text-foreground">
+    <main className="relative bg-background text-foreground">
       <PromoAnnouncementBar />
       <Nav />
       <Hero />
