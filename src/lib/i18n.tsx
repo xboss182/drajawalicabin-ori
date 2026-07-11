@@ -15,6 +15,10 @@ export const translations = {
       cta: "Check availability",
       view: "View our cabins →",
     },
+    promo: {
+      title: "Stay longer, save more",
+      body: "10% off from your 2nd night onwards. Auto-applied.",
+    },
     search: {
       checkin: "Check-in",
       checkout: "Check-out",
@@ -244,6 +248,10 @@ export const translations = {
       body: "Kabin persendirian di Chendering, Kuala Terengganu. Destinasi tenang buat keluarga, pasangan, dan pengembara yang inginkan kicauan burung berbanding bunyi notifikasi telefon.",
       cta: "Semak kekosongan",
       view: "Lihat kabin kami →",
+    },
+    promo: {
+      title: "Menginap lebih lama, jimat lebih banyak",
+      body: "Diskaun 10% mulai malam ke-2 dan seterusnya. Dikenakan secara automatik.",
     },
     search: {
       checkin: "Daftar masuk",

@@ -27,7 +27,7 @@ import toilet4paxAsset from "@/assets/toilet-4pax.png.asset.json";
 import galleryPool from "@/assets/gallery/pool-01.jpg.asset.json";
 import galleryBbq from "@/assets/gallery/bbq-pavilion-01.jpg.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
-import { PromoAnnouncementBar } from "@/components/promo-announcement-bar";
+import { Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -155,7 +155,6 @@ const nearbyImages = [nearbyMosqueAsset.url, nearbyBeachAsset.url, nearbyCraftAs
 function Index() {
   return (
     <main className="relative bg-background text-foreground">
-      <PromoAnnouncementBar />
       <Nav />
       <Hero />
       <AvailabilitySearch />
@@ -174,7 +173,7 @@ function Index() {
 function Nav() {
   const { t } = useLanguage();
   return (
-    <header className="absolute left-0 right-0 top-9 z-30 sm:top-8">
+    <header className="absolute left-0 right-0 top-0 z-30">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
         <a href="#top" className="flex items-center gap-2 text-coconut">
           <Leaf />
@@ -266,6 +265,14 @@ function Hero() {
           <a href="#stay" className="text-sm text-coconut/85 underline-offset-4 hover:underline">
             {t.hero.view}
           </a>
+        </div>
+        <div className="mt-6 inline-flex w-fit items-center gap-2.5 rounded-full border border-sand/50 bg-forest/40 px-4 py-2 text-sm text-coconut shadow-lg backdrop-blur-md sm:text-base">
+          <Sparkles className="h-4 w-4 shrink-0 text-sand" aria-hidden />
+          <span>
+            <strong className="font-semibold text-sand">{t.promo.title}</strong>
+            <span className="hidden sm:inline"> — </span>
+            <span className="block sm:inline">{t.promo.body}</span>
+          </span>
         </div>
         <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70">
           <span>8 private cabins</span>
