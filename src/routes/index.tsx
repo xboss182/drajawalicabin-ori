@@ -27,6 +27,7 @@ import toilet4paxAsset from "@/assets/toilet-4pax.png.asset.json";
 import galleryPool from "@/assets/gallery/pool-01.jpg.asset.json";
 import galleryBbq from "@/assets/gallery/bbq-pavilion-01.jpg.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
+import { PromoAnnouncementBar } from "@/components/promo-announcement-bar";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -153,7 +154,8 @@ const nearbyImages = [nearbyMosqueAsset.url, nearbyBeachAsset.url, nearbyCraftAs
 
 function Index() {
   return (
-    <main className="bg-background text-foreground">
+    <main className="relative bg-background text-foreground">
+      <PromoAnnouncementBar />
       <Nav />
       <Hero />
       <AvailabilitySearch />
@@ -467,6 +469,10 @@ function AvailabilitySearch() {
       </form>
       <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
         {t.search.note}
+      </p>
+      <p className="mx-auto mt-2 flex max-w-3xl items-center justify-center gap-1.5 text-center text-[11px] font-medium text-forest sm:text-xs">
+        <span aria-hidden>✦</span>
+        Auto discount: 10% off from the 2nd night onwards.
       </p>
       <p className="mx-auto mt-1.5 max-w-3xl text-center text-[11px] text-foreground/60 sm:text-xs">
         {t.search.childNote}
