@@ -249,6 +249,10 @@ export const translations = {
       cta: "Semak kekosongan",
       view: "Lihat kabin kami →",
     },
+    promo: {
+      title: "Menginap lebih lama, jimat lebih banyak",
+      body: "Diskaun 10% mulai malam ke-2 dan seterusnya. Dikenakan secara automatik.",
+    },
     search: {
       checkin: "Daftar masuk",
       checkout: "Daftar keluar",
