@@ -30,8 +30,8 @@ export function PromoAnnouncementBar() {
 
   return (
     <div className="relative z-40 bg-forest text-coconut">
-      <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-10 py-2 text-center text-[11px] sm:text-xs">
-        <Sparkles className="h-3.5 w-3.5 shrink-0 text-sand" aria-hidden />
+      <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-10 py-2.5 text-center text-sm sm:text-base">
+        <Sparkles className="h-4 w-4 shrink-0 text-sand" aria-hidden />
         <span>
           {isBM ? (
             <>
