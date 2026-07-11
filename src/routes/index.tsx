@@ -269,9 +269,9 @@ function Hero() {
         <div className="mt-6 inline-flex w-fit items-center gap-2.5 rounded-full border border-sand/50 bg-forest/40 px-4 py-2 text-sm text-coconut shadow-lg backdrop-blur-md sm:text-base">
           <Sparkles className="h-4 w-4 shrink-0 text-sand" aria-hidden />
           <span>
-            <strong className="font-semibold text-sand">Stay longer, save more</strong>
+            <strong className="font-semibold text-sand">{t.promo.title}</strong>
             <span className="hidden sm:inline"> — </span>
-            <span className="block sm:inline">10% off from your 2nd night onwards. Auto-applied.</span>
+            <span className="block sm:inline">{t.promo.body}</span>
           </span>
         </div>
         <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70">
