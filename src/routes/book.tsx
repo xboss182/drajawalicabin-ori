@@ -734,37 +734,37 @@ function DetailsStep(props: {
           </div>
         )}
 
-        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="mt-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Availability</p>
-              <h3 className="mt-1 font-display text-lg text-forest">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-stone">Availability</p>
+              <h3 className="mt-0.5 font-display text-base text-forest">
                 {cart.length > 0
                   ? `${totalRooms} room${totalRooms > 1 ? "s" : ""} · live calendar`
                   : "Pick your nights"}
               </h3>
-              <p className="mt-1 text-xs text-stone">
+              <p className="mt-0.5 text-[11px] text-stone">
                 {blockedDates.length === 0
                   ? "All nights available in the next 90 days."
                   : `${blockedDates.length} night${blockedDates.length === 1 ? "" : "s"} unavailable for this cart — hover a red date to see why.`}
               </p>
             </div>
-            <div className="flex items-center gap-4 text-[11px] uppercase tracking-widest text-stone">
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-full border border-border bg-background" />
+            <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-stone">
+              <span className="flex items-center gap-1">
+                <span className="inline-block h-2 w-2 rounded-full border border-border bg-background" />
                 Available
               </span>
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-forest" />
+              <span className="flex items-center gap-1">
+                <span className="inline-block h-2 w-2 rounded-full bg-forest" />
                 Your stay
               </span>
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-red-200" />
+              <span className="flex items-center gap-1">
+                <span className="inline-block h-2 w-2 rounded-full bg-red-200" />
                 Booked
               </span>
             </div>
           </div>
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-3 overflow-x-auto">
             <Calendar
               mode="range"
               numberOfMonths={2}
@@ -804,7 +804,7 @@ function DetailsStep(props: {
                   return <CalendarDayButton {...btnProps} title={title} aria-label={title ?? undefined} />;
                 },
               }}
-              className="pointer-events-auto p-0 [--cell-size:2.5rem] sm:[--cell-size:2.75rem]"
+              className="pointer-events-auto p-0 [--cell-size:2.25rem] sm:[--cell-size:2.5rem]"
               classNames={{
                 today: "font-semibold text-forest underline underline-offset-4",
               }}
@@ -812,20 +812,20 @@ function DetailsStep(props: {
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <div className="flex items-end justify-between gap-3">
+        <div className="mt-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-end justify-between gap-2">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Your rooms</p>
-              <h3 className="mt-1 font-display text-lg text-forest">Pick the cabins for this stay</h3>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-stone">Your rooms</p>
+              <h3 className="mt-0.5 font-display text-base text-forest">Pick the cabins for this stay</h3>
             </div>
-            <span className="rounded-full bg-coconut px-3 py-1 text-[11px] uppercase tracking-widest text-forest">
+            <span className="rounded-full bg-coconut px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-forest">
               {totalRooms} room{totalRooms === 1 ? "" : "s"}
             </span>
           </div>
 
-          <ul className="mt-4 flex flex-col gap-3">
+          <ul className="mt-3 flex flex-col gap-2">
             {cart.length === 0 && (
-              <li className="rounded-xl border border-dashed border-border bg-coconut/50 px-5 py-4 text-sm text-stone">
+              <li className="rounded-lg border border-dashed border-border bg-coconut/50 px-4 py-3 text-xs text-stone">
                 No rooms selected yet — add one below.
               </li>
             )}
@@ -837,53 +837,53 @@ function DetailsStep(props: {
               const free = freeCabinsForType(it.cabinType).length;
               const tooMany = free < it.qty;
               return (
-                <li key={it.cabinType} className="rounded-xl border border-border bg-background px-5 py-4">
-                  <div className="flex items-center justify-between gap-4">
+                <li key={it.cabinType} className="rounded-lg border border-border bg-background px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-display text-base text-forest">{g.label}</p>
-                      <p className="text-xs text-stone">
+                      <p className="font-display text-sm text-forest">{g.label}</p>
+                      <p className="text-[11px] text-stone">
                         Sleeps {sample?.capacity ?? "?"} ·{" "}
                         {priceByType[it.cabinType]?.nights
                           ? `RM ${priceByType[it.cabinType].perNight.toFixed(2)}/night avg · RM ${(priceByType[it.cabinType].subtotal * it.qty).toFixed(2)} for ${priceByType[it.cabinType].nights} night${priceByType[it.cabinType].nights > 1 ? "s" : ""}`
                           : `from RM ${sample?.weekday_rate ?? 0}/night`}{" "}
                         · {maxQty} room{maxQty > 1 ? "s" : ""} in this type
                       </p>
-                      <p className="mt-0.5 text-[10px] text-stone/80">
+                      <p className="mt-0.5 text-[9px] text-stone/80">
                         Weekday RM {sample?.weekday_rate} · Weekend RM {sample?.weekend_rate} · School holiday RM {sample?.school_holiday_rate}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => setCartLineQty(idx, it.qty - 1)}
                         disabled={it.qty <= 1}
                         aria-label="Decrease rooms"
-                        className="grid h-8 w-8 place-items-center rounded-full border border-border text-stone hover:text-forest disabled:opacity-40"
+                        className="grid h-7 w-7 place-items-center rounded-full border border-border text-stone hover:text-forest disabled:opacity-40"
                       >
-                        <Minus className="h-4 w-4" />
+                        <Minus className="h-3.5 w-3.5" />
                       </button>
-                      <span className="min-w-[1.5rem] text-center text-base font-medium text-forest">{it.qty}</span>
+                      <span className="min-w-[1.25rem] text-center text-sm font-medium text-forest">{it.qty}</span>
                       <button
                         type="button"
                         onClick={() => setCartLineQty(idx, it.qty + 1)}
                         disabled={it.qty >= maxQty}
                         aria-label="Increase rooms"
-                        className="grid h-8 w-8 place-items-center rounded-full border border-border text-stone hover:text-forest disabled:opacity-40"
+                        className="grid h-7 w-7 place-items-center rounded-full border border-border text-stone hover:text-forest disabled:opacity-40"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-3.5 w-3.5" />
                       </button>
                       <button
                         type="button"
                         onClick={() => removeCartLine(idx)}
                         aria-label="Remove cabin"
-                        className="ml-2 grid h-8 w-8 place-items-center rounded-full text-stone hover:text-red-700"
+                        className="ml-1.5 grid h-7 w-7 place-items-center rounded-full text-stone hover:text-red-700"
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
                   {tooMany && (
-                    <p className="mt-2 text-xs text-red-700">
+                    <p className="mt-1.5 text-[11px] text-red-700">
                       Only {free} {g.label} room{free === 1 ? "" : "s"} free for these dates — reduce qty or change dates.
                     </p>
                   )}
@@ -893,17 +893,17 @@ function DetailsStep(props: {
           </ul>
 
           {remainingGroups.length > 0 && (
-            <div className="mt-4 border-t border-border pt-4">
-              <p className="text-xs uppercase tracking-widest text-stone">Add another room</p>
-              <div className="mt-2 flex flex-nowrap items-center gap-2 overflow-x-auto">
+            <div className="mt-3 border-t border-border pt-3">
+              <p className="text-[11px] uppercase tracking-widest text-stone">Add another room</p>
+              <div className="mt-1.5 flex flex-nowrap items-center gap-2 overflow-x-auto">
                 {remainingGroups.map((g) => (
                   <button
                     key={g.type}
                     type="button"
                     onClick={() => addCartLine(g.type)}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs text-forest hover:bg-coconut"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-forest hover:bg-coconut"
                   >
-                    <Plus className="h-3.5 w-3.5" /> {g.label}
+                    <Plus className="h-3 w-3" /> {g.label}
                   </button>
                 ))}
               </div>
