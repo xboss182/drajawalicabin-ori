@@ -1094,9 +1094,6 @@ function DetailsStep(props: {
                     <Row label={bt.summary.comforterLabel} value={`RM ${price.comforter_total.toFixed(2)}`} />
                   )}
                   <div className="py-1.5">
-                    <label className="mb-0.5 block text-[10px] uppercase tracking-widest text-stone">
-                      Promo code
-                    </label>
                     {couponRow ? (
                       <div className="flex items-center justify-between rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-800">
                         <span>
@@ -1127,7 +1124,7 @@ function DetailsStep(props: {
                                 applyCoupon();
                               }
                             }}
-                            placeholder="Enter code"
+                            placeholder="Promo code"
                             maxLength={24}
                             aria-invalid={couponError ? true : undefined}
                             aria-describedby={couponError ? "coupon-error" : undefined}
