@@ -680,17 +680,19 @@ function DetailsStep(props: {
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
         {isAnyCabin && (
-          <div className="mb-6 rounded-2xl border border-forest/30 bg-forest/[0.04] p-5">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-forest">Recommended for your party</p>
-            <p className="mt-1 text-xs text-stone">
-              Based on {guests} guest{Number(guests.replace("+", "")) > 1 ? "s" : ""} and your selected dates.
-            </p>
+          <div className="mb-4 rounded-xl border border-forest/30 bg-forest/[0.04] p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-forest">Recommended for your party</p>
+              <p className="text-[10px] text-stone">
+                {guests} guest{Number(guests.replace("+", "")) > 1 ? "s" : ""}
+              </p>
+            </div>
             {recommendations.length === 0 ? (
-              <p className="mt-3 text-sm text-stone">
-                No matching cabins for these dates — try different nights, or pick rooms manually below.
+              <p className="mt-2 text-xs text-stone">
+                No matching cabins — try different nights or pick rooms manually.
               </p>
             ) : (
-              <div className="mt-4 flex flex-col gap-3">
+              <div className="mt-2 flex flex-col gap-2">
                 {recommendations.map((r, i) => {
                   const isCombo = !!r.combo && r.combo.length > 1;
                   return (
@@ -702,27 +704,27 @@ function DetailsStep(props: {
                           ? pickComboRecommendation(r.combo!.map((c) => c.cabinType))
                           : pickRecommendation(r.cabinType)
                       }
-                      className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 text-left hover:border-forest hover:shadow-sm transition"
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2 text-left hover:border-forest hover:shadow-sm transition"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           {i === 0 && (
-                            <span className="inline-block rounded-full bg-forest px-2 py-0.5 text-[9px] uppercase tracking-widest text-coconut">
+                            <span className="inline-block rounded-full bg-forest px-1.5 py-0.5 text-[8px] uppercase tracking-widest text-coconut">
                               Best fit
                             </span>
                           )}
-                          <p className="font-display text-base text-forest">
+                          <p className="truncate font-display text-sm text-forest">
                             {isCombo ? r.combo!.map((c) => c.name).join(" + ") : r.name}
                           </p>
                         </div>
-                        <p className="mt-0.5 text-xs text-stone">
+                        <p className="text-[10px] text-stone">
                           Sleeps {r.capacity} · {r.nights} night{r.nights > 1 ? "s" : ""}
                           {isCombo ? ` · ${r.combo!.length} rooms` : ""}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4 shrink-0">
-                        <p className="font-display text-lg text-forest">RM {r.total.toFixed(2)}</p>
-                        <span className="text-[10px] uppercase tracking-widest text-forest underline">Select</span>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <p className="font-display text-sm text-forest">RM {r.total.toFixed(2)}</p>
+                        <span className="text-[9px] uppercase tracking-widest text-forest underline">Select</span>
                       </div>
                     </button>
                   );
