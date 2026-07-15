@@ -265,7 +265,7 @@ function Hero() {
           <a href="#stay" className="text-sm text-coconut/85 underline-offset-4 hover:underline">
             {t.hero.view}
           </a>
-          <div className="hidden sm:ml-auto sm:inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
+          <div className="sm:ml-auto inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
             <Sparkles className="h-6 w-6 shrink-0 text-sand" aria-hidden />
             <span className="leading-snug sm:leading-relaxed">
               <strong className="font-semibold text-sand">{t.promo.title}</strong>
