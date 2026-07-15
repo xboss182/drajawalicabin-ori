@@ -1322,7 +1322,7 @@ function PaymentStep({
             </div>
           </dl>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="mx-auto w-full max-w-xs rounded-2xl border border-border bg-card p-6 sm:mx-0 sm:max-w-none">
           <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.qrTitle}</p>
           <p className="mt-2 font-display text-xl text-forest">{bt.pay.qrSub}</p>
           <div className="mt-4 flex aspect-square w-full items-center justify-center rounded-xl border border-border bg-coconut overflow-hidden">
