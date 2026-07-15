@@ -235,7 +235,7 @@ function Leaf() {
 function Hero() {
   const { t } = useLanguage();
   return (
-    <section id="top" className="relative min-h-[78svh] w-full overflow-hidden lg:min-h-[82svh]">
+    <section id="top" className="relative min-h-[62svh] w-full overflow-hidden sm:min-h-[78svh] lg:min-h-[82svh]">
       <img
         src={heroRiverside}
         alt="Riverside cabins at Rajawali D'Cabin Chalet at twilight, Chendering, Kuala Terengganu"
@@ -245,7 +245,7 @@ function Hero() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/30 to-forest/85" />
-      <div className="relative mx-auto flex min-h-[78svh] max-w-7xl flex-col justify-end px-6 pb-28 pt-32 text-coconut lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
+      <div className="relative mx-auto flex min-h-[62svh] max-w-7xl flex-col justify-end px-6 pb-14 pt-20 text-coconut sm:min-h-[78svh] sm:pb-28 sm:pt-32 lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
         <span className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.3em] backdrop-blur">
           <span className="size-1.5 rounded-full bg-coconut" /> {t.hero.badge}
         </span>
@@ -265,7 +265,7 @@ function Hero() {
           <a href="#stay" className="text-sm text-coconut/85 underline-offset-4 hover:underline">
             {t.hero.view}
           </a>
-          <div className="sm:ml-auto inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
+          <div className="hidden sm:ml-auto sm:inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
             <Sparkles className="h-6 w-6 shrink-0 text-sand" aria-hidden />
             <span className="leading-snug sm:leading-relaxed">
               <strong className="font-semibold text-sand">{t.promo.title}</strong>
