@@ -1045,7 +1045,7 @@ function DetailsStep(props: {
         <p className="mt-4 text-xs text-stone">{bt.holdNote}</p>
       </form>
 
-      <aside className="order-1 lg:order-2">
+      <aside className="order-2 lg:order-2">
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <img
             src={
