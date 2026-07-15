@@ -477,11 +477,11 @@ function AvailabilitySearch() {
       <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
         {t.search.note}
       </p>
-      <p className="mx-auto mt-2 flex max-w-3xl items-center justify-center gap-1.5 text-center text-[11px] font-medium text-forest sm:text-xs">
+      <p className="mx-auto mt-2 hidden max-w-3xl items-center justify-center gap-1.5 text-center text-[11px] font-medium text-forest sm:flex sm:text-xs">
         <span aria-hidden>✦</span>
         {t.search.autoDiscount}
       </p>
-      <p className="mx-auto mt-1.5 max-w-3xl text-center text-[11px] text-foreground/60 sm:text-xs">
+      <p className="mx-auto mt-1.5 hidden max-w-3xl text-center text-[11px] text-foreground/60 sm:block sm:text-xs">
         {t.search.childNote}
       </p>
     </section>
