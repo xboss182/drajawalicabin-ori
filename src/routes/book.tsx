@@ -851,7 +851,7 @@ function DetailsStep(props: {
                           : `from RM ${sample?.weekday_rate ?? 0}/night`}{" "}
                         · {maxQty} room{maxQty > 1 ? "s" : ""} in this type
                       </p>
-                      <p className="mt-0.5 text-[9px] text-stone/80">
+                      <p className="mt-0.5 hidden text-[9px] text-stone/80 sm:block">
                         Weekday RM {sample?.weekday_rate} · Weekend RM {sample?.weekend_rate} · School holiday RM {sample?.school_holiday_rate}
                       </p>
                     </div>
