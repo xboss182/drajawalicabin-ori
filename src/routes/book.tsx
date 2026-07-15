@@ -6,7 +6,6 @@ import {
   previewPrice,
   previewPriceDetailed,
   attachPaymentProof,
-  getTakenDates,
   recommendCabins,
 } from "@/lib/booking.functions";
 import { listActiveAutoDiscounts, validateCoupon } from "@/lib/discounts.functions";
@@ -65,6 +64,16 @@ function addDaysISO(iso: string, days: number): string {
   const d = parseLocalDate(iso);
   d.setDate(d.getDate() + days);
   return formatLocalDate(d);
+}
+
+async function fetchTakenDates(cabinId: string, from: string, to: string): Promise<string[]> {
+  const params = new URLSearchParams({ cabinId, from, to });
+  const res = await fetch(`/api/public/availability/taken-dates?${params.toString()}`, {
+    headers: { accept: "application/json" },
+  });
+  if (!res.ok) return [];
+  const json = (await res.json()) as { dates?: unknown };
+  return Array.isArray(json.dates) ? json.dates.filter((d): d is string => typeof d === "string") : [];
 }
 
 const todayStr = formatPropertyDate(new Date());
@@ -342,8 +351,7 @@ function BookPage() {
       const entries = await Promise.all(
         cabins.map(async (c) => {
           try {
-            const r = await getTakenDates({ data: { cabinId: c.id, from, to } });
-            return [c.id, r.dates] as const;
+            return [c.id, await fetchTakenDates(c.id, from, to)] as const;
           } catch {
             return [c.id, [] as string[]] as const;
           }
