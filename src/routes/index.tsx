@@ -630,7 +630,7 @@ function Accommodation() {
             {t.stay.intro}
           </p>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {t.stay.cabins.map((c, idx) => (
             <article key={c.name} className="group flex flex-col overflow-hidden rounded-lg bg-card shadow-sm">
               <div className="relative">
@@ -641,7 +641,7 @@ function Accommodation() {
               </div>
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <h3 className="font-display text-xl leading-tight">{c.name}</h3>
-                <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px] text-foreground/75">
+                <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 text-[13px] text-foreground/75 sm:grid-cols-2">
                   {c.features.map((f) => (
                     <li key={f} className="flex gap-1.5">
                       <span className="mt-[7px] size-1 shrink-0 rounded-full bg-forest/60" />
