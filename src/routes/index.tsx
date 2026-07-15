@@ -761,10 +761,10 @@ function NearbySection() {
             <span className="text-coconut">{t.nearby.alsoLabel}</span> {t.nearby.also}
           </p>
         </div>
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 md:pb-0">
           {t.nearby.items.map((n, idx) => (
-            <figure key={n.name} className="group overflow-hidden rounded-lg">
-              <div className="aspect-[3/4] overflow-hidden">
+            <figure key={n.name} className="group w-[78%] shrink-0 snap-start overflow-hidden rounded-lg md:w-auto md:shrink">
+              <div className="aspect-[4/3] overflow-hidden md:aspect-[3/4]">
                 <img
                   src={nearbyImages[idx]}
                   alt={`${n.name} — nearby attraction from Rajawali D'Cabin Chalet, Kuala Terengganu`}
