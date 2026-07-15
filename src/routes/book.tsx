@@ -655,6 +655,8 @@ function DetailsStep(props: {
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
   const usedTypes = new Set(cart.map((it) => it.cabinType));
   const remainingGroups = cabinGroups.filter((g) => !usedTypes.has(g.type));
+  const isMobile = useIsMobile();
+  const visibleRecommendations = isMobile ? recommendations.slice(0, 2) : recommendations;
 
   function setCartLineQty(idx: number, qty: number) {
     setCart((c) =>
@@ -676,7 +678,7 @@ function DetailsStep(props: {
 
   return (
     <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
-      <form onSubmit={submit} className="order-2 lg:order-1">
+      <form onSubmit={submit} className="order-1 lg:order-1">
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
