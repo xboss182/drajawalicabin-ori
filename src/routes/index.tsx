@@ -713,7 +713,7 @@ function WhyStay() {
           </Link>
           <Link
             to="/gallery"
-            className="group relative overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+            className="group relative hidden overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest sm:block"
             aria-label="View BBQ area in gallery"
           >
             <div className="aspect-[4/2.55]">
