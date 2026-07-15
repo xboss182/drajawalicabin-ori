@@ -425,13 +425,24 @@ export const getTakenDates = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => cabinAvailSchema.parse(d))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: rows, error } = await supabaseAdmin.rpc("cabin_taken_dates", {
-      _cabin_id: data.cabinId,
-      _from: data.from,
-      _to: data.to,
-    });
-    if (error) throw new Error(error.message);
-    return { dates: (rows ?? []).map((r: { d: string }) => r.d) };
+    // Retry once — parallel RPC bursts occasionally fail transiently.
+    let rows: Array<{ d: string }> | null = null;
+    let lastErr: unknown = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const { data: r, error } = await supabaseAdmin.rpc("cabin_taken_dates", {
+        _cabin_id: data.cabinId,
+        _from: data.from,
+        _to: data.to,
+      });
+      if (!error) { rows = (r ?? []) as Array<{ d: string }>; lastErr = null; break; }
+      lastErr = error;
+      await new Promise((res) => setTimeout(res, 120));
+    }
+    if (lastErr) {
+      console.error("[getTakenDates] rpc failed", lastErr);
+      return { dates: [] as string[] };
+    }
+    return { dates: (rows ?? []).map((r) => r.d) };
   });
 
 const previewSchema = z.object({
