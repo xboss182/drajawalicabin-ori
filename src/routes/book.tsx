@@ -22,6 +22,7 @@ import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Plus, Minus, X } from "lucide-react";
 import { isPaymentsConfigured } from "@/lib/stripe";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // All bookings are evaluated in the property's timezone (Kuala Terengganu, UTC+8)
 // so a guest in any timezone sees the same "today" and never selects a date
@@ -654,6 +655,8 @@ function DetailsStep(props: {
   const groupByType = new Map(cabinGroups.map((g) => [g.type, g] as const));
   const usedTypes = new Set(cart.map((it) => it.cabinType));
   const remainingGroups = cabinGroups.filter((g) => !usedTypes.has(g.type));
+  const isMobile = useIsMobile();
+  const visibleRecommendations = isMobile ? recommendations.slice(0, 2) : recommendations;
 
   function setCartLineQty(idx: number, qty: number) {
     setCart((c) =>
@@ -675,7 +678,7 @@ function DetailsStep(props: {
 
   return (
     <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
-      <form onSubmit={submit} className="order-2 lg:order-1">
+      <form onSubmit={submit} className="order-1 lg:order-1">
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
         <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
 
@@ -693,7 +696,7 @@ function DetailsStep(props: {
               </p>
             ) : (
               <div className="mt-2 flex flex-col gap-2">
-                {recommendations.map((r, i) => {
+                {visibleRecommendations.map((r, i) => {
                   const isCombo = !!r.combo && r.combo.length > 1;
                   return (
                     <button
@@ -767,7 +770,7 @@ function DetailsStep(props: {
           <div className="mt-3 overflow-x-auto">
             <Calendar
               mode="range"
-              numberOfMonths={2}
+              numberOfMonths={isMobile ? 1 : 2}
               showOutsideDays={false}
               selected={
                 checkin && checkout && checkout > checkin
@@ -848,7 +851,7 @@ function DetailsStep(props: {
                           : `from RM ${sample?.weekday_rate ?? 0}/night`}{" "}
                         · {maxQty} room{maxQty > 1 ? "s" : ""} in this type
                       </p>
-                      <p className="mt-0.5 text-[9px] text-stone/80">
+                      <p className="mt-0.5 hidden text-[9px] text-stone/80 sm:block">
                         Weekday RM {sample?.weekday_rate} · Weekend RM {sample?.weekend_rate} · School holiday RM {sample?.school_holiday_rate}
                       </p>
                     </div>
@@ -1042,7 +1045,7 @@ function DetailsStep(props: {
         <p className="mt-4 text-xs text-stone">{bt.holdNote}</p>
       </form>
 
-      <aside className="order-1 lg:order-2">
+      <aside className="order-2 lg:order-2">
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <img
             src={
@@ -1319,7 +1322,7 @@ function PaymentStep({
             </div>
           </dl>
         </div>
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="mx-auto w-full max-w-xs rounded-2xl border border-border bg-card p-6 sm:mx-0 sm:max-w-none">
           <p className="text-xs uppercase tracking-widest text-stone">{bt.pay.qrTitle}</p>
           <p className="mt-2 font-display text-xl text-forest">{bt.pay.qrSub}</p>
           <div className="mt-4 flex aspect-square w-full items-center justify-center rounded-xl border border-border bg-coconut overflow-hidden">

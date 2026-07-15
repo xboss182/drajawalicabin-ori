@@ -235,7 +235,7 @@ function Leaf() {
 function Hero() {
   const { t } = useLanguage();
   return (
-    <section id="top" className="relative min-h-[78svh] w-full overflow-hidden lg:min-h-[82svh]">
+    <section id="top" className="relative min-h-[62svh] w-full overflow-hidden sm:min-h-[78svh] lg:min-h-[82svh]">
       <img
         src={heroRiverside}
         alt="Riverside cabins at Rajawali D'Cabin Chalet at twilight, Chendering, Kuala Terengganu"
@@ -245,7 +245,7 @@ function Hero() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/30 to-forest/85" />
-      <div className="relative mx-auto flex min-h-[78svh] max-w-7xl flex-col justify-end px-6 pb-28 pt-32 text-coconut lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
+      <div className="relative mx-auto flex min-h-[62svh] max-w-7xl flex-col justify-end px-6 pb-14 pt-20 text-coconut sm:min-h-[78svh] sm:pb-28 sm:pt-32 lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
         <span className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.3em] backdrop-blur">
           <span className="size-1.5 rounded-full bg-coconut" /> {t.hero.badge}
         </span>
@@ -265,7 +265,7 @@ function Hero() {
           <a href="#stay" className="text-sm text-coconut/85 underline-offset-4 hover:underline">
             {t.hero.view}
           </a>
-          <div className="sm:ml-auto inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
+          <div className="hidden sm:ml-auto sm:inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
             <Sparkles className="h-6 w-6 shrink-0 text-sand" aria-hidden />
             <span className="leading-snug sm:leading-relaxed">
               <strong className="font-semibold text-sand">{t.promo.title}</strong>
@@ -477,11 +477,11 @@ function AvailabilitySearch() {
       <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
         {t.search.note}
       </p>
-      <p className="mx-auto mt-2 flex max-w-3xl items-center justify-center gap-1.5 text-center text-[11px] font-medium text-forest sm:text-xs">
+      <p className="mx-auto mt-2 hidden max-w-3xl items-center justify-center gap-1.5 text-center text-[11px] font-medium text-forest sm:flex sm:text-xs">
         <span aria-hidden>✦</span>
         {t.search.autoDiscount}
       </p>
-      <p className="mx-auto mt-1.5 max-w-3xl text-center text-[11px] text-foreground/60 sm:text-xs">
+      <p className="mx-auto mt-1.5 hidden max-w-3xl text-center text-[11px] text-foreground/60 sm:block sm:text-xs">
         {t.search.childNote}
       </p>
     </section>
@@ -630,7 +630,7 @@ function Accommodation() {
             {t.stay.intro}
           </p>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {t.stay.cabins.map((c, idx) => (
             <article key={c.name} className="group flex flex-col overflow-hidden rounded-lg bg-card shadow-sm">
               <div className="relative">
@@ -641,7 +641,7 @@ function Accommodation() {
               </div>
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <h3 className="font-display text-xl leading-tight">{c.name}</h3>
-                <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px] text-foreground/75">
+                <ul className="grid grid-cols-1 gap-x-3 gap-y-1.5 text-[13px] text-foreground/75 sm:grid-cols-2">
                   {c.features.map((f) => (
                     <li key={f} className="flex gap-1.5">
                       <span className="mt-[7px] size-1 shrink-0 rounded-full bg-forest/60" />
@@ -713,7 +713,7 @@ function WhyStay() {
           </Link>
           <Link
             to="/gallery"
-            className="group relative overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+            className="group relative hidden overflow-hidden rounded-2xl bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest sm:block"
             aria-label="View BBQ area in gallery"
           >
             <div className="aspect-[4/2.55]">
@@ -761,10 +761,10 @@ function NearbySection() {
             <span className="text-coconut">{t.nearby.alsoLabel}</span> {t.nearby.also}
           </p>
         </div>
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 md:pb-0">
           {t.nearby.items.map((n, idx) => (
-            <figure key={n.name} className="group overflow-hidden rounded-lg">
-              <div className="aspect-[3/4] overflow-hidden">
+            <figure key={n.name} className="group w-[78%] shrink-0 snap-start overflow-hidden rounded-lg md:w-auto md:shrink">
+              <div className="aspect-[4/3] overflow-hidden md:aspect-[3/4]">
                 <img
                   src={nearbyImages[idx]}
                   alt={`${n.name} — nearby attraction from Rajawali D'Cabin Chalet, Kuala Terengganu`}
@@ -791,7 +791,7 @@ function Footer() {
   const { t } = useLanguage();
   return (
     <footer className="bg-coconut text-foreground">
-      <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-10">
+      <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 sm:gap-12 sm:py-20 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-10">
         <div>
           <p className="font-display text-3xl text-forest">Rajawali D'Cabin Chalet</p>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-foreground/70">
@@ -831,7 +831,7 @@ function Footer() {
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-6 py-6 text-xs text-stone sm:flex-row sm:items-center lg:px-10">
           <p>{t.footer.copyright.replace("{year}", String(new Date().getFullYear()))}</p>
-          <p className="italic">{t.footer.slogan}</p>
+          <p className="hidden italic sm:block">{t.footer.slogan}</p>
         </div>
       </div>
     </footer>
