@@ -791,7 +791,7 @@ function Footer() {
   const { t } = useLanguage();
   return (
     <footer className="bg-coconut text-foreground">
-      <div className="mx-auto grid max-w-7xl gap-12 px-6 py-20 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-10">
+      <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 sm:gap-12 sm:py-20 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-10">
         <div>
           <p className="font-display text-3xl text-forest">Rajawali D'Cabin Chalet</p>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-foreground/70">
@@ -831,7 +831,7 @@ function Footer() {
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-3 px-6 py-6 text-xs text-stone sm:flex-row sm:items-center lg:px-10">
           <p>{t.footer.copyright.replace("{year}", String(new Date().getFullYear()))}</p>
-          <p className="italic">{t.footer.slogan}</p>
+          <p className="hidden italic sm:block">{t.footer.slogan}</p>
         </div>
       </div>
     </footer>
