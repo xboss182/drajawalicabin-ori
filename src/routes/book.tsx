@@ -696,7 +696,7 @@ function DetailsStep(props: {
               </p>
             ) : (
               <div className="mt-2 flex flex-col gap-2">
-                {recommendations.map((r, i) => {
+                {visibleRecommendations.map((r, i) => {
                   const isCombo = !!r.combo && r.combo.length > 1;
                   return (
                     <button
