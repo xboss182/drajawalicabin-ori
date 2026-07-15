@@ -770,7 +770,7 @@ function DetailsStep(props: {
           <div className="mt-3 overflow-x-auto">
             <Calendar
               mode="range"
-              numberOfMonths={2}
+              numberOfMonths={isMobile ? 1 : 2}
               showOutsideDays={false}
               selected={
                 checkin && checkout && checkout > checkin
