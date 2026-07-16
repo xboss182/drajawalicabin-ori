@@ -249,6 +249,9 @@ export const createBooking = createServerFn({ method: "POST" })
       status: "pending_payment",
       num_rooms: 1,
       payment_type: data.paymentType ?? "deposit",
+      discount_id: null,
+      discount_code: null,
+      discount_amount: 0,
     };
 
     const rows = assigned.map((a) => ({
@@ -826,6 +829,9 @@ export const adminCreateBooking = createServerFn({ method: "POST" })
         status: data.status,
         payment_type: "full",
         num_rooms: 1,
+        discount_id: null,
+        discount_code: null,
+        discount_amount: 0,
         notes: data.notes ? `[Manual entry] ${data.notes}` : "[Manual entry]",
         confirmed_at: data.status !== "pending_payment" ? nowIso : null,
         confirmed_by: data.status !== "pending_payment" ? context.userId : null,
