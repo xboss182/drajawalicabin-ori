@@ -1,16 +1,35 @@
-## Plan
+## Goal
+On the `/book` page, reorder the mobile layout so the guest sees the **Stay summary** before the **Payment option**, **Property rules**, and **payment button**. Desktop layout stays exactly as it is.
 
-1. **Fix the booking insert payload**
-   - In the customer booking creation logic, always include `discount_amount: 0` and empty discount fields when no discount applies.
-   - Keep the existing behavior where the lead row gets the actual discount amount/code when a discount is applied.
+## Current layout
+The page uses a single-column stack on mobile (`< lg`):
+1. Form (availability → rooms → guest details → payment option → property rules → submit button)
+2. Stay summary card (aside)
 
-2. **Fix manual admin bookings too**
-   - Add the same safe default to manual booking rows, so admin-created bookings cannot hit the same database error.
+This pushes the price summary below everything the guest must read/click, which is poor for conversion.
 
-3. **Verify checkout flow**
-   - Test a normal mobile-style booking with no coupon/discount.
-   - Confirm it reaches the payment option step without showing the red `discount_amount` database error.
+## Proposed change
+1. **Extract** the stay summary card from the existing `<aside>` into a reusable `StaySummaryCard` component inside `src/routes/book.tsx`.
+2. **Insert** a mobile-only instance of `StaySummaryCard` inside the booking form, positioned immediately before the "Payment option" section.
+3. **Hide** the desktop `<aside>` below the `lg` breakpoint (`hidden lg:block`) so the summary is not duplicated on mobile.
+4. **Keep** the desktop two-column layout untouched: form on the left, aside on the right.
 
-## Technical details
+## Resulting mobile order
+- Availability / room selection / guest details
+- **Stay summary**
+- Payment option
+- Property rules
+- Submit button
 
-The database requires `booking_requests.discount_amount` to be non-null. The current insert rows only set `discount_amount` when a discount exists, so when no discount is applied the insert can send a missing/null value and fail on mobile checkout. The fix is to make every inserted booking row explicitly include `discount_amount: 0` by default, then override it only for the discounted lead row.
+## Resulting desktop order (unchanged)
+- Left column: form
+- Right column: stay summary card
+
+## File to change
+- `src/routes/book.tsx`
+
+## Verification
+- Open `/book` on a mobile viewport.
+- Confirm the Stay summary card renders above the Payment option section.
+- Confirm desktop still shows the summary in the right sidebar and the form in the left column.
+- Confirm no duplicate summary on any viewport.
