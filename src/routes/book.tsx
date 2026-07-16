@@ -1053,153 +1053,27 @@ function DetailsStep(props: {
         <p className="mt-4 text-xs text-stone">{bt.holdNote}</p>
       </form>
 
-      <aside className="order-2 lg:order-2">
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <img
-            src={
-              previewCabin
-                ? previewCabin.cabin_type === "Queen"
-                  ? cabinQueenImg
-                  : previewCabin.cabin_type === "Twin"
-                    ? cabinTwinImg
-                    : previewCabin.cabin_type === "Family"
-                      ? cabinFamilyImg
-                      : previewCabin.cabin_type === "Triple"
-                        ? cabinTripleImg
-                        : heroRiverside
-                : heroRiverside
-            }
-            alt={previewCabin?.name ?? "Rajawali D'Cabin cabin interior"}
-            className="aspect-[4/3] w-full object-cover"
-          />
-          <div className="p-6">
-            <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.summary.eyebrow}</p>
-            <h2 className="mt-2 font-display text-2xl text-forest">
-              {cart.length === 0
-                ? bt.summary.pickCabin
-                : cart.length === 1
-                  ? groupByType.get(cart[0].cabinType)?.label ?? previewCabin?.name ?? ""
-                  : `${totalRooms} rooms · ${cart.length} cabin types`}
-            </h2>
-            {cart.length > 0 && (
-              <ul className="mt-3 flex flex-col gap-1 text-sm text-stone">
-                {cart.map((it) => {
-                  const g = groupByType.get(it.cabinType);
-                  return (
-                    <li key={it.cabinType} className="flex justify-between">
-                      <span>{g?.label}</span>
-                      <span className="text-foreground">× {it.qty}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-            <dl className="mt-6 divide-y divide-border text-sm">
-              <Row label={bt.summary.checkin} value={fmt(checkin, bt.locale)} />
-              <Row label={bt.summary.checkout} value={fmt(checkout, bt.locale)} />
-              <Row label={bt.summary.nights} value={String(price?.nights ?? "—")} />
-              <Row label={bt.summary.guests} value={`${guests} adult${Number(guests) === 1 ? "" : "s"}${Number(kids) > 0 ? ` + ${kids} child${Number(kids) === 1 ? "" : "ren"} <12` : ""}`} />
-              <Row label={bt.summary.rooms} value={String(totalRooms)} />
-              {price && (
-                <>
-                  <Row label={bt.summary.roomSubtotal} value={`RM ${price.subtotal.toFixed(2)}`} />
-                  {price.comforter_total > 0 && (
-                    <Row label={bt.summary.comforterLabel} value={`RM ${price.comforter_total.toFixed(2)}`} />
-                  )}
-                  <div className="py-1.5">
-                    {couponRow ? (
-                      <div className="flex items-center justify-between rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-800">
-                        <span>
-                          ✓ <span className="font-medium">{couponRow.code}</span> applied
-                        </span>
-                        <button
-                          type="button"
-                          onClick={clearCoupon}
-                          className="text-[10px] underline underline-offset-2 hover:text-emerald-900"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex gap-1">
-                          <input
-                            type="text"
-                            value={couponInput}
-                            onChange={(e) =>
-                              setCouponInput(
-                                e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 24),
-                              )
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && couponInput.trim() && !couponApplying) {
-                                e.preventDefault();
-                                applyCoupon();
-                              }
-                            }}
-                            placeholder="Promo code"
-                            maxLength={24}
-                            aria-invalid={couponError ? true : undefined}
-                            aria-describedby={couponError ? "coupon-error" : undefined}
-                            className={`h-7 flex-1 rounded-md border bg-background px-2 text-[11px] uppercase tracking-wide outline-none transition focus:ring-2 focus:ring-forest/30 ${
-                              couponError
-                                ? "border-red-500 focus:border-red-500 focus:ring-red-200"
-                                : "border-border focus:border-forest"
-                            }`}
-                          />
-                          <button
-                            type="button"
-                            onClick={applyCoupon}
-                            disabled={couponApplying || !couponInput.trim()}
-                            className="h-7 rounded-md bg-forest px-2 text-[10px] font-medium uppercase tracking-wider text-white transition hover:bg-forest/90 focus:outline-none focus:ring-2 focus:ring-forest/40 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {couponApplying ? "…" : "Apply"}
-                          </button>
-                        </div>
-                        {couponError && (
-                          <p
-                            id="coupon-error"
-                            role="alert"
-                            className="mt-0.5 text-[10px] leading-tight text-red-600"
-                          >
-                            {couponError}
-                          </p>
-                        )}
-                        {!couponError && couponRow && couponAmount === 0 && (
-                          <p className="mt-0.5 text-[10px] leading-tight text-amber-700">
-                            Code accepted but doesn't apply to this stay (check minimum nights or dates).
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  {discounts.length > 0 && (
-                    <>
-                      {discounts.map((d, i) => (
-                        <div key={i} className="flex items-center justify-between py-2 text-sm">
-                          <span className="text-emerald-700">Discount · {d.label}</span>
-                          <span className="font-medium text-emerald-700">−RM {d.amount.toFixed(2)}</span>
-                        </div>
-                      ))}
-                      <Row
-                        label="Room subtotal after discount"
-                        value={`RM ${Math.max(0, price.subtotal - discounts.reduce((s, d) => s + d.amount, 0)).toFixed(2)}`}
-                      />
-                    </>
-                  )}
-                  <Row label={bt.summary.securityDeposit} value={`RM ${(totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}`} />
-                </>
-              )}
-            </dl>
-            {price && (
-              <div className="mt-4 flex items-baseline justify-between rounded-xl bg-coconut px-4 py-3">
-                <span className="text-xs uppercase tracking-widest text-stone">{bt.summary.totalPayable}</span>
-                <span className="font-display text-2xl text-forest">RM {(price.total - discounts.reduce((s, d) => s + d.amount, 0) + totalRooms * SECURITY_DEPOSIT_PER_ROOM).toFixed(2)}</span>
-              </div>
-            )}
-            <p className="mt-4 text-xs text-stone">{bt.summary.priceNote}</p>
-          </div>
-        </div>
+      <aside className="order-2 hidden lg:block lg:order-2">
+        <StaySummaryCard
+          previewCabin={previewCabin}
+          cart={cart}
+          groupByType={groupByType}
+          totalRooms={totalRooms}
+          checkin={checkin}
+          checkout={checkout}
+          guests={guests}
+          kids={kids}
+          price={price}
+          discounts={discounts}
+          couponInput={couponInput}
+          setCouponInput={setCouponInput}
+          couponRow={couponRow}
+          couponError={couponError}
+          couponApplying={couponApplying}
+          applyCoupon={applyCoupon}
+          clearCoupon={clearCoupon}
+          couponAmount={couponAmount}
+        />
       </aside>
     </section>
   );
