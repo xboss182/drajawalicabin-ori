@@ -25,6 +25,7 @@ function PromoPage() {
   const [busy, setBusy] = useState<null | "save" | "ai">(null);
   const [err, setErr] = useState<string | null>(null);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [previewLang, setPreviewLang] = useState<"en" | "bm">("en");
 
   useEffect(() => {
     (async () => {
@@ -44,6 +45,19 @@ function PromoPage() {
   }
   function remove(id: string) {
     setItems((prev) => prev.filter((it) => it.id !== id));
+  }
+
+  function addPreset() {
+    setItems((prev) => [
+      ...prev,
+      {
+        id: `cta_${Date.now().toString(36)}`,
+        enabled: true,
+        text_en: "Stay longer, save more — 10% off from your 2nd night onwards. Auto-applied.",
+        text_bm:
+          "Menginap lebih lama, jimat lebih banyak — Diskaun 10% mulai malam ke-2 dan seterusnya. Dikenakan secara automatik.",
+      },
+    ]);
   }
 
   async function save() {
@@ -113,6 +127,50 @@ function PromoPage() {
           <p className="mt-8 text-sm text-stone">Loading…</p>
         ) : (
           <div className="mt-8 space-y-6">
+            {/* Live preview */}
+            <div className="rounded-xl border border-border bg-card p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-lg text-forest">Homepage preview</h2>
+                <div className="flex gap-1 rounded-full border border-border p-1 text-[10px] uppercase tracking-widest">
+                  <button
+                    onClick={() => setPreviewLang("en")}
+                    className={`rounded-full px-3 py-1 ${previewLang === "en" ? "bg-forest text-coconut" : "text-stone"}`}
+                  >
+                    EN
+                  </button>
+                  <button
+                    onClick={() => setPreviewLang("bm")}
+                    className={`rounded-full px-3 py-1 ${previewLang === "bm" ? "bg-forest text-coconut" : "text-stone"}`}
+                  >
+                    BM
+                  </button>
+                </div>
+              </div>
+              <p className="mt-1 text-xs text-stone">
+                Shows the first enabled CTA as it will appear on the hero. Changes reflect after
+                you Save.
+              </p>
+              <div className="mt-4 rounded-2xl bg-forest/90 p-6">
+                {(() => {
+                  const active = items.find((i) => i.enabled);
+                  if (!active) {
+                    return (
+                      <p className="text-center text-xs uppercase tracking-widest text-coconut/70">
+                        No enabled CTA — pill hidden on homepage
+                      </p>
+                    );
+                  }
+                  const text = previewLang === "bm" ? active.text_bm : active.text_en;
+                  return (
+                    <div className="mx-auto inline-flex max-w-full items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md">
+                      <span className="text-sand">✦</span>
+                      <span className="text-sand">{text}</span>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
             {/* AI generate */}
             <div className="rounded-xl border border-border bg-card p-5">
               <h2 className="font-display text-lg text-forest">Auto-generate with AI</h2>
@@ -135,6 +193,12 @@ function PromoPage() {
                   {busy === "ai" ? "Generating…" : "✨ Generate"}
                 </button>
               </div>
+              <button
+                onClick={addPreset}
+                className="mt-3 rounded-full border border-forest/30 px-4 py-1.5 text-[11px] uppercase tracking-widest text-forest hover:bg-forest hover:text-coconut"
+              >
+                + Add "Stay longer, save more" preset
+              </button>
             </div>
 
             {/* Items list */}
