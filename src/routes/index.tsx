@@ -235,8 +235,7 @@ function Leaf() {
 
 /* ---------------- Hero ---------------- */
 function Hero() {
-  const { t } = useLanguage();
-  const { lang } = useLanguage();
+  const { t, lang } = useLanguage();
   const { data: promo } = useQuery({
     queryKey: ["hero-promo-cta"],
     queryFn: () => getHeroPromoCta(),
