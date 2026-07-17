@@ -241,12 +241,13 @@ function Hero() {
     queryFn: () => getHeroPromoCta(),
     staleTime: 60_000,
   });
-  const promoText = promo
+  const activePromo = promo?.items.find((i) => i.enabled) ?? null;
+  const promoText = activePromo
     ? lang === "bm"
-      ? promo.text_bm
-      : promo.text_en
+      ? activePromo.text_bm
+      : activePromo.text_en
     : `${t.promo.title} — ${t.promo.body}`;
-  const promoEnabled = promo ? promo.enabled : true;
+  const promoEnabled = promo ? activePromo !== null : true;
   return (
     <section id="top" className="relative min-h-[62svh] w-full overflow-hidden sm:min-h-[78svh] lg:min-h-[82svh]">
       <img
