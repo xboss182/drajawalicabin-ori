@@ -28,6 +28,8 @@ import galleryPool from "@/assets/gallery/pool-01.jpg.asset.json";
 import galleryBbq from "@/assets/gallery/bbq-pavilion-01.jpg.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
 import { Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getHeroPromoCta } from "@/lib/promo-cta.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -233,7 +235,18 @@ function Leaf() {
 
 /* ---------------- Hero ---------------- */
 function Hero() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const { data: promo } = useQuery({
+    queryKey: ["hero-promo-cta"],
+    queryFn: () => getHeroPromoCta(),
+    staleTime: 60_000,
+  });
+  const promoText = promo
+    ? lang === "bm"
+      ? promo.text_bm
+      : promo.text_en
+    : `${t.promo.title} — ${t.promo.body}`;
+  const promoEnabled = promo ? promo.enabled : true;
   return (
     <section id="top" className="relative min-h-[62svh] w-full overflow-hidden sm:min-h-[78svh] lg:min-h-[82svh]">
       <img
@@ -265,14 +278,14 @@ function Hero() {
           <a href="#stay" className="text-sm text-coconut/85 underline-offset-4 hover:underline">
             {t.hero.view}
           </a>
-          <div className="sm:ml-auto inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
-            <Sparkles className="h-6 w-6 shrink-0 text-sand" aria-hidden />
-            <span className="leading-snug sm:leading-relaxed">
-              <strong className="font-semibold text-sand">{t.promo.title}</strong>
-              <span className="hidden sm:inline"> — </span>
-              <span className="block sm:inline">{t.promo.body}</span>
-            </span>
-          </div>
+          {promoEnabled && (
+            <div className="sm:ml-auto inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
+              <Sparkles className="h-6 w-6 shrink-0 text-sand" aria-hidden />
+              <span className="leading-snug text-sand sm:leading-relaxed">
+                {promoText}
+              </span>
+            </div>
+          )}
         </div>
         <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70">
           <span>8 private cabins</span>

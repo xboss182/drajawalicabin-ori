@@ -1,35 +1,45 @@
+
 ## Goal
-On the `/book` page, reorder the mobile layout so the guest sees the **Stay summary** before the **Payment option**, **Property rules**, and **payment button**. Desktop layout stays exactly as it is.
+Give admin control over the "Stay longer, save more" hero promo pill on the homepage:
+1. Toggle it on/off
+2. Edit the CTA sentence (EN + BM)
+3. Auto-generate a new catchy sentence via Lovable AI
 
-## Current layout
-The page uses a single-column stack on mobile (`< lg`):
-1. Form (availability → rooms → guest details → payment option → property rules → submit button)
-2. Stay summary card (aside)
+## Changes
 
-This pushes the price summary below everything the guest must read/click, which is poor for conversion.
+### 1. Storage (app_settings)
+Reuse the existing `app_settings` key/value table. Add one row:
+- key: `hero_promo_cta`
+- value (JSON): `{ enabled: boolean, text_en: string, text_bm: string }`
 
-## Proposed change
-1. **Extract** the stay summary card from the existing `<aside>` into a reusable `StaySummaryCard` component inside `src/routes/book.tsx`.
-2. **Insert** a mobile-only instance of `StaySummaryCard` inside the booking form, positioned immediately before the "Payment option" section.
-3. **Hide** the desktop `<aside>` below the `lg` breakpoint (`hidden lg:block`) so the summary is not duplicated on mobile.
-4. **Keep** the desktop two-column layout untouched: form on the left, aside on the right.
+Seed with current defaults ("Stay longer, save more — 10% off from the 2nd night onwards" / BM equivalent). No schema migration needed.
 
-## Resulting mobile order
-- Availability / room selection / guest details
-- **Stay summary**
-- Payment option
-- Property rules
-- Submit button
+### 2. New admin page: `src/routes/_authenticated/admin.promo.tsx`
+- Add "Promo" tab to `AdminTabs` in `admin.tsx`
+- Fields:
+  - Toggle: Enable hero promo CTA
+  - Textarea: English sentence
+  - Textarea: Malay sentence
+  - Button: "✨ Generate with AI" (opens small prompt input, calls server fn, fills both text fields with returned EN + BM)
+  - Save button
 
-## Resulting desktop order (unchanged)
-- Left column: form
-- Right column: stay summary card
+### 3. Server functions: `src/lib/promo-cta.functions.ts`
+- `getHeroPromoCta()` — public, reads row from `app_settings` (server publishable client). Returns `{ enabled, text_en, text_bm }` with defaults if missing.
+- `updateHeroPromoCta({ enabled, text_en, text_bm })` — auth + admin role check, upserts row.
+- `generatePromoCtaAi({ hint? })` — auth + admin role check, calls Lovable AI Gateway (`google/gemini-3.5-flash`) with a prompt that returns catchy EN + BM sentences about the 10% 2nd-night discount. Returns `{ text_en, text_bm }`.
 
-## File to change
-- `src/routes/book.tsx`
+### 4. Frontend consumption: `src/routes/index.tsx`
+- Fetch `getHeroPromoCta` via TanStack Query (public, cacheable)
+- If `enabled === false`, hide the promo pill
+- Else render `lang === 'bm' ? text_bm : text_en` inside the existing pill styling
+- Keep current fallback text if fetch fails
 
-## Verification
-- Open `/book` on a mobile viewport.
-- Confirm the Stay summary card renders above the Payment option section.
-- Confirm desktop still shows the summary in the right sidebar and the form in the left column.
-- Confirm no duplicate summary on any viewport.
+### 5. Grants / RLS
+`app_settings` already exists with a public read policy (used elsewhere). Ensure:
+- SELECT allowed to `anon` for this key (read-only public config)
+- Writes only via authenticated admin server fn using `supabaseAdmin` after role check
+
+## Out of scope
+- No changes to the discount engine logic
+- No changes to the /book page pricing
+- Pill styling and placement unchanged

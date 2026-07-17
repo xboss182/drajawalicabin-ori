@@ -27,6 +27,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthenticatedAdminStatsRouteImport } from './routes/_authenticated/admin.stats'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminPromoRouteImport } from './routes/_authenticated/admin.promo'
 import { Route as AuthenticatedAdminMembersRouteImport } from './routes/_authenticated/admin.members'
 import { Route as AuthenticatedAdminHolidaysRouteImport } from './routes/_authenticated/admin.holidays'
 import { Route as AuthenticatedAdminDiscountsRouteImport } from './routes/_authenticated/admin.discounts'
@@ -131,6 +132,11 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPromoRoute = AuthenticatedAdminPromoRouteImport.update({
+  id: '/promo',
+  path: '/promo',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminMembersRoute =
   AuthenticatedAdminMembersRouteImport.update({
     id: '/members',
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/admin/discounts': typeof AuthenticatedAdminDiscountsRoute
   '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/admin/members': typeof AuthenticatedAdminMembersRoute
+  '/admin/promo': typeof AuthenticatedAdminPromoRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -260,6 +267,7 @@ export interface FileRoutesByTo {
   '/admin/discounts': typeof AuthenticatedAdminDiscountsRoute
   '/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/admin/members': typeof AuthenticatedAdminMembersRoute
+  '/admin/promo': typeof AuthenticatedAdminPromoRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/discounts': typeof AuthenticatedAdminDiscountsRoute
   '/_authenticated/admin/holidays': typeof AuthenticatedAdminHolidaysRoute
   '/_authenticated/admin/members': typeof AuthenticatedAdminMembersRoute
+  '/_authenticated/admin/promo': typeof AuthenticatedAdminPromoRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/admin/discounts'
     | '/admin/holidays'
     | '/admin/members'
+    | '/admin/promo'
     | '/admin/settings'
     | '/admin/stats'
     | '/lovable/email/suppression'
@@ -359,6 +369,7 @@ export interface FileRouteTypes {
     | '/admin/discounts'
     | '/admin/holidays'
     | '/admin/members'
+    | '/admin/promo'
     | '/admin/settings'
     | '/admin/stats'
     | '/lovable/email/suppression'
@@ -392,6 +403,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/discounts'
     | '/_authenticated/admin/holidays'
     | '/_authenticated/admin/members'
+    | '/_authenticated/admin/promo'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/stats'
     | '/lovable/email/suppression'
@@ -557,6 +569,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/promo': {
+      id: '/_authenticated/admin/promo'
+      path: '/promo'
+      fullPath: '/admin/promo'
+      preLoaderRoute: typeof AuthenticatedAdminPromoRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/members': {
       id: '/_authenticated/admin/members'
       path: '/members'
@@ -657,6 +676,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminDiscountsRoute: typeof AuthenticatedAdminDiscountsRoute
   AuthenticatedAdminHolidaysRoute: typeof AuthenticatedAdminHolidaysRoute
   AuthenticatedAdminMembersRoute: typeof AuthenticatedAdminMembersRoute
+  AuthenticatedAdminPromoRoute: typeof AuthenticatedAdminPromoRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStatsRoute: typeof AuthenticatedAdminStatsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -669,6 +689,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminDiscountsRoute: AuthenticatedAdminDiscountsRoute,
   AuthenticatedAdminHolidaysRoute: AuthenticatedAdminHolidaysRoute,
   AuthenticatedAdminMembersRoute: AuthenticatedAdminMembersRoute,
+  AuthenticatedAdminPromoRoute: AuthenticatedAdminPromoRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminStatsRoute: AuthenticatedAdminStatsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -727,13 +748,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
