@@ -56,7 +56,7 @@ function PromoPage() {
 
   function addPreset() {
     setItems((prev) => [
-      ...prev,
+      ...prev.map((it) => ({ ...it, enabled: false })),
       {
         id: `cta_${Date.now().toString(36)}`,
         enabled: true,
@@ -97,7 +97,7 @@ function PromoPage() {
     setBusy("ai");
     try {
       const r = await generatePromoCtaAi({ data: { hint: hint.trim() || undefined } });
-      setItems((prev) => [...prev, r]);
+      setItems((prev) => [...prev.map((it) => ({ ...it, enabled: false })), r]);
     } catch (e: any) {
       setErr(e?.message ?? "AI generation failed");
     } finally {
