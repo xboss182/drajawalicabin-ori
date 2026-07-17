@@ -1,78 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  PROMO_CTA_KEY,
+  DEFAULT_PROMO_ITEM,
+  normalizePromoCta,
+  makePromoId,
+  type PromoCtaItem,
+  type HeroPromoCta,
+} from "./promo-cta.server";
 
-const KEY = "hero_promo_cta";
-
-const DEFAULT_ITEM = {
-  id: "default",
-  enabled: true,
-  text_en: "Stay longer, save more — 10% off from your 2nd night onwards. Auto-applied.",
-  text_bm:
-    "Menginap lebih lama, jimat lebih banyak — Diskaun 10% mulai malam ke-2 dan seterusnya. Dikenakan secara automatik.",
-};
-
-export type PromoCtaItem = {
-  id: string;
-  enabled: boolean;
-  text_en: string;
-  text_bm: string;
-};
-
-export type HeroPromoCta = { items: PromoCtaItem[] };
-
-function makeId() {
-  return `cta_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
-}
-
-function normalize(value: any): HeroPromoCta {
-  if (!value || typeof value !== "object") return { items: [DEFAULT_ITEM] };
-  // Legacy shape: { enabled, text_en, text_bm }
-  if (Array.isArray(value.items) === false && (value.text_en || value.text_bm)) {
-    return {
-      items: [
-        {
-          id: "default",
-          enabled: typeof value.enabled === "boolean" ? value.enabled : true,
-          text_en:
-            typeof value.text_en === "string" && value.text_en.trim()
-              ? value.text_en
-              : DEFAULT_ITEM.text_en,
-          text_bm:
-            typeof value.text_bm === "string" && value.text_bm.trim()
-              ? value.text_bm
-              : DEFAULT_ITEM.text_bm,
-        },
-      ],
-    };
-  }
-  const items = Array.isArray(value.items) ? value.items : [];
-  const cleaned: PromoCtaItem[] = items
-    .map((it: any, i: number): PromoCtaItem | null => {
-      if (!it || typeof it !== "object") return null;
-      const text_en = typeof it.text_en === "string" ? it.text_en.trim() : "";
-      const text_bm = typeof it.text_bm === "string" ? it.text_bm.trim() : "";
-      if (!text_en || !text_bm) return null;
-      return {
-        id: typeof it.id === "string" && it.id ? it.id : `item_${i}`,
-        enabled: typeof it.enabled === "boolean" ? it.enabled : false,
-        text_en: text_en.slice(0, 240),
-        text_bm: text_bm.slice(0, 240),
-      };
-    })
-    .filter((x: PromoCtaItem | null): x is PromoCtaItem => x !== null);
-  if (cleaned.length === 0) return { items: [DEFAULT_ITEM] };
-  return { items: cleaned };
-}
-
-async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden");
-}
+export type { PromoCtaItem, HeroPromoCta };
 
 export const getHeroPromoCta = createServerFn({ method: "GET" }).handler(async () => {
   try {
@@ -80,12 +18,12 @@ export const getHeroPromoCta = createServerFn({ method: "GET" }).handler(async (
     const { data, error } = await supabaseAdmin
       .from("app_settings")
       .select("value")
-      .eq("key", KEY)
+      .eq("key", PROMO_CTA_KEY)
       .maybeSingle();
-    if (error) return { items: [DEFAULT_ITEM] };
-    return normalize(data?.value);
+    if (error) return { items: [DEFAULT_PROMO_ITEM] };
+    return normalizePromoCta(data?.value);
   } catch {
-    return { items: [DEFAULT_ITEM] };
+    return { items: [DEFAULT_PROMO_ITEM] };
   }
 });
 
@@ -102,10 +40,15 @@ export const updateHeroPromoCta = createServerFn({ method: "POST" })
     z.object({ items: z.array(ItemSchema).max(20) }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    const { data: isAdmin, error: rerr } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (rerr) throw new Error(rerr.message);
+    if (!isAdmin) throw new Error("Forbidden");
     const { error } = await context.supabase
       .from("app_settings")
-      .upsert({ key: KEY, value: data as any, updated_at: new Date().toISOString() });
+      .upsert({ key: PROMO_CTA_KEY, value: data as any, updated_at: new Date().toISOString() });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -116,7 +59,12 @@ export const generatePromoCtaAi = createServerFn({ method: "POST" })
     z.object({ hint: z.string().trim().max(300).optional() }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    const { data: isAdmin, error: rerr } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (rerr) throw new Error(rerr.message);
+    if (!isAdmin) throw new Error("Forbidden");
     const key = process.env.LOVABLE_API_KEY;
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
@@ -156,7 +104,7 @@ Return STRICT JSON with exactly these keys: {"text_en": string, "text_bm": strin
     const text_bm = String(parsed.text_bm ?? "").trim();
     if (!text_en || !text_bm) throw new Error("AI response missing text fields");
     return {
-      id: makeId(),
+      id: makePromoId(),
       enabled: true,
       text_en: text_en.slice(0, 240),
       text_bm: text_bm.slice(0, 240),
