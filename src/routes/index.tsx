@@ -302,7 +302,18 @@ function Hero() {
 
 /* ---------------- Availability ---------------- */
 function AvailabilitySearch() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const { data: promo } = useQuery({
+    queryKey: ["hero-promo-cta"],
+    queryFn: () => getHeroPromoCta(),
+    staleTime: 60_000,
+  });
+  const activePromo = promo?.items.find((i) => i.enabled) ?? null;
+  const promoText = activePromo
+    ? lang === "bm"
+      ? activePromo.text_bm
+      : activePromo.text_en
+    : null;
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
   const tomorrowDate = new Date(todayDate);
@@ -491,10 +502,12 @@ function AvailabilitySearch() {
       <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
         {t.search.note}
       </p>
-      <p className="mx-auto mt-2 hidden max-w-3xl items-center justify-center gap-1.5 text-center text-[11px] font-medium text-forest sm:flex sm:text-xs">
-        <span aria-hidden>✦</span>
-        {t.search.autoDiscount}
-      </p>
+      {promoText && (
+        <p className="mx-auto mt-2 hidden max-w-3xl items-center justify-center gap-1.5 text-center text-[11px] font-medium text-forest sm:flex sm:text-xs">
+          <span aria-hidden>✦</span>
+          {promoText}
+        </p>
+      )}
       <p className="mx-auto mt-1.5 hidden max-w-3xl text-center text-[11px] text-foreground/60 sm:block sm:text-xs">
         {t.search.childNote}
       </p>
