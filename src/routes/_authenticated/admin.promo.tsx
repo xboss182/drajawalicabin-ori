@@ -41,7 +41,14 @@ function PromoPage() {
   }, []);
 
   function patch(id: string, patch: Partial<PromoCtaItem>) {
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...patch } : it)));
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it.id === id) return { ...it, ...patch };
+        // Enforce single-enabled: turning one on turns others off.
+        if (patch.enabled === true) return { ...it, enabled: false };
+        return it;
+      }),
+    );
   }
   function remove(id: string) {
     setItems((prev) => prev.filter((it) => it.id !== id));
