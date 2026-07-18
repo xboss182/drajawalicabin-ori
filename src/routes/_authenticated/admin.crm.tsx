@@ -753,81 +753,39 @@ function L({ label, children, full }: { label: string; children: React.ReactNode
 
 function GuestBookingsPanel({ id, onChange }: { id: string; onChange: () => void }) {
   const [data, setData] = useState<any>(null);
-  const [cabins, setCabins] = useState<{ id: string; name: string }[]>([]);
-  const [editing, setEditing] = useState<any | null>(null);
+  const [fullBookings, setFullBookings] = useState<AdminBooking[]>([]);
+  const [loadingFull, setLoadingFull] = useState(false);
   async function reload() {
     const r = await getGuest({ data: { id } });
     setData(r);
+    setLoadingFull(true);
+    try {
+      const all = await listBookings();
+      const guestEmail = String(r.guest.email ?? "").toLowerCase();
+      const isManual = /^manual\+.*@admin\.local$/i.test(guestEmail);
+      const guestName = (r.guest.full_name ?? "").toLowerCase();
+      const matched = (all.bookings as AdminBooking[]).filter((b) => {
+        const em = String(b.email ?? "").toLowerCase();
+        if (isManual) return em === "manual@admin.local" && (b.guest_name ?? "").toLowerCase() === guestName;
+        return em === guestEmail;
+      });
+      setFullBookings(matched);
+    } finally { setLoadingFull(false); }
   }
   useEffect(() => {
     reload();
-    listCabins().then((c) => setCabins(c.cabins as any));
   }, [id]);
   if (!data) return <div className="text-sm text-stone">Loading…</div>;
-  const bookings = (data.bookings ?? []) as any[];
-  if (bookings.length === 0) return <div className="text-sm text-stone">No bookings yet.</div>;
+  if (loadingFull && fullBookings.length === 0) return <div className="text-sm text-stone">Loading bookings…</div>;
+  if (fullBookings.length === 0) return <div className="text-sm text-stone">No bookings yet.</div>;
   return (
     <div className="space-y-2">
-      <div className="text-[10px] uppercase tracking-widest text-stone">Bookings — click a row for full details</div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-left text-[10px] uppercase tracking-widest text-stone">
-            <tr>
-              <th className="p-2">Booking #</th>
-              <th className="p-2">Check-in</th>
-              <th className="p-2">Check-out</th>
-              <th className="p-2 text-right">Nights</th>
-              <th className="p-2 text-right">Rooms</th>
-              <th className="p-2 text-right">Pax</th>
-              <th className="p-2 text-right">Total</th>
-              <th className="p-2">Status</th>
-              <th className="p-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {bookings.map((b) => (
-              <tr
-                key={b.id}
-                className="cursor-pointer border-t border-border/40 hover:bg-coconut/40"
-              >
-                <td className="p-2 font-mono text-xs">
-                  <Link
-                    to="/admin"
-                    hash={`b-${b.id}`}
-                    className="text-forest underline underline-offset-2 hover:opacity-80"
-                    title="Open full booking in Bookings tab"
-                  >
-                    {b.payment_reference ?? b.id.slice(0, 8)}
-                  </Link>
-                </td>
-                <td className="p-2 text-xs">{b.check_in ?? "—"}</td>
-                <td className="p-2 text-xs">{b.check_out ?? "—"}</td>
-                <td className="p-2 text-right">{b.nights ?? "—"}</td>
-                <td className="p-2 text-right">{b.num_rooms ?? 1}</td>
-                <td className="p-2 text-right">{b.guests ?? "—"}</td>
-                <td className="p-2 text-right">RM{Number(b.total_amount ?? 0).toFixed(0)}</td>
-                <td className="p-2 text-xs">{b.status}</td>
-                <td className="p-2 text-right">
-                  <button
-                    onClick={() => setEditing(b)}
-                    className="text-[10px] text-stone underline"
-                  >
-                    quick edit
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="text-[10px] uppercase tracking-widest text-stone">
+        Bookings ({fullBookings.length})
       </div>
-      {editing && (
-        <BookingEditModal
-          booking={editing}
-          cabins={cabins}
-          onClose={() => setEditing(null)}
-          onSaved={async () => { setEditing(null); await reload(); onChange(); }}
-        />
-      )}
+      {fullBookings.map((b) => (
+        <BookingCard key={b.id} b={b} onRefresh={async () => { await reload(); onChange(); }} />
+      ))}
     </div>
   );
 }
