@@ -44,7 +44,6 @@ function CrmPage() {
   const [sort, setSort] = useState<"last_stay" | "spent" | "bookings" | "name">("last_stay");
   const [tags, setTags] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [bookingsFor, setBookingsFor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
