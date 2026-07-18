@@ -307,6 +307,65 @@ export const createBooking = createServerFn({ method: "POST" })
       );
     }
 
+    // Send confirmation email to guest + new-booking alert to admins.
+    // Best-effort: never fail the booking if email sending errors out.
+    try {
+      const guestEmail = (data.email || "").toLowerCase();
+      const isManual = guestEmail === "manual@admin.local";
+      const gid = (lead.booking_group_id as string) ?? (lead.id as string);
+      const { data: groupRows } = await supabaseAdmin
+        .from("booking_requests")
+        .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, subtotal, comforter, comforter_total, total_amount, deposit_amount, balance_amount, payment_reference, payment_type")
+        .eq("booking_group_id", gid)
+        .order("created_at", { ascending: true });
+      const leadRow = groupRows?.[0];
+      if (leadRow) {
+        const totalAmount = (groupRows ?? []).reduce((s, r) => s + Number(r.total_amount ?? 0), 0);
+        const securityDeposit = (groupRows ?? []).reduce((s, r) => s + Number(r.deposit_amount ?? 0), 0);
+        const remaining = (groupRows ?? []).reduce((s, r) => s + Number(r.balance_amount ?? 0), 0);
+        const templateData = {
+          guestName: leadRow.guest_name,
+          reference: leadRow.payment_reference ?? String(leadRow.id).slice(0, 8),
+          roomType: cleanRoomType(leadRow.room_type),
+          checkIn: leadRow.check_in,
+          checkOut: leadRow.check_out,
+          nights: leadRow.nights,
+          guests: leadRow.guests,
+          total: totalAmount,
+          securityDeposit,
+          remaining,
+          paymentType: (leadRow as any).payment_type ?? "deposit",
+          rooms: (groupRows ?? []).map((r) => ({ name: cleanRoomType(r.room_type), total: Number(r.total_amount ?? 0) })),
+        };
+        const { sendTransactionalEmail, getAdminRecipients } = await import("./email/send.server");
+        if (!isManual) {
+          await sendTransactionalEmail(supabaseAdmin, {
+            templateName: "booking-summary",
+            recipientEmail: leadRow.email,
+            idempotencyKey: `booking-created-${leadRow.id}-guest`,
+            templateData,
+          });
+        }
+        const admins = await getAdminRecipients(supabaseAdmin, "notify_new_booking");
+        const adminTemplateData = {
+          ...templateData,
+          guestEmail: leadRow.email,
+          guestPhone: (leadRow as any).phone,
+          bookingId: leadRow.id,
+        };
+        for (const adminEmail of admins) {
+          await sendTransactionalEmail(supabaseAdmin, {
+            templateName: "admin-booking-alert",
+            recipientEmail: adminEmail,
+            idempotencyKey: `admin-new-booking-${leadRow.id}-${adminEmail}`,
+            templateData: adminTemplateData,
+          });
+        }
+      }
+    } catch (emailErr) {
+      console.error("[createBooking] email send failed", emailErr);
+    }
+
     return {
       bookingId: lead.id as string,
       groupId: (lead.booking_group_id as string) ?? lead.id,
