@@ -123,6 +123,20 @@ function AdminPage() {
     refresh();
   }, []);
 
+  // Scroll to a specific booking when navigated with #b-<id> hash
+  useEffect(() => {
+    if (loading) return;
+    if (typeof window === "undefined") return;
+    const h = window.location.hash;
+    if (!h?.startsWith("#b-")) return;
+    const el = document.getElementById(h.slice(1));
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.classList.add("ring-2", "ring-forest");
+      setTimeout(() => el.classList.remove("ring-2", "ring-forest"), 2500);
+    }
+  }, [loading, bookings]);
+
   async function onConfirm(id: string) {
     if (!confirm("Confirm payment received and block these dates?")) return;
     await confirmBooking({ data: { bookingId: id } });
