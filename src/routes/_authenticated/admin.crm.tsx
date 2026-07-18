@@ -69,12 +69,16 @@ function CrmPage() {
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [sort, tag]);
 
-  async function openGuestByEmail(email: string) {
+  async function openGuestByEmail(email: string, name?: string | null) {
+    const isManual = email.toLowerCase() === "manual@admin.local";
+    const searchTerm = isManual ? (name ?? "") : email;
     setTab("guests");
-    setPendingEmail(email);
-    setSearch(email);
-    const list = await load(email);
-    const match = list.find((g) => g.email.toLowerCase() === email.toLowerCase());
+    setPendingEmail(searchTerm || email);
+    setSearch(searchTerm);
+    const list = await load(searchTerm);
+    const match = isManual
+      ? list.find((g) => (g.full_name ?? "").toLowerCase() === (name ?? "").toLowerCase())
+      : list.find((g) => g.email.toLowerCase() === email.toLowerCase());
     if (match) setSelectedId(match.id);
     setPendingEmail(null);
   }
@@ -389,7 +393,7 @@ function BookingRow({ b, cabins, onSaved }: { b: any; cabins: { id: string; name
   );
 }
 
-function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string) => void }) {
+function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: string | null) => void }) {
   const now = new Date();
   const [month, setMonth] = useState(
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
@@ -530,7 +534,7 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string) => void }) 
                           {b.email ? (
                             <button
                               type="button"
-                              onClick={() => onOpenGuest(b.email)}
+                              onClick={() => onOpenGuest(b.email, b.guest_name)}
                               className="text-forest underline underline-offset-2 hover:opacity-80"
                               title="Open in CRM"
                             >

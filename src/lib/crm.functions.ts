@@ -38,6 +38,7 @@ export const rebuildCrmGuests = createServerFn({ method: "POST" })
 
     type Agg = {
       email: string;
+      key_email: string;
       full_name: string | null;
       phone: string | null;
       total_bookings: number;
@@ -48,14 +49,24 @@ export const rebuildCrmGuests = createServerFn({ method: "POST" })
       groups: Set<string>;
     };
     const map = new Map<string, Agg>();
+    const slug = (s: string) =>
+      s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "guest";
     for (const b of bookings ?? []) {
       const email = String(b.email ?? "").trim().toLowerCase();
       if (!email) continue;
+      // Manual admin bookings all share manual@admin.local — group them by
+      // guest name so each real person becomes a distinct CRM entry.
+      const isManual = email === "manual@admin.local";
+      const nameForKey = (b.guest_name ?? "").trim();
+      const keyEmail = isManual
+        ? `manual+${slug(nameForKey || String(b.id))}@admin.local`
+        : email;
       const groupId = String(b.booking_group_id ?? b.id);
-      let a = map.get(email);
+      let a = map.get(keyEmail);
       if (!a) {
         a = {
-          email,
+          email: keyEmail,
+          key_email: keyEmail,
           full_name: b.guest_name ?? null,
           phone: b.phone ?? null,
           total_bookings: 0,
@@ -65,7 +76,7 @@ export const rebuildCrmGuests = createServerFn({ method: "POST" })
           first_seen_at: b.created_at ?? new Date().toISOString(),
           groups: new Set(),
         };
-        map.set(email, a);
+        map.set(keyEmail, a);
       }
       if (b.created_at && b.created_at < a.first_seen_at) a.first_seen_at = b.created_at;
       if (b.guest_name && !a.full_name) a.full_name = b.guest_name;
@@ -151,12 +162,21 @@ export const getGuest = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!guest) throw new Error("Not found");
+    const isManual = /^manual\+.*@admin\.local$/i.test(String(guest.email ?? ""));
+    const bookingsQuery = isManual
+      ? supabaseAdmin
+          .from("booking_requests")
+          .select("id, payment_reference, booking_group_id, cabin_id, room_type, num_rooms, check_in, check_out, nights, guests, total_amount, status, created_at, notes")
+          .ilike("email", "manual@admin.local")
+          .ilike("guest_name", guest.full_name ?? "")
+          .order("check_in", { ascending: false })
+      : supabaseAdmin
+          .from("booking_requests")
+          .select("id, payment_reference, booking_group_id, cabin_id, room_type, num_rooms, check_in, check_out, nights, guests, total_amount, status, created_at, notes")
+          .ilike("email", guest.email)
+          .order("check_in", { ascending: false });
     const [{ data: bookings }, { data: tasks }] = await Promise.all([
-      supabaseAdmin
-        .from("booking_requests")
-        .select("id, payment_reference, booking_group_id, cabin_id, room_type, num_rooms, check_in, check_out, nights, guests, total_amount, status, created_at, notes")
-        .ilike("email", guest.email)
-        .order("check_in", { ascending: false }),
+      bookingsQuery,
       supabaseAdmin
         .from("crm_tasks")
         .select("*")
