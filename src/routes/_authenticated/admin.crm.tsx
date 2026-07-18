@@ -76,11 +76,10 @@ function CrmPage() {
     setTab("guests");
     setPendingEmail(searchTerm || email);
     setSearch(searchTerm);
-    const list = await load(searchTerm);
-    const match = isManual
-      ? list.find((g) => (g.full_name ?? "").toLowerCase() === (name ?? "").toLowerCase())
-      : list.find((g) => g.email.toLowerCase() === email.toLowerCase());
-    if (match) setSelectedId(match.id);
+    await load(searchTerm);
+    // Do not auto-open Edit info or Bookings — user must click explicitly.
+    setSelectedId(null);
+    setBookingsFor(null);
     setPendingEmail(null);
   }
 
@@ -753,6 +752,7 @@ function L({ label, children, full }: { label: string; children: React.ReactNode
 function GuestBookingsPanel({ id, onChange }: { id: string; onChange: () => void }) {
   const [data, setData] = useState<any>(null);
   const [cabins, setCabins] = useState<{ id: string; name: string }[]>([]);
+  const [editing, setEditing] = useState<any | null>(null);
   async function reload() {
     const r = await getGuest({ data: { id } });
     setData(r);
@@ -766,15 +766,49 @@ function GuestBookingsPanel({ id, onChange }: { id: string; onChange: () => void
   if (bookings.length === 0) return <div className="text-sm text-stone">No bookings yet.</div>;
   return (
     <div className="space-y-2">
-      <div className="text-[10px] uppercase tracking-widest text-stone">Bookings — edit inline</div>
-      {bookings.map((b) => (
-        <BookingRow
-          key={b.id}
-          b={b}
+      <div className="text-[10px] uppercase tracking-widest text-stone">Bookings — click a row for full details</div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-left text-[10px] uppercase tracking-widest text-stone">
+            <tr>
+              <th className="p-2">Booking #</th>
+              <th className="p-2">Check-in</th>
+              <th className="p-2">Check-out</th>
+              <th className="p-2 text-right">Nights</th>
+              <th className="p-2 text-right">Rooms</th>
+              <th className="p-2 text-right">Pax</th>
+              <th className="p-2 text-right">Total</th>
+              <th className="p-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bookings.map((b) => (
+              <tr
+                key={b.id}
+                onClick={() => setEditing(b)}
+                className="cursor-pointer border-t border-border/40 hover:bg-coconut/40"
+              >
+                <td className="p-2 font-mono text-xs">{b.payment_reference ?? b.id.slice(0, 8)}</td>
+                <td className="p-2 text-xs">{b.check_in ?? "—"}</td>
+                <td className="p-2 text-xs">{b.check_out ?? "—"}</td>
+                <td className="p-2 text-right">{b.nights ?? "—"}</td>
+                <td className="p-2 text-right">{b.num_rooms ?? 1}</td>
+                <td className="p-2 text-right">{b.guests ?? "—"}</td>
+                <td className="p-2 text-right">RM{Number(b.total_amount ?? 0).toFixed(0)}</td>
+                <td className="p-2 text-xs">{b.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {editing && (
+        <BookingEditModal
+          booking={editing}
           cabins={cabins}
-          onSaved={async () => { await reload(); onChange(); }}
+          onClose={() => setEditing(null)}
+          onSaved={async () => { setEditing(null); await reload(); onChange(); }}
         />
-      ))}
+      )}
     </div>
   );
 }
