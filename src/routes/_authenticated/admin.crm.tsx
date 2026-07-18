@@ -10,10 +10,9 @@ import {
   createTask,
   toggleTask,
   deleteTask,
-  sendBroadcast,
-  listBroadcasts,
   listAllTags,
   listCabins,
+  listBookingsByDate,
 } from "@/lib/crm.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/crm")({
@@ -37,7 +36,7 @@ type Guest = {
 };
 
 function CrmPage() {
-  const [tab, setTab] = useState<"guests" | "broadcast" | "history">("guests");
+  const [tab, setTab] = useState<"by_date" | "guests">("by_date");
   const [rows, setRows] = useState<Guest[]>([]);
   const [count, setCount] = useState(0);
   const [search, setSearch] = useState("");
@@ -98,13 +97,15 @@ function CrmPage() {
         {err && <p className="mt-2 text-sm text-red-700">{err}</p>}
 
         <div className="mt-4 flex gap-1 border-b border-border">
-          {(["guests", "broadcast", "history"] as const).map((t) => (
+          {(["by_date", "guests"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-2 text-xs uppercase tracking-widest ${tab === t ? "border-b-2 border-forest text-forest" : "text-stone"}`}>
-              {t === "guests" ? "Guests" : t === "broadcast" ? "Broadcast" : "History"}
+              {t === "by_date" ? "By date" : "Guests"}
             </button>
           ))}
         </div>
+
+        {tab === "by_date" && <ByDatePanel />}
 
         {tab === "guests" && (
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
@@ -170,9 +171,6 @@ function CrmPage() {
             <GuestDetail id={selectedId} onChange={load} />
           </div>
         )}
-
-        {tab === "broadcast" && <BroadcastPanel tags={tags} />}
-        {tab === "history" && <HistoryPanel />}
       </section>
     </main>
   );
