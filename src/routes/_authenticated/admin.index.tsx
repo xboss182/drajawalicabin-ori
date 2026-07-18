@@ -376,7 +376,7 @@ function Card({
   }
 
   return (
-    <article className="rounded-xl border border-border bg-card p-5">
+    <article id={`b-${b.id}`} className="scroll-mt-24 rounded-xl border border-border bg-card p-5 target:ring-2 target:ring-forest">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-widest text-stone">
