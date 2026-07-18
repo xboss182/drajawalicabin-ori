@@ -162,8 +162,8 @@ function CrmPage() {
                   </thead>
                   <tbody>
                     {rows.map((r) => (
-                      <>
-                      <tr key={r.id}
+                      <React.Fragment key={r.id}>
+                      <tr
                         onClick={() => setSelectedId(selectedId === r.id ? null : r.id)}
                         className={`cursor-pointer border-t border-border/40 hover:bg-coconut/40 ${selectedId === r.id ? "bg-coconut/60" : ""}`}>
                         <td className="p-2">
@@ -189,7 +189,7 @@ function CrmPage() {
                           </td>
                         </tr>
                       )}
-                      </>
+                      </React.Fragment>
                     ))}
                     {rows.length === 0 && !loading && (
                       <tr><td colSpan={5} className="p-4 text-center text-stone">
