@@ -129,7 +129,7 @@ function CrmPage() {
         )}
 
         {tab === "guests" && (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="mt-6 space-y-6">
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex flex-wrap gap-2">
                 <input value={search} onChange={(e) => setSearch(e.target.value)}
@@ -162,8 +162,9 @@ function CrmPage() {
                   </thead>
                   <tbody>
                     {rows.map((r) => (
+                      <>
                       <tr key={r.id}
-                        onClick={() => setSelectedId(r.id)}
+                        onClick={() => setSelectedId(selectedId === r.id ? null : r.id)}
                         className={`cursor-pointer border-t border-border/40 hover:bg-coconut/40 ${selectedId === r.id ? "bg-coconut/60" : ""}`}>
                         <td className="p-2">
                           <div className="font-medium">{r.full_name ?? "—"}</div>
@@ -179,6 +180,16 @@ function CrmPage() {
                         <td className="p-2 text-right">RM {Number(r.total_spent).toFixed(0)}</td>
                         <td className="p-2 text-xs">{r.last_stay_at ?? "—"}</td>
                       </tr>
+                      {selectedId === r.id && (
+                        <tr>
+                          <td colSpan={5} className="p-0">
+                            <div className="border-t border-border/40 bg-coconut/20 p-4">
+                              <GuestDetail id={r.id} onChange={load} />
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      </>
                     ))}
                     {rows.length === 0 && !loading && (
                       <tr><td colSpan={5} className="p-4 text-center text-stone">
@@ -189,7 +200,6 @@ function CrmPage() {
                 </table>
               </div>
             </div>
-            <GuestDetail id={selectedId} onChange={load} />
           </div>
         )}
       </section>
