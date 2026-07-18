@@ -462,6 +462,7 @@ function BookingRow({ b, cabins, onSaved }: { b: any; cabins: { id: string; name
 }
 
 function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: string | null) => void }) {
+  // no-op marker
   const now = new Date();
   const [month, setMonth] = useState(
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
