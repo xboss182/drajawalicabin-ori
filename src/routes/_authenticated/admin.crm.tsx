@@ -779,6 +779,7 @@ function GuestBookingsPanel({ id, onChange }: { id: string; onChange: () => void
               <th className="p-2 text-right">Pax</th>
               <th className="p-2 text-right">Total</th>
               <th className="p-2">Status</th>
+              <th className="p-2"></th>
             </tr>
           </thead>
           <tbody>
