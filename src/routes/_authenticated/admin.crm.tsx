@@ -10,10 +10,9 @@ import {
   createTask,
   toggleTask,
   deleteTask,
-  sendBroadcast,
-  listBroadcasts,
   listAllTags,
   listCabins,
+  listBookingsByDate,
 } from "@/lib/crm.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/crm")({
@@ -37,7 +36,7 @@ type Guest = {
 };
 
 function CrmPage() {
-  const [tab, setTab] = useState<"guests" | "broadcast" | "history">("guests");
+  const [tab, setTab] = useState<"by_date" | "guests">("by_date");
   const [rows, setRows] = useState<Guest[]>([]);
   const [count, setCount] = useState(0);
   const [search, setSearch] = useState("");
@@ -98,13 +97,15 @@ function CrmPage() {
         {err && <p className="mt-2 text-sm text-red-700">{err}</p>}
 
         <div className="mt-4 flex gap-1 border-b border-border">
-          {(["guests", "broadcast", "history"] as const).map((t) => (
+          {(["by_date", "guests"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-2 text-xs uppercase tracking-widest ${tab === t ? "border-b-2 border-forest text-forest" : "text-stone"}`}>
-              {t === "guests" ? "Guests" : t === "broadcast" ? "Broadcast" : "History"}
+              {t === "by_date" ? "By date" : "Guests"}
             </button>
           ))}
         </div>
+
+        {tab === "by_date" && <ByDatePanel />}
 
         {tab === "guests" && (
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
@@ -170,9 +171,6 @@ function CrmPage() {
             <GuestDetail id={selectedId} onChange={load} />
           </div>
         )}
-
-        {tab === "broadcast" && <BroadcastPanel tags={tags} />}
-        {tab === "history" && <HistoryPanel />}
       </section>
     </main>
   );
@@ -374,96 +372,110 @@ function BookingRow({ b, cabins, onSaved }: { b: any; cabins: { id: string; name
   );
 }
 
-function BroadcastPanel({ tags }: { tags: string[] }) {
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [scope, setScope] = useState<"all" | "tag">("all");
-  const [tag, setTag] = useState("");
-  const [count, setCount] = useState<number | null>(null);
-  const [sending, setSending] = useState(false);
-
-  async function estimate() {
-    const r = await sendBroadcast({ data: { subject: subject || "test", body_html: body || "<p>test</p>", audience: { scope, tag: scope === "tag" ? tag : undefined }, dry_run: true } });
-    setCount(r.recipient_count);
-  }
-  async function send() {
-    if (!subject.trim() || !body.trim()) { alert("Subject and body required."); return; }
-    if (!confirm(`Send to ~${count ?? "?"} guests? This cannot be undone.`)) return;
-    setSending(true);
-    try {
-      const r = await sendBroadcast({ data: { subject, body_html: body, audience: { scope, tag: scope === "tag" ? tag : undefined } } });
-      alert(`Queued for ${r.recipient_count} recipient(s).`);
-      setSubject(""); setBody(""); setCount(null);
-    } catch (e: any) { alert(e?.message ?? "Failed"); }
-    setSending(false);
-  }
-
-  return (
-    <div className="mt-6 rounded-xl border border-border bg-card p-5">
-      <h2 className="font-display text-lg text-forest">Send broadcast email</h2>
-      <p className="mt-1 text-xs text-stone">
-        Sends to guests with marketing opt-in enabled. Each recipient gets one copy with an unsubscribe link.
-      </p>
-      <div className="mt-4 grid gap-3">
-        <label className="block">
-          <span className="text-[10px] uppercase tracking-widest text-stone">Audience</span>
-          <div className="mt-1 flex flex-wrap gap-2">
-            <label className="flex items-center gap-1 text-sm"><input type="radio" checked={scope === "all"} onChange={() => setScope("all")} /> All opted-in</label>
-            <label className="flex items-center gap-1 text-sm"><input type="radio" checked={scope === "tag"} onChange={() => setScope("tag")} /> By tag</label>
-            {scope === "tag" && (
-              <select value={tag} onChange={(e) => setTag(e.target.value)} className="rounded border border-border bg-background px-2 py-1 text-sm">
-                <option value="">— pick tag —</option>
-                {tags.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            )}
-          </div>
-        </label>
-        <label className="block">
-          <span className="text-[10px] uppercase tracking-widest text-stone">Subject</span>
-          <input value={subject} onChange={(e) => setSubject(e.target.value)} className="mt-1 w-full rounded border border-border bg-background px-3 py-2 text-sm" />
-        </label>
-        <label className="block">
-          <span className="text-[10px] uppercase tracking-widest text-stone">Body (HTML allowed)</span>
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10}
-            className="mt-1 w-full rounded border border-border bg-background px-3 py-2 font-mono text-sm" />
-        </label>
-        <div className="flex flex-wrap items-center gap-3">
-          <button onClick={estimate} className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest">
-            Estimate audience
-          </button>
-          {count !== null && <span className="text-sm">≈ {count} recipient(s)</span>}
-          <button onClick={send} disabled={sending}
-            className="ml-auto rounded-full bg-forest px-5 py-2 text-xs uppercase tracking-widest text-coconut disabled:opacity-60">
-            {sending ? "Sending…" : "Send broadcast"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HistoryPanel() {
+function ByDatePanel() {
+  const today = new Date().toISOString().slice(0, 10);
+  const in90 = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+  const past7 = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const [from, setFrom] = useState(past7);
+  const [to, setTo] = useState(in90);
+  const [search, setSearch] = useState("");
   const [rows, setRows] = useState<any[]>([]);
-  useEffect(() => { listBroadcasts().then((r) => setRows(r.rows)); }, []);
+  const [loading, setLoading] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const r = await listBookingsByDate({ data: { from, to, search: search || undefined } });
+      setRows(r.rows);
+    } finally { setLoading(false); }
+  }
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+
+  // Group by check_in date
+  const groups = useMemo(() => {
+    const m = new Map<string, any[]>();
+    for (const r of rows) {
+      const d = r.check_in ?? "—";
+      const arr = m.get(d) ?? [];
+      arr.push(r);
+      m.set(d, arr);
+    }
+    // Within each day, sort by payment_reference then id
+    for (const [, arr] of m) arr.sort((a, b) => String(a.payment_reference ?? a.id).localeCompare(String(b.payment_reference ?? b.id)));
+    return Array.from(m.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [rows]);
+
   return (
-    <div className="mt-6 rounded-xl border border-border bg-card p-5">
-      <h2 className="font-display text-lg text-forest">Broadcast history</h2>
-      <div className="mt-3 overflow-auto">
-        <table className="w-full text-sm">
-          <thead className="text-left text-[10px] uppercase tracking-widest text-stone">
-            <tr><th className="p-2">Sent</th><th className="p-2">Subject</th><th className="p-2 text-right">Recipients</th></tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-border/40">
-                <td className="p-2 text-xs">{new Date(r.sent_at).toLocaleString()}</td>
-                <td className="p-2">{r.subject}</td>
-                <td className="p-2 text-right">{r.recipient_count}</td>
-              </tr>
-            ))}
-            {rows.length === 0 && <tr><td colSpan={3} className="p-4 text-center text-stone">No broadcasts sent yet.</td></tr>}
-          </tbody>
-        </table>
+    <div className="mt-6 rounded-xl border border-border bg-card p-4">
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="text-[10px] uppercase tracking-widest text-stone">From
+          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-0.5 block rounded border border-border bg-background px-2 py-1 text-sm normal-case" />
+        </label>
+        <label className="text-[10px] uppercase tracking-widest text-stone">To
+          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-0.5 block rounded border border-border bg-background px-2 py-1 text-sm normal-case" />
+        </label>
+        <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load()}
+          placeholder="Search name / phone / booking #"
+          className="flex-1 min-w-[200px] rounded-md border border-border bg-background px-3 py-2 text-sm" />
+        <button onClick={load} className="rounded-full bg-forest px-4 py-2 text-xs uppercase tracking-widest text-coconut">
+          {loading ? "…" : "Refresh"}
+        </button>
+      </div>
+      <p className="mt-2 text-[11px] text-stone">{rows.length} booking(s) with check-in between {from} and {to}.</p>
+
+      <div className="mt-4 space-y-6">
+        {groups.length === 0 && !loading && (
+          <div className="rounded border border-dashed border-border p-6 text-center text-sm text-stone">No bookings in this range.</div>
+        )}
+        {groups.map(([date, list]) => {
+          const dateLabel = new Date(date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+          const totalPax = list.reduce((s, b) => s + Number(b.guests ?? 0), 0);
+          const totalRooms = list.reduce((s, b) => s + Number(b.num_rooms ?? 1), 0);
+          return (
+            <div key={date}>
+              <div className="sticky top-0 z-10 flex items-baseline justify-between border-b-2 border-forest/30 bg-card py-1">
+                <h3 className="font-display text-base text-forest">{dateLabel}</h3>
+                <span className="text-[11px] text-stone">{list.length} booking(s) · {totalRooms} room(s) · {totalPax} pax</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="mt-1 w-full text-sm">
+                  <thead className="text-left text-[10px] uppercase tracking-widest text-stone">
+                    <tr>
+                      <th className="p-2">Booking #</th>
+                      <th className="p-2">Guest</th>
+                      <th className="p-2">Contact</th>
+                      <th className="p-2">Cabin / Room</th>
+                      <th className="p-2 text-right">Rooms</th>
+                      <th className="p-2 text-right">Pax</th>
+                      <th className="p-2">Check-out</th>
+                      <th className="p-2 text-right">Nights</th>
+                      <th className="p-2 text-right">Total</th>
+                      <th className="p-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {list.map((b) => (
+                      <tr key={b.id} className="border-t border-border/40 align-top">
+                        <td className="p-2 font-mono text-xs">{b.payment_reference ?? b.id.slice(0, 8)}</td>
+                        <td className="p-2">{b.guest_name ?? "—"}</td>
+                        <td className="p-2 text-xs text-stone">
+                          {b.phone ?? ""}<br />{b.email ?? ""}
+                        </td>
+                        <td className="p-2">{b.cabins?.name ?? b.room_type ?? "—"}</td>
+                        <td className="p-2 text-right">{b.num_rooms ?? 1}</td>
+                        <td className="p-2 text-right">{b.guests ?? "—"}</td>
+                        <td className="p-2 text-xs">{b.check_out ?? "—"}</td>
+                        <td className="p-2 text-right">{b.nights ?? "—"}</td>
+                        <td className="p-2 text-right">RM{Number(b.total_amount ?? 0).toFixed(0)}</td>
+                        <td className="p-2 text-xs">{b.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
