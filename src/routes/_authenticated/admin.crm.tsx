@@ -390,11 +390,18 @@ function BookingRow({ b, cabins, onSaved }: { b: any; cabins: { id: string; name
 }
 
 function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string) => void }) {
-  const today = new Date().toISOString().slice(0, 10);
-  const in90 = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
-  const past7 = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
-  const [from, setFrom] = useState(past7);
-  const [to, setTo] = useState(in90);
+  const now = new Date();
+  const [month, setMonth] = useState(
+    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
+  );
+  const { from, to } = useMemo(() => {
+    const [y, m] = month.split("-").map(Number);
+    const start = new Date(y, m - 1, 1);
+    const end = new Date(y, m, 0); // last day of month
+    const fmt = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return { from: fmt(start), to: fmt(end) };
+  }, [month]);
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -406,7 +413,7 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string) => void }) 
       setRows(r.rows);
     } finally { setLoading(false); }
   }
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [month]);
 
   // Collapse multi-room bookings into 1 row per guest (per booking_group_id),
   // then group by check-in date.
@@ -473,16 +480,13 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string) => void }) 
   return (
     <div className="mt-6 rounded-xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-end gap-2">
-        <label className="text-[10px] uppercase tracking-widest text-stone">From
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-0.5 block rounded border border-border bg-background px-2 py-1 text-sm normal-case" />
-        </label>
-        <label className="text-[10px] uppercase tracking-widest text-stone">To
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-0.5 block rounded border border-border bg-background px-2 py-1 text-sm normal-case" />
+        <label className="text-[10px] uppercase tracking-widest text-stone">Month
+          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="mt-0.5 block h-9 rounded border border-border bg-background px-2 py-1 text-sm normal-case" />
         </label>
         <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load()}
           placeholder="Search name / phone / booking #"
-          className="flex-1 min-w-[200px] rounded-md border border-border bg-background px-3 py-2 text-sm" />
-        <button onClick={load} className="rounded-full bg-forest px-4 py-2 text-xs uppercase tracking-widest text-coconut">
+          className="flex-1 min-w-[200px] h-9 rounded-md border border-border bg-background px-3 text-sm" />
+        <button onClick={load} className="h-9 rounded-full bg-forest px-4 text-xs uppercase tracking-widest text-coconut">
           {loading ? "…" : "Refresh"}
         </button>
       </div>
