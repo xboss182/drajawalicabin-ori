@@ -1,45 +1,27 @@
+## Findings
 
-## Goal
-Give admin control over the "Stay longer, save more" hero promo pill on the homepage:
-1. Toggle it on/off
-2. Edit the CTA sentence (EN + BM)
-3. Auto-generate a new catchy sentence via Lovable AI
+Inventory: 8 active cabins — Queen 1, Queen 3, Twin 2, Twin 4, Triple 5, Family 6, Family 7, Family 8.
 
-## Changes
+### Night of Jul 31 → Aug 1
+All 8 rooms are covered by confirmed bookings → **fully booked**. But two rooms are double-assigned:
 
-### 1. Storage (app_settings)
-Reuse the existing `app_settings` key/value table. Add one row:
-- key: `hero_promo_cta`
-- value (JSON): `{ enabled: boolean, text_en: string, text_bm: string }`
+| Cabin | Guest A | Guest B |
+|---|---|---|
+| Queen room 1 | Noor Tuah Jaafar (Jul 8 → Aug 13) | Elin Norezatie (Jul 31 → Aug 2) |
+| Twin room 2 | Asmir Abu Bakar (Jul 31 → Aug 2) | Noor Faridah Abdullah (Jul 31 → Aug 2) |
 
-Seed with current defaults ("Stay longer, save more — 10% off from the 2nd night onwards" / BM equivalent). No schema migration needed.
+### Night of Aug 1 → Aug 2
+7 rooms confirmed. **Queen room 3 is available** — azliyana's Jul 31 → Aug 1 hold is `pending_payment` and expired on 2026-07-18 10:32, and it was only 1 night so it never covered Aug 1 anyway. Public site should still allow a Queen booking for that night.
 
-### 2. New admin page: `src/routes/_authenticated/admin.promo.tsx`
-- Add "Promo" tab to `AdminTabs` in `admin.tsx`
-- Fields:
-  - Toggle: Enable hero promo CTA
-  - Textarea: English sentence
-  - Textarea: Malay sentence
-  - Button: "✨ Generate with AI" (opens small prompt input, calls server fn, fills both text fields with returned EN + BM)
-  - Save button
+## Proposed actions (need owner decision per item)
 
-### 3. Server functions: `src/lib/promo-cta.functions.ts`
-- `getHeroPromoCta()` — public, reads row from `app_settings` (server publishable client). Returns `{ enabled, text_en, text_bm }` with defaults if missing.
-- `updateHeroPromoCta({ enabled, text_en, text_bm })` — auth + admin role check, upserts row.
-- `generatePromoCtaAi({ hint? })` — auth + admin role check, calls Lovable AI Gateway (`google/gemini-3.5-flash`) with a prompt that returns catchy EN + BM sentences about the 10% 2nd-night discount. Returns `{ text_en, text_bm }`.
+1. **Queen room 1 conflict** — owner confirms which guest keeps Queen 1; reassign the other to a free room *of the same type* on those dates, or contact them to reschedule/refund. Currently no other Queen is free on Jul 31.
+2. **Twin room 2 conflict** — same call for Asmir vs Noor Faridah. Twin 4 is taken by Asmir already; no Twin free on Jul 31.
+3. **Aug 1 status** — confirm whether the owner intended to block Aug 1 entirely (e.g. owner-hold) or leave Queen 3 bookable. If it should be blocked, we add an admin-side manual block for Queen 3 on the Aug 1 night.
+4. **Prevent recurrence** — the current `cabin_taken_dates` RPC and price/availability check don't hard-reject a second confirmed booking on the same cabin/date. Add a server-side guard before insert/confirm that rejects if an overlapping booking already exists on that cabin_id (excluding the same booking_group_id), and add a matching Postgres exclusion constraint or unique index to make double-booking impossible at the DB level.
 
-### 4. Frontend consumption: `src/routes/index.tsx`
-- Fetch `getHeroPromoCta` via TanStack Query (public, cacheable)
-- If `enabled === false`, hide the promo pill
-- Else render `lang === 'bm' ? text_bm : text_en` inside the existing pill styling
-- Keep current fallback text if fetch fails
+## What I need from you before implementing
 
-### 5. Grants / RLS
-`app_settings` already exists with a public read policy (used elsewhere). Ensure:
-- SELECT allowed to `anon` for this key (read-only public config)
-- Writes only via authenticated admin server fn using `supabaseAdmin` after role check
-
-## Out of scope
-- No changes to the discount engine logic
-- No changes to the /book page pricing
-- Pill styling and placement unchanged
+- For each double-booking above: which guest keeps the room?
+- For Aug 1 night: block Queen 3 or leave it open?
+- Approve step 4 (DB-level double-booking guard).
