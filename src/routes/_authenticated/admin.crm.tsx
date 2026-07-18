@@ -14,6 +14,8 @@ import {
   listCabins,
   listBookingsByDate,
 } from "@/lib/crm.functions";
+import { listBookings } from "@/lib/booking.functions";
+import { BookingCard, type AdminBooking } from "@/components/admin/booking-card";
 
 export const Route = createFileRoute("/_authenticated/admin/crm")({
   head: () => ({ meta: [{ title: "CRM — Rajawali D'Cabin" }, { name: "robots", content: "noindex" }] }),
