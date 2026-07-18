@@ -4,6 +4,7 @@ import { template as balanceReminder } from './balance-reminder'
 import { template as fullyPaid } from './fully-paid'
 import { template as manageLink } from './manage-link'
 import { template as adminBookingAlert } from './admin-booking-alert'
+import { template as marketingBroadcast } from './marketing-broadcast'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -28,4 +29,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'fully-paid': fullyPaid,
   'manage-link': manageLink,
   'admin-booking-alert': adminBookingAlert,
+  'marketing-broadcast': marketingBroadcast,
 }
