@@ -44,6 +44,7 @@ function CrmPage() {
   const [sort, setSort] = useState<"last_stay" | "spent" | "bookings" | "name">("last_stay");
   const [tags, setTags] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [bookingsFor, setBookingsFor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -186,12 +187,12 @@ function CrmPage() {
                           >
                             {selectedId === r.id ? "Close" : "Edit info"}
                           </button>
-                          <Link
-                            to="/admin"
-                            className="ml-1 inline-block rounded-full bg-forest px-3 py-1 text-[10px] uppercase tracking-widest text-coconut hover:opacity-90"
+                          <button
+                            onClick={() => setBookingsFor(bookingsFor === r.id ? null : r.id)}
+                            className="ml-1 rounded-full bg-forest px-3 py-1 text-[10px] uppercase tracking-widest text-coconut hover:opacity-90"
                           >
-                            Booking
-                          </Link>
+                            {bookingsFor === r.id ? "Hide" : "Booking"}
+                          </button>
                         </td>
                       </tr>
                       {selectedId === r.id && (
@@ -199,6 +200,15 @@ function CrmPage() {
                           <td colSpan={6} className="p-0">
                             <div className="border-t border-border/40 bg-coconut/20 p-4">
                               <GuestDetail id={r.id} onChange={load} />
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      {bookingsFor === r.id && (
+                        <tr>
+                          <td colSpan={6} className="p-0">
+                            <div className="border-t border-border/40 bg-coconut/20 p-4">
+                              <GuestBookingsPanel id={r.id} onChange={load} />
                             </div>
                           </td>
                         </tr>
