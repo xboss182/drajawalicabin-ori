@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AdminTabs } from "./admin";
 import {
   rebuildCrmGuests,
@@ -129,7 +129,7 @@ function CrmPage() {
         )}
 
         {tab === "guests" && (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+          <div className="mt-6 space-y-6">
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="flex flex-wrap gap-2">
                 <input value={search} onChange={(e) => setSearch(e.target.value)}
@@ -162,8 +162,9 @@ function CrmPage() {
                   </thead>
                   <tbody>
                     {rows.map((r) => (
-                      <tr key={r.id}
-                        onClick={() => setSelectedId(r.id)}
+                      <React.Fragment key={r.id}>
+                      <tr
+                        onClick={() => setSelectedId(selectedId === r.id ? null : r.id)}
                         className={`cursor-pointer border-t border-border/40 hover:bg-coconut/40 ${selectedId === r.id ? "bg-coconut/60" : ""}`}>
                         <td className="p-2">
                           <div className="font-medium">{r.full_name ?? "—"}</div>
@@ -179,6 +180,16 @@ function CrmPage() {
                         <td className="p-2 text-right">RM {Number(r.total_spent).toFixed(0)}</td>
                         <td className="p-2 text-xs">{r.last_stay_at ?? "—"}</td>
                       </tr>
+                      {selectedId === r.id && (
+                        <tr>
+                          <td colSpan={5} className="p-0">
+                            <div className="border-t border-border/40 bg-coconut/20 p-4">
+                              <GuestDetail id={r.id} onChange={load} />
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      </React.Fragment>
                     ))}
                     {rows.length === 0 && !loading && (
                       <tr><td colSpan={5} className="p-4 text-center text-stone">
@@ -189,7 +200,6 @@ function CrmPage() {
                 </table>
               </div>
             </div>
-            <GuestDetail id={selectedId} onChange={load} />
           </div>
         )}
       </section>
@@ -204,12 +214,19 @@ function GuestDetail({ id, onChange }: { id: string | null; onChange: () => void
   const [notes, setNotes] = useState("");
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDue, setTaskDue] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     if (!id) { setData(null); return; }
     getGuest({ data: { id } }).then((r) => {
       setData(r);
       setNotes(r.guest.notes ?? "");
+      setName(r.guest.full_name ?? "");
+      setEmail(r.guest.email ?? "");
+      setPhone(r.guest.phone ?? "");
     });
     listCabins().then((c) => setCabins(c.cabins as any));
   }, [id]);
@@ -223,6 +240,20 @@ function GuestDetail({ id, onChange }: { id: string | null; onChange: () => void
   }
   if (!data) return <div className="rounded-xl border border-border bg-card p-4 text-sm">Loading…</div>;
   const g = data.guest as Guest;
+  const isManualEmail = /^manual\+.*@admin\.local$/i.test(g.email ?? "");
+
+  async function saveProfile() {
+    setSavingProfile(true);
+    try {
+      const patch: any = { id: g.id };
+      if (name !== (g.full_name ?? "")) patch.full_name = name;
+      if (phone !== (g.phone ?? "")) patch.phone = phone;
+      if (!isManualEmail && email && email !== g.email) patch.email = email;
+      await updateGuest({ data: patch });
+      const r = await getGuest({ data: { id: g.id } }); setData(r); onChange();
+    } catch (e: any) { alert(e?.message ?? "Failed"); }
+    setSavingProfile(false);
+  }
 
   async function addTag() {
     const t = tagInput.trim();
@@ -262,15 +293,28 @@ function GuestDetail({ id, onChange }: { id: string | null; onChange: () => void
 
   return (
     <aside className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="font-display text-lg text-forest">{g.full_name ?? g.email}</h2>
-          <p className="text-xs text-stone">{g.email}{g.phone ? ` · ${g.phone}` : ""}</p>
-        </div>
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="font-display text-lg text-forest">{g.full_name ?? g.email}</h2>
         <label className="flex items-center gap-2 text-xs">
           <input type="checkbox" checked={g.marketing_opt_in} onChange={toggleOptIn} /> Opt-in
         </label>
       </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        <label className="text-[10px] uppercase tracking-widest text-stone">Name
+          <input value={name} onChange={(e) => setName(e.target.value)} className="mt-0.5 block w-full rounded-md border border-border bg-background px-2 py-1 text-sm normal-case" />
+        </label>
+        <label className="text-[10px] uppercase tracking-widest text-stone">Email
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={isManualEmail}
+            className="mt-0.5 block w-full rounded-md border border-border bg-background px-2 py-1 text-sm normal-case disabled:opacity-60" />
+          {isManualEmail && <span className="mt-0.5 block text-[10px] normal-case text-stone">Manual entry — email locked</span>}
+        </label>
+        <label className="text-[10px] uppercase tracking-widest text-stone">Phone
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-0.5 block w-full rounded-md border border-border bg-background px-2 py-1 text-sm normal-case" />
+        </label>
+      </div>
+      <button disabled={savingProfile} onClick={saveProfile} className="mt-2 rounded-full border border-border px-3 py-1 text-[10px] uppercase tracking-widest disabled:opacity-60">
+        {savingProfile ? "Saving…" : "Save contact"}
+      </button>
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
         <div className="rounded-lg bg-coconut/50 p-2"><div className="text-lg font-medium">{g.total_bookings}</div>Bookings</div>

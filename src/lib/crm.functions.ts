@@ -194,6 +194,7 @@ const updateGuestSchema = z.object({
   marketing_opt_in: z.boolean().optional(),
   full_name: z.string().trim().max(120).optional(),
   phone: z.string().trim().max(40).optional(),
+  email: z.string().trim().email().max(160).optional(),
 });
 
 export const updateGuest = createServerFn({ method: "POST" })
@@ -208,6 +209,7 @@ export const updateGuest = createServerFn({ method: "POST" })
     if (data.marketing_opt_in !== undefined) patch.marketing_opt_in = data.marketing_opt_in;
     if (data.full_name !== undefined) patch.full_name = data.full_name;
     if (data.phone !== undefined) patch.phone = data.phone;
+    if (data.email !== undefined) patch.email = data.email.toLowerCase();
     const { error } = await supabaseAdmin
       .from("crm_guests")
       .update(patch as never)
