@@ -749,3 +749,32 @@ function L({ label, children, full }: { label: string; children: React.ReactNode
     </label>
   );
 }
+
+function GuestBookingsPanel({ id, onChange }: { id: string; onChange: () => void }) {
+  const [data, setData] = useState<any>(null);
+  const [cabins, setCabins] = useState<{ id: string; name: string }[]>([]);
+  async function reload() {
+    const r = await getGuest({ data: { id } });
+    setData(r);
+  }
+  useEffect(() => {
+    reload();
+    listCabins().then((c) => setCabins(c.cabins as any));
+  }, [id]);
+  if (!data) return <div className="text-sm text-stone">Loading…</div>;
+  const bookings = (data.bookings ?? []) as any[];
+  if (bookings.length === 0) return <div className="text-sm text-stone">No bookings yet.</div>;
+  return (
+    <div className="space-y-2">
+      <div className="text-[10px] uppercase tracking-widest text-stone">Bookings — edit inline</div>
+      {bookings.map((b) => (
+        <BookingRow
+          key={b.id}
+          b={b}
+          cabins={cabins}
+          onSaved={async () => { await reload(); onChange(); }}
+        />
+      ))}
+    </div>
+  );
+}
