@@ -97,34 +97,14 @@ export const syncBookingsToOneDrive = createServerFn({ method: "POST" })
       id?: string;
     };
 
-    // Create (or fetch existing) anonymous view link so other admins can open it.
-    let shareUrl: string | null = null;
-    if (item.id) {
-      const linkRes = await fetch(
-        `${GATEWAY_URL}/me/drive/items/${item.id}/createLink`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": connKey,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ type: "view", scope: "anonymous" }),
-        },
-      );
-      if (linkRes.ok) {
-        const linkData = (await linkRes.json().catch(() => ({}))) as {
-          link?: { webUrl?: string };
-        };
-        shareUrl = linkData.link?.webUrl ?? null;
-      }
-    }
-
+    // SECURITY: Do NOT create an anonymous share link. The file contains guest
+    // PII (names, phone numbers, vehicle numbers, notes). Admins must open the
+    // file via their authenticated OneDrive session (webUrl requires sign-in).
     return {
       ok: true as const,
       fileName: item.name ?? FILE_NAME,
       webUrl: item.webUrl ?? null,
-      shareUrl,
+      shareUrl: null as string | null,
       rowCount,
     };
   });
