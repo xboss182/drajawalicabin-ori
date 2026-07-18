@@ -429,9 +429,32 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string) => void }) 
             .filter(Boolean),
         ),
       );
+      // Group by cabin type prefix, combine trailing room numbers:
+      // ["Twin room 4","Twin room 2","Queen room 1"] -> "Twin room 2, 4; Queen room 1"
+      const byType = new Map<string, number[]>();
+      const bare: string[] = [];
+      for (const name of cabinNames) {
+        const m = /^(.*?)\s*(\d+)\s*$/.exec(name);
+        if (m) {
+          const prefix = m[1].trim();
+          const num = Number(m[2]);
+          const list = byType.get(prefix) ?? [];
+          list.push(num);
+          byType.set(prefix, list);
+        } else {
+          bare.push(name);
+        }
+      }
+      const groupedLabel = [
+        ...Array.from(byType.entries()).map(
+          ([prefix, nums]) =>
+            `${prefix} ${Array.from(new Set(nums)).sort((a, b) => a - b).join(", ")}`,
+        ),
+        ...bare,
+      ].join("; ");
       merged.push({
         ...b,
-        _cabin_label: cabinNames.join(", ") || "—",
+        _cabin_label: groupedLabel || "—",
         num_rooms: arr.reduce((s, r) => s + Number(r.num_rooms ?? 1), 0),
         total_amount: arr.reduce((s, r) => s + Number(r.total_amount ?? 0), 0),
       });
