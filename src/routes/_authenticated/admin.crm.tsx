@@ -44,7 +44,6 @@ function CrmPage() {
   const [sort, setSort] = useState<"last_stay" | "spent" | "bookings" | "name">("last_stay");
   const [tags, setTags] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [bookingsFor, setBookingsFor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -187,12 +186,12 @@ function CrmPage() {
                           >
                             {selectedId === r.id ? "Close" : "Edit info"}
                           </button>
-                          <button
-                            onClick={() => setBookingsFor(bookingsFor === r.id ? null : r.id)}
-                            className="ml-1 rounded-full bg-forest px-3 py-1 text-[10px] uppercase tracking-widest text-coconut hover:opacity-90"
+                          <Link
+                            to="/admin"
+                            className="ml-1 inline-block rounded-full bg-forest px-3 py-1 text-[10px] uppercase tracking-widest text-coconut hover:opacity-90"
                           >
-                            {bookingsFor === r.id ? "Hide" : "Booking"}
-                          </button>
+                            Booking
+                          </Link>
                         </td>
                       </tr>
                       {selectedId === r.id && (
@@ -200,15 +199,6 @@ function CrmPage() {
                           <td colSpan={6} className="p-0">
                             <div className="border-t border-border/40 bg-coconut/20 p-4">
                               <GuestDetail id={r.id} onChange={load} />
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                      {bookingsFor === r.id && (
-                        <tr>
-                          <td colSpan={6} className="p-0">
-                            <div className="border-t border-border/40 bg-coconut/20 p-4">
-                              <GuestBookingsList id={r.id} />
                             </div>
                           </td>
                         </tr>
@@ -747,36 +737,5 @@ function L({ label, children, full }: { label: string; children: React.ReactNode
       {label}
       {children}
     </label>
-  );
-}
-
-function GuestBookingsList({ id }: { id: string }) {
-  const [data, setData] = useState<any>(null);
-  useEffect(() => {
-    getGuest({ data: { id } }).then((r) => setData(r));
-  }, [id]);
-  if (!data) return <div className="text-sm text-stone">Loading…</div>;
-  const bookings = (data.bookings ?? []) as any[];
-  if (bookings.length === 0) return <div className="text-sm text-stone">No bookings.</div>;
-  return (
-    <div className="space-y-2">
-      <div className="text-[10px] uppercase tracking-widest text-stone">Bookings — open in admin dashboard</div>
-      {bookings.map((b) => (
-        <Link
-          key={b.id}
-          to="/admin"
-          hash={`b-${b.id}`}
-          className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2 text-sm hover:bg-coconut/40"
-        >
-          <div>
-            <div className="font-mono text-xs">{b.payment_reference ?? b.id.slice(0, 8)} · <span className="text-stone normal-case">{b.status}</span></div>
-            <div className="text-[11px] text-stone">
-              {b.check_in} → {b.check_out} · {b.nights}n · {b.num_rooms ?? 1} rm · RM{Number(b.total_amount ?? 0).toFixed(0)}
-            </div>
-          </div>
-          <span className="rounded-full bg-forest px-3 py-1 text-[10px] uppercase tracking-widest text-coconut">Open</span>
-        </Link>
-      ))}
-    </div>
   );
 }
