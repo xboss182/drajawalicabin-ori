@@ -785,10 +785,18 @@ function GuestBookingsPanel({ id, onChange }: { id: string; onChange: () => void
             {bookings.map((b) => (
               <tr
                 key={b.id}
-                onClick={() => setEditing(b)}
                 className="cursor-pointer border-t border-border/40 hover:bg-coconut/40"
               >
-                <td className="p-2 font-mono text-xs">{b.payment_reference ?? b.id.slice(0, 8)}</td>
+                <td className="p-2 font-mono text-xs">
+                  <Link
+                    to="/admin"
+                    hash={`b-${b.id}`}
+                    className="text-forest underline underline-offset-2 hover:opacity-80"
+                    title="Open full booking in Bookings tab"
+                  >
+                    {b.payment_reference ?? b.id.slice(0, 8)}
+                  </Link>
+                </td>
                 <td className="p-2 text-xs">{b.check_in ?? "—"}</td>
                 <td className="p-2 text-xs">{b.check_out ?? "—"}</td>
                 <td className="p-2 text-right">{b.nights ?? "—"}</td>
@@ -796,6 +804,14 @@ function GuestBookingsPanel({ id, onChange }: { id: string; onChange: () => void
                 <td className="p-2 text-right">{b.guests ?? "—"}</td>
                 <td className="p-2 text-right">RM{Number(b.total_amount ?? 0).toFixed(0)}</td>
                 <td className="p-2 text-xs">{b.status}</td>
+                <td className="p-2 text-right">
+                  <button
+                    onClick={() => setEditing(b)}
+                    className="text-[10px] text-stone underline"
+                  >
+                    quick edit
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
