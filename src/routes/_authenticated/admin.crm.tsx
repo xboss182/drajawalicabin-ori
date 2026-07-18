@@ -189,7 +189,6 @@ function CrmPage() {
                           </button>
                           <Link
                             to="/admin"
-                            search={{ guest: r.email }}
                             className="ml-1 inline-block rounded-full bg-forest px-3 py-1 text-[10px] uppercase tracking-widest text-coconut hover:opacity-90"
                           >
                             Booking
