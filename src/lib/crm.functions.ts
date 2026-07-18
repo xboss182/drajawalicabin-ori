@@ -393,3 +393,39 @@ export const listCabins = createServerFn({ method: "GET" })
       .order("name");
     return { cabins: data ?? [] };
   });
+
+const byDateSchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  search: z.string().trim().max(120).optional(),
+});
+
+export const listBookingsByDate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => byDateSchema.parse(d ?? {}))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const today = new Date();
+    const fromDefault = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7)
+      .toISOString().slice(0, 10);
+    const toDefault = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate())
+      .toISOString().slice(0, 10);
+    const from = data.from ?? fromDefault;
+    const to = data.to ?? toDefault;
+    let q = supabaseAdmin
+      .from("booking_requests")
+      .select("id, payment_reference, booking_group_id, guest_name, email, phone, check_in, check_out, nights, num_rooms, guests, total_amount, deposit_amount, status, notes, room_type, cabin_id, cabins(name)")
+      .gte("check_in", from)
+      .lte("check_in", to)
+      .in("status", ["confirmed", "awaiting_review", "fully_paid", "pending_payment"])
+      .order("check_in", { ascending: true })
+      .order("payment_reference", { ascending: true });
+    if (data.search) {
+      const s = `%${data.search.trim()}%`;
+      q = q.or(`guest_name.ilike.${s},email.ilike.${s},phone.ilike.${s},payment_reference.ilike.${s}`);
+    }
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return { rows: rows ?? [], from, to };
+  });
