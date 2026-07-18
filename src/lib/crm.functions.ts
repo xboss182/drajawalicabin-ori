@@ -220,11 +220,16 @@ export const updateGuest = createServerFn({ method: "POST" })
 
 const editBookingSchema = z.object({
   id: z.string().uuid(),
+  guest_name: z.string().trim().min(1).max(120).optional(),
+  email: z.string().trim().email().max(160).optional(),
+  phone: z.string().trim().max(40).optional(),
+  status: z.enum(["pending_payment","awaiting_review","confirmed","cancelled","expired","fully_paid"]).optional(),
   check_in: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   check_out: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   cabin_id: z.string().uuid().optional(),
   num_rooms: z.number().int().min(1).max(8).optional(),
   guests: z.number().int().min(1).max(30).optional(),
+  total_amount: z.number().min(0).max(100000).optional(),
   notes: z.string().max(2000).nullable().optional(),
 });
 
@@ -235,11 +240,16 @@ export const editBooking = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const patch: Record<string, unknown> = {};
+    if (data.guest_name !== undefined) patch.guest_name = data.guest_name;
+    if (data.email !== undefined) patch.email = data.email.toLowerCase();
+    if (data.phone !== undefined) patch.phone = data.phone;
+    if (data.status !== undefined) patch.status = data.status;
     if (data.check_in) patch.check_in = data.check_in;
     if (data.check_out) patch.check_out = data.check_out;
     if (data.cabin_id) patch.cabin_id = data.cabin_id;
     if (data.num_rooms) patch.num_rooms = data.num_rooms;
     if (data.guests) patch.guests = data.guests;
+    if (data.total_amount !== undefined) patch.total_amount = data.total_amount;
     if (data.notes !== undefined) patch.notes = data.notes;
     if (data.check_in && data.check_out) {
       if (new Date(data.check_out) <= new Date(data.check_in)) {
