@@ -290,6 +290,125 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_broadcasts: {
+        Row: {
+          audience: Json
+          body_html: string
+          id: string
+          recipient_count: number
+          sent_at: string
+          sent_by: string | null
+          subject: string
+        }
+        Insert: {
+          audience?: Json
+          body_html: string
+          id?: string
+          recipient_count?: number
+          sent_at?: string
+          sent_by?: string | null
+          subject: string
+        }
+        Update: {
+          audience?: Json
+          body_html?: string
+          id?: string
+          recipient_count?: number
+          sent_at?: string
+          sent_by?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
+      crm_guests: {
+        Row: {
+          created_at: string
+          email: string
+          first_seen_at: string
+          full_name: string | null
+          id: string
+          last_stay_at: string | null
+          marketing_opt_in: boolean
+          notes: string | null
+          phone: string | null
+          tags: string[]
+          total_bookings: number
+          total_nights: number
+          total_spent: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_seen_at?: string
+          full_name?: string | null
+          id?: string
+          last_stay_at?: string | null
+          marketing_opt_in?: boolean
+          notes?: string | null
+          phone?: string | null
+          tags?: string[]
+          total_bookings?: number
+          total_nights?: number
+          total_spent?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_seen_at?: string
+          full_name?: string | null
+          id?: string
+          last_stay_at?: string | null
+          marketing_opt_in?: boolean
+          notes?: string | null
+          phone?: string | null
+          tags?: string[]
+          total_bookings?: number
+          total_nights?: number
+          total_spent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_tasks: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          done: boolean
+          due_at: string | null
+          guest_id: string
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          due_at?: string | null
+          guest_id: string
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          done?: boolean
+          due_at?: string | null
+          guest_id?: string
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_tasks_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "crm_guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discount_redemptions: {
         Row: {
           amount_off: number
@@ -669,6 +788,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_email: { Args: { _uid: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
