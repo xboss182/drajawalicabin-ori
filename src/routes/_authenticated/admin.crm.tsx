@@ -409,6 +409,9 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: stri
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [cabins, setCabins] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => { listCabins().then((c) => setCabins(c.cabins as any)); }, []);
 
   async function load() {
     setLoading(true);
@@ -528,13 +531,17 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: stri
                   </thead>
                   <tbody>
                     {list.map((b) => (
-                      <tr key={b.id} className="border-t border-border/40 align-top">
+                      <tr
+                        key={b.id}
+                        onClick={() => setEditing(b)}
+                        className="cursor-pointer border-t border-border/40 align-top hover:bg-coconut/40"
+                      >
                         <td className="p-2 font-mono text-xs">{b.payment_reference ?? b.id.slice(0, 8)}</td>
                         <td className="p-2">
                           {b.email ? (
                             <button
                               type="button"
-                              onClick={() => onOpenGuest(b.email, b.guest_name)}
+                              onClick={(e) => { e.stopPropagation(); onOpenGuest(b.email, b.guest_name); }}
                               className="text-forest underline underline-offset-2 hover:opacity-80"
                               title="Open in CRM"
                             >
@@ -563,6 +570,114 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: stri
           );
         })}
       </div>
+      {editing && (
+        <BookingEditModal
+          booking={editing}
+          cabins={cabins}
+          onClose={() => setEditing(null)}
+          onSaved={async () => { setEditing(null); await load(); }}
+        />
+      )}
     </div>
+  );
+}
+
+function BookingEditModal({
+  booking, cabins, onClose, onSaved,
+}: { booking: any; cabins: { id: string; name: string }[]; onClose: () => void; onSaved: () => void }) {
+  const [f, setF] = useState({
+    guest_name: booking.guest_name ?? "",
+    email: booking.email ?? "",
+    phone: booking.phone ?? "",
+    status: booking.status ?? "confirmed",
+    check_in: booking.check_in ?? "",
+    check_out: booking.check_out ?? "",
+    cabin_id: booking.cabin_id ?? "",
+    num_rooms: Number(booking.num_rooms ?? 1),
+    guests: Number(booking.guests ?? 1),
+    total_amount: Number(booking.total_amount ?? 0),
+    notes: booking.notes ?? "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  function set<K extends keyof typeof f>(k: K, v: (typeof f)[K]) { setF((p) => ({ ...p, [k]: v })); }
+  async function save() {
+    setSaving(true); setErr(null);
+    try {
+      await editBooking({ data: {
+        id: booking.id,
+        guest_name: f.guest_name || undefined,
+        email: f.email || undefined,
+        phone: f.phone || undefined,
+        status: f.status as any,
+        check_in: f.check_in || undefined,
+        check_out: f.check_out || undefined,
+        cabin_id: f.cabin_id || undefined,
+        num_rooms: Number(f.num_rooms),
+        guests: Number(f.guests),
+        total_amount: Number(f.total_amount),
+        notes: f.notes ?? null,
+      } });
+      onSaved();
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed to save");
+    }
+    setSaving(false);
+  }
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4" onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-xl border border-border bg-card p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="font-display text-lg text-forest">Edit booking</h3>
+            <p className="text-xs text-stone">{booking.payment_reference ?? booking.id.slice(0, 8)}</p>
+          </div>
+          <button onClick={onClose} className="text-stone hover:text-forest">✕</button>
+        </div>
+        {err && <p className="mt-2 text-sm text-red-700">{err}</p>}
+        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+          <L label="Guest name"><input value={f.guest_name} onChange={(e) => set("guest_name", e.target.value)} className={inp} /></L>
+          <L label="Phone"><input value={f.phone} onChange={(e) => set("phone", e.target.value)} className={inp} /></L>
+          <L label="Email"><input value={f.email} onChange={(e) => set("email", e.target.value)} className={inp} /></L>
+          <L label="Status">
+            <select value={f.status} onChange={(e) => set("status", e.target.value)} className={inp}>
+              {["pending_payment","awaiting_review","confirmed","fully_paid","cancelled","expired"].map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </L>
+          <L label="Check-in"><input type="date" value={f.check_in} onChange={(e) => set("check_in", e.target.value)} className={inp} /></L>
+          <L label="Check-out"><input type="date" value={f.check_out} onChange={(e) => set("check_out", e.target.value)} className={inp} /></L>
+          <L label="Cabin / Room">
+            <select value={f.cabin_id ?? ""} onChange={(e) => set("cabin_id", e.target.value)} className={inp}>
+              <option value="">—</option>
+              {cabins.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </L>
+          <L label="Rooms"><input type="number" min={1} max={8} value={f.num_rooms} onChange={(e) => set("num_rooms", Number(e.target.value))} className={inp} /></L>
+          <L label="Guests (pax)"><input type="number" min={1} max={30} value={f.guests} onChange={(e) => set("guests", Number(e.target.value))} className={inp} /></L>
+          <L label="Total amount (RM)"><input type="number" min={0} step="0.01" value={f.total_amount} onChange={(e) => set("total_amount", Number(e.target.value))} className={inp} /></L>
+          <L label="Notes" full>
+            <textarea value={f.notes ?? ""} onChange={(e) => set("notes", e.target.value)} rows={3} className={inp} />
+          </L>
+        </div>
+        <div className="mt-5 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-full border border-border px-4 py-1.5 text-xs uppercase tracking-widest">Cancel</button>
+          <button disabled={saving} onClick={save} className="rounded-full bg-forest px-4 py-1.5 text-xs uppercase tracking-widest text-coconut disabled:opacity-60">
+            {saving ? "Saving…" : "Save changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const inp = "mt-0.5 w-full rounded border border-border bg-background px-2 py-1 text-sm";
+function L({ label, children, full }: { label: string; children: React.ReactNode; full?: boolean }) {
+  return (
+    <label className={`text-[10px] uppercase tracking-widest text-stone ${full ? "col-span-2" : ""}`}>
+      {label}
+      {children}
+    </label>
   );
 }
