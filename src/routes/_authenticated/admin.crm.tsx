@@ -187,12 +187,13 @@ function CrmPage() {
                           >
                             {selectedId === r.id ? "Close" : "Edit info"}
                           </button>
-                          <button
-                            onClick={() => setBookingsFor(bookingsFor === r.id ? null : r.id)}
-                            className="ml-1 rounded-full bg-forest px-3 py-1 text-[10px] uppercase tracking-widest text-coconut hover:opacity-90"
+                          <Link
+                            to="/admin"
+                            search={{ guest: r.email }}
+                            className="ml-1 inline-block rounded-full bg-forest px-3 py-1 text-[10px] uppercase tracking-widest text-coconut hover:opacity-90"
                           >
-                            {bookingsFor === r.id ? "Hide" : "Booking"}
-                          </button>
+                            Booking
+                          </Link>
                         </td>
                       </tr>
                       {selectedId === r.id && (
@@ -200,15 +201,6 @@ function CrmPage() {
                           <td colSpan={6} className="p-0">
                             <div className="border-t border-border/40 bg-coconut/20 p-4">
                               <GuestDetail id={r.id} onChange={load} />
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                      {bookingsFor === r.id && (
-                        <tr>
-                          <td colSpan={6} className="p-0">
-                            <div className="border-t border-border/40 bg-coconut/20 p-4">
-                              <GuestBookingsList id={r.id} />
                             </div>
                           </td>
                         </tr>
