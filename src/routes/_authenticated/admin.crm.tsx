@@ -749,3 +749,34 @@ function L({ label, children, full }: { label: string; children: React.ReactNode
     </label>
   );
 }
+
+function GuestBookingsList({ id }: { id: string }) {
+  const [data, setData] = useState<any>(null);
+  useEffect(() => {
+    getGuest({ data: { id } }).then((r) => setData(r));
+  }, [id]);
+  if (!data) return <div className="text-sm text-stone">Loading…</div>;
+  const bookings = (data.bookings ?? []) as any[];
+  if (bookings.length === 0) return <div className="text-sm text-stone">No bookings.</div>;
+  return (
+    <div className="space-y-2">
+      <div className="text-[10px] uppercase tracking-widest text-stone">Bookings — open in admin dashboard</div>
+      {bookings.map((b) => (
+        <Link
+          key={b.id}
+          to="/admin"
+          hash={`b-${b.id}`}
+          className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2 text-sm hover:bg-coconut/40"
+        >
+          <div>
+            <div className="font-mono text-xs">{b.payment_reference ?? b.id.slice(0, 8)} · <span className="text-stone normal-case">{b.status}</span></div>
+            <div className="text-[11px] text-stone">
+              {b.check_in} → {b.check_out} · {b.nights}n · {b.num_rooms ?? 1} rm · RM{Number(b.total_amount ?? 0).toFixed(0)}
+            </div>
+          </div>
+          <span className="rounded-full bg-forest px-3 py-1 text-[10px] uppercase tracking-widest text-coconut">Open</span>
+        </Link>
+      ))}
+    </div>
+  );
+}
