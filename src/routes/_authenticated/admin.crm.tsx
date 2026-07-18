@@ -47,23 +47,37 @@ function CrmPage() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
-  async function load() {
+  async function load(overrideSearch?: string) {
     setLoading(true);
     setErr(null);
     try {
-      const r = await listGuests({ data: { search: search || undefined, tag: tag || undefined, sort, limit: 100 } });
+      const s = overrideSearch !== undefined ? overrideSearch : search;
+      const r = await listGuests({ data: { search: s || undefined, tag: tag || undefined, sort, limit: 100 } });
       setRows(r.rows as Guest[]);
       setCount(r.count);
       const t = await listAllTags();
       setTags(t.tags);
+      return r.rows as Guest[];
     } catch (e: any) {
       setErr(e?.message ?? "Failed");
+      return [] as Guest[];
     } finally {
       setLoading(false);
     }
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [sort, tag]);
+
+  async function openGuestByEmail(email: string) {
+    setTab("guests");
+    setPendingEmail(email);
+    setSearch(email);
+    const list = await load(email);
+    const match = list.find((g) => g.email.toLowerCase() === email.toLowerCase());
+    if (match) setSelectedId(match.id);
+    setPendingEmail(null);
+  }
 
   async function sync() {
     setStatus("Syncing guest profiles…");
@@ -105,7 +119,10 @@ function CrmPage() {
           ))}
         </div>
 
-        {tab === "by_date" && <ByDatePanel />}
+        {tab === "by_date" && <ByDatePanel onOpenGuest={openGuestByEmail} />}
+        {pendingEmail && tab === "guests" && (
+          <p className="mt-2 text-xs text-stone">Opening {pendingEmail}…</p>
+        )}
 
         {tab === "guests" && (
           <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
@@ -372,7 +389,7 @@ function BookingRow({ b, cabins, onSaved }: { b: any; cabins: { id: string; name
   );
 }
 
-function ByDatePanel() {
+function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string) => void }) {
   const today = new Date().toISOString().slice(0, 10);
   const in90 = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
   const past7 = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
@@ -391,17 +408,42 @@ function ByDatePanel() {
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
-  // Group by check_in date
+  // Collapse multi-room bookings into 1 row per guest (per booking_group_id),
+  // then group by check-in date.
   const groups = useMemo(() => {
-    const m = new Map<string, any[]>();
+    // Aggregate rows sharing a booking_group_id
+    const byGroup = new Map<string, any[]>();
     for (const r of rows) {
-      const d = r.check_in ?? "—";
-      const arr = m.get(d) ?? [];
+      const key = r.booking_group_id ?? r.id;
+      const arr = byGroup.get(key) ?? [];
       arr.push(r);
-      m.set(d, arr);
+      byGroup.set(key, arr);
     }
-    // Within each day, sort by payment_reference then id
-    for (const [, arr] of m) arr.sort((a, b) => String(a.payment_reference ?? a.id).localeCompare(String(b.payment_reference ?? b.id)));
+    const merged: any[] = [];
+    for (const arr of byGroup.values()) {
+      const b = arr[0];
+      const cabinNames = Array.from(
+        new Set(
+          arr
+            .map((r) => r.cabins?.name ?? r.room_type ?? "")
+            .filter(Boolean),
+        ),
+      );
+      merged.push({
+        ...b,
+        _cabin_label: cabinNames.join(", ") || "—",
+        num_rooms: arr.reduce((s, r) => s + Number(r.num_rooms ?? 1), 0),
+        total_amount: arr.reduce((s, r) => s + Number(r.total_amount ?? 0), 0),
+      });
+    }
+    const m = new Map<string, any[]>();
+    for (const r of merged) {
+      const d = r.check_in ?? "—";
+      const a = m.get(d) ?? [];
+      a.push(r);
+      m.set(d, a);
+    }
+    for (const [, a] of m) a.sort((x, y) => String(x.payment_reference ?? x.id).localeCompare(String(y.payment_reference ?? y.id)));
     return Array.from(m.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [rows]);
 
@@ -457,11 +499,24 @@ function ByDatePanel() {
                     {list.map((b) => (
                       <tr key={b.id} className="border-t border-border/40 align-top">
                         <td className="p-2 font-mono text-xs">{b.payment_reference ?? b.id.slice(0, 8)}</td>
-                        <td className="p-2">{b.guest_name ?? "—"}</td>
+                        <td className="p-2">
+                          {b.email ? (
+                            <button
+                              type="button"
+                              onClick={() => onOpenGuest(b.email)}
+                              className="text-forest underline underline-offset-2 hover:opacity-80"
+                              title="Open in CRM"
+                            >
+                              {b.guest_name ?? b.email}
+                            </button>
+                          ) : (
+                            b.guest_name ?? "—"
+                          )}
+                        </td>
                         <td className="p-2 text-xs text-stone">
                           {b.phone ?? ""}<br />{b.email ?? ""}
                         </td>
-                        <td className="p-2">{b.cabins?.name ?? b.room_type ?? "—"}</td>
+                        <td className="p-2">{b._cabin_label ?? b.cabins?.name ?? b.room_type ?? "—"}</td>
                         <td className="p-2 text-right">{b.num_rooms ?? 1}</td>
                         <td className="p-2 text-right">{b.guests ?? "—"}</td>
                         <td className="p-2 text-xs">{b.check_out ?? "—"}</td>
