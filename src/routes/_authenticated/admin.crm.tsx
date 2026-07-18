@@ -142,7 +142,7 @@ function CrmPage() {
                   <option value="bookings">Bookings</option>
                   <option value="name">Name</option>
                 </select>
-                <button onClick={load} className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest">Search</button>
+                <button onClick={() => load()} className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest">Search</button>
               </div>
               <p className="mt-2 text-[11px] text-stone">{loading ? "Loading…" : `${count} guest(s)`}</p>
               <div className="mt-3 max-h-[65vh] overflow-auto">
