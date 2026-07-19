@@ -19,12 +19,12 @@ export function AdminTabs({ current }: { current: string }) {
   const tabs: Array<{ id: string; label: string; to: string }> = [
     { id: "bookings", label: "Bookings", to: "/admin" },
     { id: "calendar", label: "Calendar", to: "/admin/calendar" },
-    { id: "cabins", label: "Cabins", to: "/admin/cabins" },
-    { id: "holidays", label: "Holidays", to: "/admin/holidays" },
+    { id: "crm", label: "CRM", to: "/admin/crm" },
     { id: "stats", label: "Stats", to: "/admin/stats" },
     { id: "discounts", label: "Discounts", to: "/admin/discounts" },
     { id: "promo", label: "Promo", to: "/admin/promo" },
-    { id: "crm", label: "CRM", to: "/admin/crm" },
+    { id: "cabins", label: "Cabins", to: "/admin/cabins" },
+    { id: "holidays", label: "Holidays", to: "/admin/holidays" },
     { id: "members", label: "Members", to: "/admin/members" },
     { id: "settings", label: "Settings", to: "/admin/settings" },
   ];
