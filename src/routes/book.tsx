@@ -413,7 +413,13 @@ function BookPage() {
     blockedDates: string[];
     blockedReasonByDate: Map<string, string>;
   }>(() => {
-    if (cart.length === 0) return { blockedDates: [], blockedReasonByDate: new Map() };
+    // With no cart yet, still surface property-wide fully-booked nights so
+    // guests immediately see dates with zero vacancy (e.g. Jul 31).
+    if (cart.length === 0) {
+      const reasonByDate = new Map<string, string>();
+      for (const [d, msg] of propertyFullyBooked) reasonByDate.set(d, msg);
+      return { blockedDates: Array.from(reasonByDate.keys()), blockedReasonByDate: reasonByDate };
+    }
     const reasonByDate = new Map<string, string[]>();
     for (const it of cart) {
       const g = groupByType.get(it.cabinType);
@@ -441,7 +447,7 @@ function BookPage() {
     const map = new Map<string, string>();
     for (const [d, msgs] of reasonByDate) map.set(d, msgs.join(" · "));
     return { blockedDates: Array.from(map.keys()), blockedReasonByDate: map };
-  }, [cart, groupByType, takenByCabin]);
+  }, [cart, groupByType, takenByCabin, propertyFullyBooked]);
 
   function freeCabinsForType(type: string): Cabin[] {
     const g = groupByType.get(type);
