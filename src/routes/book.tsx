@@ -800,6 +800,25 @@ function DetailsStep(props: {
               </span>
             </div>
           </div>
+          {(() => {
+            if (!checkin || !checkout || checkout <= checkin) return null;
+            const hits: string[] = [];
+            for (const d of blockedDates) {
+              if (d >= checkin && d < checkout) hits.push(d);
+            }
+            if (hits.length === 0) return null;
+            const first = hits.sort()[0];
+            const reason = blockedReasonByDate.get(first) ?? "No vacancy";
+            const label = parseLocalDate(first).toLocaleDateString("en-MY", {
+              day: "numeric", month: "short", year: "numeric",
+            });
+            return (
+              <div className="mt-3 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-[12px] text-red-800">
+                <span className="font-medium">No vacancy on {label}</span>
+                {hits.length > 1 ? ` (+${hits.length - 1} more night${hits.length - 1 === 1 ? "" : "s"})` : ""} — {reason}. Please choose different dates.
+              </div>
+            );
+          })()}
           <div className="mt-3 overflow-x-auto">
             <Calendar
               mode="range"
