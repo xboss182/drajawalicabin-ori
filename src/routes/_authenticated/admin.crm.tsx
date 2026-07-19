@@ -586,9 +586,9 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: stri
                 <table className="mt-1 w-full table-fixed text-sm">
                   <colgroup>
                     <col className="w-[9%]" />
-                    <col className="w-[14%]" />
+                    <col className="w-[16%]" />
                     <col className="w-[18%]" />
-                    <col className="w-[15%]" />
+                    <col className="w-[13%]" />
                     <col className="w-[7%]" />
                     <col className="w-[6%]" />
                     <col className="w-[10%]" />
@@ -599,7 +599,7 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: stri
                   <thead className="text-left text-[10px] uppercase tracking-widest text-stone">
                     <tr>
                       <th className="p-2">Booking #</th>
-                      <th className="p-2">Guest</th>
+                      <th className="p-2 text-left">Guest</th>
                       <th className="p-2">Contact</th>
                       <th className="p-2">Cabin / Room</th>
                       <th className="p-2 text-right">Rooms</th>
@@ -618,7 +618,7 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: stri
                         className="cursor-pointer border-t border-border/40 align-top hover:bg-coconut/40"
                       >
                         <td className="p-2 font-mono text-xs">{b.payment_reference ?? b.id.slice(0, 8)}</td>
-                        <td className="p-2">
+                        <td className="p-2 text-left">
                           {b.email ? (
                             <button
                               type="button"
