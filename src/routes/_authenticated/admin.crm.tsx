@@ -583,7 +583,19 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: stri
                 <span className="text-[11px] text-stone">{list.length} booking(s) · {totalRooms} room(s) · {totalPax} pax</span>
               </div>
               <div className="overflow-x-auto">
-                <table className="mt-1 w-full text-sm">
+                <table className="mt-1 w-full table-fixed text-sm">
+                  <colgroup>
+                    <col className="w-[9%]" />
+                    <col className="w-[14%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[15%]" />
+                    <col className="w-[7%]" />
+                    <col className="w-[6%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[7%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[10%]" />
+                  </colgroup>
                   <thead className="text-left text-[10px] uppercase tracking-widest text-stone">
                     <tr>
                       <th className="p-2">Booking #</th>
