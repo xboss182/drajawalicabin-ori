@@ -407,13 +407,38 @@ function BookPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  // Property-wide fully-booked dates: every active cabin has a booking that
+  // night. Surfaced on the calendar even before the user picks a room so
+  // guests can see zero-vacancy dates immediately.
+  const propertyFullyBooked = useMemo<Map<string, string>>(() => {
+    if (cabins.length === 0) return new Map();
+    const counts = new Map<string, number>();
+    for (const c of cabins) {
+      for (const d of takenByCabin[c.id] ?? []) {
+        counts.set(d, (counts.get(d) ?? 0) + 1);
+      }
+    }
+    const total = cabins.length;
+    const map = new Map<string, string>();
+    for (const [d, n] of counts) {
+      if (n >= total) map.set(d, `Property fully booked (all ${total} rooms taken)`);
+    }
+    return map;
+  }, [cabins, takenByCabin]);
+
   // Date is blocked when ANY cart line can't be satisfied that night.
   // We also return a per-date human-readable reason for tooltips.
   const { blockedDates, blockedReasonByDate } = useMemo<{
     blockedDates: string[];
     blockedReasonByDate: Map<string, string>;
   }>(() => {
-    if (cart.length === 0) return { blockedDates: [], blockedReasonByDate: new Map() };
+    // With no cart yet, still surface property-wide fully-booked nights so
+    // guests immediately see dates with zero vacancy (e.g. Jul 31).
+    if (cart.length === 0) {
+      const reasonByDate = new Map<string, string>();
+      for (const [d, msg] of propertyFullyBooked) reasonByDate.set(d, msg);
+      return { blockedDates: Array.from(reasonByDate.keys()), blockedReasonByDate: reasonByDate };
+    }
     const reasonByDate = new Map<string, string[]>();
     for (const it of cart) {
       const g = groupByType.get(it.cabinType);
@@ -441,7 +466,7 @@ function BookPage() {
     const map = new Map<string, string>();
     for (const [d, msgs] of reasonByDate) map.set(d, msgs.join(" · "));
     return { blockedDates: Array.from(map.keys()), blockedReasonByDate: map };
-  }, [cart, groupByType, takenByCabin]);
+  }, [cart, groupByType, takenByCabin, propertyFullyBooked]);
 
   function freeCabinsForType(type: string): Cabin[] {
     const g = groupByType.get(type);
@@ -775,6 +800,25 @@ function DetailsStep(props: {
               </span>
             </div>
           </div>
+          {(() => {
+            if (!checkin || !checkout || checkout <= checkin) return null;
+            const hits: string[] = [];
+            for (const d of blockedDates) {
+              if (d >= checkin && d < checkout) hits.push(d);
+            }
+            if (hits.length === 0) return null;
+            const first = hits.sort()[0];
+            const reason = blockedReasonByDate.get(first) ?? "No vacancy";
+            const label = parseLocalDate(first).toLocaleDateString("en-MY", {
+              day: "numeric", month: "short", year: "numeric",
+            });
+            return (
+              <div className="mt-3 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-[12px] text-red-800">
+                <span className="font-medium">No vacancy on {label}</span>
+                {hits.length > 1 ? ` (+${hits.length - 1} more night${hits.length - 1 === 1 ? "" : "s"})` : ""} — {reason}. Please choose different dates.
+              </div>
+            );
+          })()}
           <div className="mt-3 overflow-x-auto">
             <Calendar
               mode="range"
