@@ -623,7 +623,7 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: stri
                             <button
                               type="button"
                               onClick={(e) => { e.stopPropagation(); onOpenGuest(b.email, b.guest_name); }}
-                              className="text-forest underline underline-offset-2 hover:opacity-80"
+                              className="text-left text-forest underline underline-offset-2 hover:opacity-80"
                               title="Open in CRM"
                             >
                               {b.guest_name ?? b.email}
