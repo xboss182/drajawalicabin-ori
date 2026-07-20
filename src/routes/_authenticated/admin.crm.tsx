@@ -152,7 +152,65 @@ function CrmPage() {
               </div>
               <p className="mt-2 text-[11px] text-stone">{loading ? "Loading…" : `${count} guest(s)`}</p>
               <div className="mt-3 max-h-[65vh] overflow-auto">
-                <table className="w-full text-sm">
+                {/* Mobile: compact cards */}
+                <ul className="flex flex-col gap-2 sm:hidden">
+                  {rows.map((r) => (
+                    <li key={r.id} className="rounded-lg border border-border/60 bg-background p-3 text-sm">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-medium">{r.full_name ?? "—"}</div>
+                          <div className="truncate text-[11px] text-stone">{r.email}</div>
+                          {r.tags?.length ? (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {r.tags.map((t) => <span key={t} className="rounded-full bg-forest/10 px-2 py-0.5 text-[10px] text-forest">{t}</span>)}
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs font-semibold text-forest">RM{Number(r.total_spent).toFixed(0)}</div>
+                          <div className="text-[10px] text-stone">{r.total_bookings} booking{r.total_bookings === 1 ? "" : "s"}</div>
+                        </div>
+                      </div>
+                      <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[11px]">
+                        <div className="rounded bg-coconut/50 py-1"><span className="block font-medium text-foreground">{r.total_nights}</span><span className="text-stone">Nights</span></div>
+                        <div className="rounded bg-coconut/50 py-1"><span className="block font-medium text-foreground">{r.total_bookings}</span><span className="text-stone">Bookings</span></div>
+                        <div className="rounded bg-coconut/50 py-1"><span className="block font-medium text-foreground">{r.last_stay_at ?? "—"}</span><span className="text-stone">Last stay</span></div>
+                      </div>
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          onClick={() => setSelectedId(selectedId === r.id ? null : r.id)}
+                          className="flex-1 rounded-full border border-border py-1.5 text-[10px] uppercase tracking-widest"
+                        >
+                          {selectedId === r.id ? "Close" : "Edit info"}
+                        </button>
+                        <button
+                          onClick={() => setBookingsFor(bookingsFor === r.id ? null : r.id)}
+                          className="flex-1 rounded-full bg-forest py-1.5 text-[10px] uppercase tracking-widest text-coconut"
+                        >
+                          {bookingsFor === r.id ? "Hide" : "Booking"}
+                        </button>
+                      </div>
+                      {selectedId === r.id && (
+                        <div className="mt-2 border-t border-border/40 bg-coconut/20 p-3">
+                          <GuestDetail id={r.id} onChange={load} />
+                        </div>
+                      )}
+                      {bookingsFor === r.id && (
+                        <div className="mt-2 border-t border-border/40 bg-coconut/20 p-3">
+                          <GuestBookingsPanel id={r.id} onChange={load} />
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                  {rows.length === 0 && !loading && (
+                    <li className="rounded border border-dashed border-border p-6 text-center text-sm text-stone">
+                      No guests yet — click "Sync from bookings" to build the directory.
+                    </li>
+                  )}
+                </ul>
+
+                {/* Desktop: table */}
+                <table className="hidden w-full text-sm sm:table">
                   <thead className="text-left text-[10px] uppercase tracking-widest text-stone">
                     <tr>
                       <th className="p-2">Guest</th>
