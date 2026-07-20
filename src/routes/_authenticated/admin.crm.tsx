@@ -555,14 +555,14 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: stri
 
   return (
     <div className="mt-6 rounded-xl border border-border bg-card p-4">
-      <div className="flex flex-wrap items-end gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
         <label className="text-[10px] uppercase tracking-widest text-stone">Month
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="mt-0.5 block h-9 rounded border border-border bg-background px-2 py-1 text-sm normal-case" />
+          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="mt-0.5 block h-9 w-full rounded border border-border bg-background px-2 py-1 text-sm normal-case sm:w-auto" />
         </label>
         <input value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === "Enter" && load()}
           placeholder="Search name / phone / booking #"
-          className="flex-1 min-w-[200px] h-9 rounded-md border border-border bg-background px-3 text-sm" />
-        <button onClick={load} className="h-9 rounded-full bg-forest px-4 text-xs uppercase tracking-widest text-coconut">
+          className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm sm:flex-1 sm:min-w-[200px]" />
+        <button onClick={load} className="h-9 w-full rounded-full bg-forest px-4 text-xs uppercase tracking-widest text-coconut sm:w-auto">
           {loading ? "…" : "Refresh"}
         </button>
       </div>
@@ -578,11 +578,44 @@ function ByDatePanel({ onOpenGuest }: { onOpenGuest: (email: string, name?: stri
           const totalRooms = list.reduce((s, b) => s + Number(b.num_rooms ?? 1), 0);
           return (
             <div key={date}>
-              <div className="sticky top-0 z-10 flex items-baseline justify-between border-b-2 border-forest/30 bg-card py-1">
+              <div className="sticky top-0 z-10 flex flex-col gap-0.5 border-b-2 border-forest/30 bg-card py-1 sm:flex-row sm:items-baseline sm:justify-between">
                 <h3 className="font-display text-base text-forest">{dateLabel}</h3>
                 <span className="text-[11px] text-stone">{list.length} booking(s) · {totalRooms} room(s) · {totalPax} pax</span>
               </div>
-              <div className="overflow-x-auto">
+              {/* Mobile: card list */}
+              <ul className="mt-2 flex flex-col gap-2 sm:hidden">
+                {list.map((b) => (
+                  <li
+                    key={b.id}
+                    onClick={() => setEditing(b)}
+                    className="cursor-pointer rounded-lg border border-border/60 bg-background p-3 text-sm active:bg-coconut/50"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-xs text-stone">{b.payment_reference ?? b.id.slice(0, 8)}</span>
+                      <span className="rounded-full bg-coconut px-2 py-0.5 text-[10px] uppercase tracking-widest text-forest">{b.status}</span>
+                    </div>
+                    {b.email ? (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onOpenGuest(b.email, b.guest_name); }}
+                        className="mt-1 block text-left font-medium text-forest underline underline-offset-2"
+                      >
+                        {b.guest_name ?? b.email}
+                      </button>
+                    ) : (
+                      <p className="mt-1 font-medium text-foreground">{b.guest_name ?? "—"}</p>
+                    )}
+                    <p className="mt-0.5 text-xs text-stone">{b._cabin_label ?? b.cabins?.name ?? b.room_type ?? "—"}</p>
+                    <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+                      <span className="text-foreground">{b.check_in} → {b.check_out} · {b.nights ?? "?"}n</span>
+                      <span className="font-semibold text-forest">RM{Number(b.total_amount ?? 0).toFixed(0)}</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-stone">{b.num_rooms ?? 1} room · {b.guests ?? "—"} pax{b.phone ? ` · ${b.phone}` : ""}</p>
+                  </li>
+                ))}
+              </ul>
+              {/* Desktop: table */}
+              <div className="hidden overflow-x-auto sm:block">
                 <table className="mt-1 w-full table-fixed text-sm">
                   <colgroup>
                     <col className="w-[9%]" />
