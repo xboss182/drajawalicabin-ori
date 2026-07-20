@@ -133,22 +133,22 @@ function CrmPage() {
         {tab === "guests" && (
           <div className="mt-6 space-y-6">
             <div className="rounded-xl border border-border bg-card p-4">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
                 <input value={search} onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && load()}
                   placeholder="Search name / email / phone"
-                  className="flex-1 min-w-[200px] rounded-md border border-border bg-background px-3 py-2 text-sm" />
-                <select value={tag} onChange={(e) => setTag(e.target.value)} className="rounded-md border border-border bg-background px-3 py-2 text-sm">
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm sm:flex-1 sm:min-w-[200px]" />
+                <select value={tag} onChange={(e) => setTag(e.target.value)} className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm sm:w-auto">
                   <option value="">All tags</option>
                   {tags.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="rounded-md border border-border bg-background px-3 py-2 text-sm">
+                <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm sm:w-auto">
                   <option value="last_stay">Last stay</option>
                   <option value="spent">Total spent</option>
                   <option value="bookings">Bookings</option>
                   <option value="name">Name</option>
                 </select>
-                <button onClick={() => load()} className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest">Search</button>
+                <button onClick={() => load()} className="h-9 w-full rounded-full border border-border px-4 text-xs uppercase tracking-widest sm:w-auto">Search</button>
               </div>
               <p className="mt-2 text-[11px] text-stone">{loading ? "Loading…" : `${count} guest(s)`}</p>
               <div className="mt-3 max-h-[65vh] overflow-auto">
