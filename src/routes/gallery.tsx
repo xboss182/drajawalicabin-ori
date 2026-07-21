@@ -190,6 +190,7 @@ function GalleryPage() {
                 key={`${item.url}-${i}`}
                 type="button"
                 onClick={() => setLightbox({ ...item, type: "video" })}
+                aria-label={`Play video: ${item.alt}`}
                 className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <video
@@ -213,6 +214,7 @@ function GalleryPage() {
                 key={`${item.url}-${i}`}
                 type="button"
                 onClick={() => setLightbox({ ...item, type: "photo" })}
+                aria-label={`View photo: ${item.alt}`}
                 className="group relative aspect-square overflow-hidden rounded-lg bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 <img
