@@ -20,10 +20,12 @@ export const Route = createFileRoute("/manage-booking")({
     meta: [
       { title: "Manage your booking — Rajawali D'Cabin" },
       { name: "robots", content: "noindex" },
-      { name: "description", content: "View your Rajawali D'Cabin reservation, upload your room rate balance proof, and review your cabin and stay details. Your RM50/room security deposit is refundable after check-out." },
+      { name: "description", content: "View your Rajawali D'Cabin reservation, upload balance proof, and manage your stay details online." },
       { property: "og:title", content: "Manage your booking — Rajawali D'Cabin" },
       { property: "og:description", content: "View your reservation, upload room rate balance proof, and manage your Rajawali D'Cabin stay." },
+      { property: "og:url", content: "https://drajawalicabin.com/manage-booking" },
     ],
+    links: [{ rel: "canonical", href: "https://drajawalicabin.com/manage-booking" }],
   }),
   component: ManagePage,
 });

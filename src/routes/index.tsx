@@ -264,7 +264,12 @@ function Hero() {
           <span className="size-1.5 rounded-full bg-coconut" /> {t.hero.badge}
         </span>
         <h1 className="max-w-3xl font-display text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
-          {t.hero.title1}<br />{t.hero.title2}
+          <span className="sr-only">
+            Rajawali D'Cabin Chalet — Riverside Cabin Accommodations in Chendering, Kuala Terengganu
+          </span>
+          <span aria-hidden="true">
+            {t.hero.title1}<br />{t.hero.title2}
+          </span>
         </h1>
         <p className="mt-5 max-w-xl text-base text-coconut/85 sm:text-lg">
           {t.hero.body}

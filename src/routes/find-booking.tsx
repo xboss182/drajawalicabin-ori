@@ -11,7 +11,9 @@ export const Route = createFileRoute("/find-booking")({
       { name: "description", content: "Lost your Rajawali D'Cabin booking link? Enter your email and reference number and we'll re-send the manage link to your inbox." },
       { property: "og:title", content: "Find your booking — Rajawali D'Cabin" },
       { property: "og:description", content: "Recover your Rajawali D'Cabin booking management link by email." },
+      { property: "og:url", content: "https://drajawalicabin.com/find-booking" },
     ],
+    links: [{ rel: "canonical", href: "https://drajawalicabin.com/find-booking" }],
   }),
   component: FindBookingPage,
 });
