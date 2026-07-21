@@ -1365,7 +1365,7 @@ export const getInvoice = createServerFn({ method: "POST" })
     const gid = await groupIdFor(supabaseAdmin, data.bookingId);
     const { data: rows, error } = await supabaseAdmin
       .from("booking_requests")
-      .select("*")
+      .select("*, cabins(name)")
       .eq("booking_group_id", gid)
       .order("created_at", { ascending: true });
     if (error) throw new Error(error.message);
@@ -1424,7 +1424,7 @@ export const getInvoice = createServerFn({ method: "POST" })
       rooms: rows.map((r: any) => ({
         id: r.id,
         cabinId: r.cabin_id,
-        name: cleanRoomType(r.room_type),
+        name: cleanRoomType(r.cabins?.name ?? r.room_type),
         nights: r.nights,
         subtotal: Number(r.subtotal ?? 0),
         comforterTotal: Number(r.comforter_total ?? 0),
