@@ -14,7 +14,9 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Owner and staff sign-in for the Rajawali D'Cabin Chalet management console." },
       { property: "og:title", content: "Owner sign in — Rajawali D'Cabin" },
       { property: "og:description", content: "Restricted sign-in for Rajawali D'Cabin staff and owners." },
+      { property: "og:url", content: "https://drajawalicabin.com/auth" },
     ],
+    links: [{ rel: "canonical", href: "https://drajawalicabin.com/auth" }],
   }),
   component: AuthPage,
 });
