@@ -20,6 +20,26 @@ export const Route = createFileRoute("/booking-guide")({
         content:
           "Step-by-step visual guide to booking rooms, plus large-group tips (12+ guests).",
       },
+      { property: "og:url", content: "https://drajawalicabin.com/booking-guide" },
+    ],
+    links: [{ rel: "canonical", href: "https://drajawalicabin.com/booking-guide" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "HowTo",
+          name: "How to book a stay at Rajawali D'Cabin Chalet",
+          description:
+            "Step-by-step guide to booking rooms at Rajawali D'Cabin Chalet, including tips for large groups of 12+ guests.",
+          step: [
+            { "@type": "HowToStep", position: 1, name: "Select dates & initial guests", text: "Open the booking page and choose your check-in and check-out dates, then enter how many adults and children (under 12) will stay." },
+            { "@type": "HowToStep", position: 2, name: "Add multiple rooms", text: "Pick a cabin that suits your party, then keep adding rooms until the total capacity fits everyone in your group." },
+            { "@type": "HowToStep", position: 3, name: "Review & guest details", text: "Confirm the rooms in your cart and fill in the primary guest's information for the whole booking." },
+            { "@type": "HowToStep", position: 4, name: "Secure your booking", text: "Choose deposit or full payment, accept the terms, and complete checkout to receive a confirmation email with your manage-booking link." },
+          ],
+        }),
+      },
     ],
   }),
   component: BookingGuidePage,
