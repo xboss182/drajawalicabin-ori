@@ -33,7 +33,7 @@ export const rebuildCrmGuests = createServerFn({ method: "POST" })
     const { data: bookings, error } = await supabaseAdmin
       .from("booking_requests")
       .select("email, guest_name, phone, check_in, check_out, nights, total_amount, status, booking_group_id, id, created_at")
-      .in("status", ["confirmed", "awaiting_review", "fully_paid"]);
+      .in("status", ["pending_payment", "confirmed", "awaiting_review", "fully_paid"]);
     if (error) throw new Error(error.message);
 
     type Agg = {
