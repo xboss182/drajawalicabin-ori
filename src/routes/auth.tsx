@@ -6,6 +6,7 @@ import { claimAdminIfFirst, isAdminRecipient } from "@/lib/booking.functions";
 export const Route = createFileRoute("/auth")({
   validateSearch: (raw: Record<string, unknown>) => ({
     denied: raw.denied === 1 || raw.denied === "1" ? 1 : undefined,
+    next: typeof raw.next === "string" && raw.next.startsWith("/") && !raw.next.startsWith("//") ? raw.next : undefined,
   }),
   head: () => ({
     meta: [
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { denied } = Route.useSearch();
+  const { denied, next } = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -45,6 +46,10 @@ function AuthPage() {
       }
     } catch {
       setErr("Could not verify admin access. Try again.");
+      return;
+    }
+    if (next) {
+      window.location.href = next;
       return;
     }
     navigate({ to: "/admin" });

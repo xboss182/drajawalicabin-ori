@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://qhywiuayzaetevqkyxhr.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "rajawali-dcabin-mcp",
+      "version": "0.1.0",
+      "title": "Rajawali D'Cabin"
+    },
+    "tools": [
+      {
+        "name": "list_bookings",
+        "title": "List bookings",
+        "description": "List recent booking requests for the chalet, optionally filtered by check-in date range or status. Admin access required.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "from": {
+              "description": "Filter: check-in on or after this date (YYYY-MM-DD).",
+              "type": "string"
+            },
+            "to": {
+              "description": "Filter: check-in on or before this date (YYYY-MM-DD).",
+              "type": "string"
+            },
+            "status": {
+              "description": "Filter by status, e.g. pending_payment, confirmed, fully_paid, cancelled.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Max rows to return (default 50).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_cabins",
+        "title": "List cabins",
+        "description": "List all cabins (rooms) at Rajawali D'Cabin with their capacity and pricing.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
