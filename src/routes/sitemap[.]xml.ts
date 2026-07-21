@@ -3,14 +3,26 @@ import type {} from "@tanstack/react-start";
 
 const BASE_URL = "https://drajawalicabin.com";
 
+interface SitemapEntry {
+  path: string;
+  changefreq: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
+  priority: string;
+  lastmod: string;
+}
+
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
         const today = new Date().toISOString().slice(0, 10);
-        const entries = [
+        const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0", lastmod: today },
-          { path: "/book", changefreq: "weekly", priority: "0.8", lastmod: today },
+          { path: "/book", changefreq: "weekly", priority: "0.9", lastmod: today },
+          { path: "/gallery", changefreq: "weekly", priority: "0.8", lastmod: today },
+          { path: "/booking-guide", changefreq: "monthly", priority: "0.8", lastmod: today },
+          { path: "/find-booking", changefreq: "monthly", priority: "0.5", lastmod: today },
+          { path: "/checkout", changefreq: "monthly", priority: "0.5", lastmod: today },
+          { path: "/auth", changefreq: "yearly", priority: "0.3", lastmod: today },
         ];
 
         const urls = entries
