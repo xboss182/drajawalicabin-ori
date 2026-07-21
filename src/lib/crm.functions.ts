@@ -248,7 +248,16 @@ export const editBooking = createServerFn({ method: "POST" })
     if (data.status !== undefined) patch.status = data.status;
     if (data.check_in) patch.check_in = data.check_in;
     if (data.check_out) patch.check_out = data.check_out;
-    if (data.cabin_id) patch.cabin_id = data.cabin_id;
+    if (data.cabin_id) {
+      patch.cabin_id = data.cabin_id;
+      // Keep room_type text in sync so invoices/CRM labels reflect the new cabin.
+      const { data: cab } = await supabaseAdmin
+        .from("cabins")
+        .select("name")
+        .eq("id", data.cabin_id)
+        .maybeSingle();
+      if (cab?.name) patch.room_type = cab.name;
+    }
     if (data.num_rooms) patch.num_rooms = data.num_rooms;
     if (data.guests) patch.guests = data.guests;
     if (data.total_amount !== undefined) patch.total_amount = data.total_amount;
