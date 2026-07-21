@@ -229,7 +229,7 @@ function CrmPage() {
                   ))}
                   {rows.length === 0 && !loading && (
                     <li className="rounded border border-dashed border-border p-6 text-center text-sm text-stone">
-                      No guests yet — click "Sync from bookings" to build the directory.
+                      No guests yet — the directory will populate after the first booking.
                     </li>
                   )}
                 </ul>
@@ -301,7 +301,7 @@ function CrmPage() {
                     ))}
                     {rows.length === 0 && !loading && (
                       <tr><td colSpan={6} className="p-4 text-center text-stone">
-                        No guests yet — click "Sync from bookings" to build the directory.
+                        No guests yet — the directory will populate after the first booking.
                       </td></tr>
                     )}
                   </tbody>
