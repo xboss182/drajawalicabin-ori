@@ -51,6 +51,7 @@ function CrmPage() {
   const [err, setErr] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   async function load(overrideSearch?: string) {
     setLoading(true);
@@ -72,6 +73,22 @@ function CrmPage() {
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [sort, tag]);
 
+  // Auto-sync guest directory on mount so admins never have to click a button.
+  useEffect(() => {
+    (async () => {
+      setSyncing(true);
+      try {
+        await rebuildCrmGuests();
+        await load();
+      } catch {
+        /* silent — manual refresh still available */
+      } finally {
+        setSyncing(false);
+      }
+    })();
+    // eslint-disable-next-line
+  }, []);
+
   async function openGuestByEmail(email: string, name?: string | null) {
     const isManual = email.toLowerCase() === "manual@admin.local";
     const searchTerm = isManual ? (name ?? "") : email;
@@ -86,6 +103,7 @@ function CrmPage() {
   }
 
   async function sync() {
+    setSyncing(true);
     setStatus("Syncing guest profiles…");
     try {
       const r = await rebuildCrmGuests();
@@ -94,6 +112,8 @@ function CrmPage() {
     } catch (e: any) {
       setStatus(null);
       alert(e?.message ?? "Failed");
+    } finally {
+      setSyncing(false);
     }
     setTimeout(() => setStatus(null), 4000);
   }
@@ -109,8 +129,13 @@ function CrmPage() {
       <section className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
         <div className="flex items-center justify-between gap-3">
           <h1 className="font-display text-3xl text-forest">CRM</h1>
-          <button onClick={sync} className="rounded-full bg-forest px-4 py-1.5 text-xs uppercase tracking-widest text-coconut">
-            Sync from bookings
+          <button
+            onClick={sync}
+            disabled={syncing}
+            title="Refresh guest directory"
+            className="rounded-full border border-forest/30 px-3 py-1.5 text-[11px] uppercase tracking-widest text-forest hover:bg-forest/5 disabled:opacity-50"
+          >
+            {syncing ? "Syncing…" : "↻ Refresh"}
           </button>
         </div>
         {status && <p className="mt-2 text-sm text-forest">{status}</p>}
@@ -204,7 +229,7 @@ function CrmPage() {
                   ))}
                   {rows.length === 0 && !loading && (
                     <li className="rounded border border-dashed border-border p-6 text-center text-sm text-stone">
-                      No guests yet — click "Sync from bookings" to build the directory.
+                      No guests yet — the directory will populate after the first booking.
                     </li>
                   )}
                 </ul>
@@ -276,7 +301,7 @@ function CrmPage() {
                     ))}
                     {rows.length === 0 && !loading && (
                       <tr><td colSpan={6} className="p-4 text-center text-stone">
-                        No guests yet — click "Sync from bookings" to build the directory.
+                        No guests yet — the directory will populate after the first booking.
                       </td></tr>
                     )}
                   </tbody>
