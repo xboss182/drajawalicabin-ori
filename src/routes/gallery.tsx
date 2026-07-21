@@ -106,6 +106,19 @@ export const Route = createFileRoute("/gallery")({
       { name: "twitter:image", content: cabin01.url },
     ],
     links: [{ rel: "canonical", href: "https://drajawalicabin.com/gallery" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Rajawali D'Cabin Chalet — Gallery",
+          description:
+            "Photos and videos of Rajawali D'Cabin Chalet in Chendering, Kuala Terengganu.",
+          url: "https://drajawalicabin.com/gallery",
+        }),
+      },
+    ],
   }),
   component: GalleryPage,
 });
