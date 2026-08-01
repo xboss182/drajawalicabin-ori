@@ -266,6 +266,13 @@ function AdminPage() {
                 {syncing ? "Syncing…" : "Sync to Excel"}
               </button>
               <button
+                onClick={onDownloadBackup}
+                disabled={backingUp}
+                className="rounded-full border border-forest px-5 py-2 text-xs font-medium uppercase tracking-widest text-forest hover:bg-coconut disabled:opacity-60"
+              >
+                {backingUp ? "Preparing…" : "Download backup"}
+              </button>
+              <button
                 onClick={() => setShowAdd((v) => !v)}
                 className="rounded-full bg-forest px-5 py-2 text-xs font-medium uppercase tracking-widest text-coconut hover:bg-forest/90"
               >
