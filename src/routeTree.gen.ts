@@ -45,6 +45,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksSendBalanceRemindersRouteImport } from './routes/api/public/hooks/send-balance-reminders'
 import { Route as ApiPublicExportsBookingsDotcsvRouteImport } from './routes/api/public/exports/bookings[.]csv'
+import { Route as ApiPublicExportsBackupDotcsvRouteImport } from './routes/api/public/exports/backup[.]csv'
 import { Route as ApiPublicAvailabilityTakenDatesRouteImport } from './routes/api/public/availability/taken-dates'
 import { Route as AuthenticatedAdminInvoiceIdRouteImport } from './routes/_authenticated/admin.invoice.$id'
 
@@ -242,6 +243,12 @@ const ApiPublicExportsBookingsDotcsvRoute =
     path: '/api/public/exports/bookings.csv',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicExportsBackupDotcsvRoute =
+  ApiPublicExportsBackupDotcsvRouteImport.update({
+    id: '/api/public/exports/backup.csv',
+    path: '/api/public/exports/backup.csv',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAvailabilityTakenDatesRoute =
   ApiPublicAvailabilityTakenDatesRouteImport.update({
     id: '/api/public/availability/taken-dates',
@@ -287,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/availability/taken-dates': typeof ApiPublicAvailabilityTakenDatesRoute
+  '/api/public/exports/backup.csv': typeof ApiPublicExportsBackupDotcsvRoute
   '/api/public/exports/bookings.csv': typeof ApiPublicExportsBookingsDotcsvRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -325,6 +333,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/availability/taken-dates': typeof ApiPublicAvailabilityTakenDatesRoute
+  '/api/public/exports/backup.csv': typeof ApiPublicExportsBackupDotcsvRoute
   '/api/public/exports/bookings.csv': typeof ApiPublicExportsBookingsDotcsvRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -366,6 +375,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/public/availability/taken-dates': typeof ApiPublicAvailabilityTakenDatesRoute
+  '/api/public/exports/backup.csv': typeof ApiPublicExportsBackupDotcsvRoute
   '/api/public/exports/bookings.csv': typeof ApiPublicExportsBookingsDotcsvRoute
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/admin/invoice/$id'
     | '/api/public/availability/taken-dates'
+    | '/api/public/exports/backup.csv'
     | '/api/public/exports/bookings.csv'
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/invoice/$id'
     | '/api/public/availability/taken-dates'
+    | '/api/public/exports/backup.csv'
     | '/api/public/exports/bookings.csv'
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
@@ -485,6 +497,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/admin/invoice/$id'
     | '/api/public/availability/taken-dates'
+    | '/api/public/exports/backup.csv'
     | '/api/public/exports/bookings.csv'
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
@@ -513,6 +526,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicAvailabilityTakenDatesRoute: typeof ApiPublicAvailabilityTakenDatesRoute
+  ApiPublicExportsBackupDotcsvRoute: typeof ApiPublicExportsBackupDotcsvRoute
   ApiPublicExportsBookingsDotcsvRoute: typeof ApiPublicExportsBookingsDotcsvRoute
   ApiPublicHooksSendBalanceRemindersRoute: typeof ApiPublicHooksSendBalanceRemindersRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -775,6 +789,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicExportsBookingsDotcsvRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/exports/backup.csv': {
+      id: '/api/public/exports/backup.csv'
+      path: '/api/public/exports/backup.csv'
+      fullPath: '/api/public/exports/backup.csv'
+      preLoaderRoute: typeof ApiPublicExportsBackupDotcsvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/availability/taken-dates': {
       id: '/api/public/availability/taken-dates'
       path: '/api/public/availability/taken-dates'
@@ -867,6 +888,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicAvailabilityTakenDatesRoute: ApiPublicAvailabilityTakenDatesRoute,
+  ApiPublicExportsBackupDotcsvRoute: ApiPublicExportsBackupDotcsvRoute,
   ApiPublicExportsBookingsDotcsvRoute: ApiPublicExportsBookingsDotcsvRoute,
   ApiPublicHooksSendBalanceRemindersRoute:
     ApiPublicHooksSendBalanceRemindersRoute,

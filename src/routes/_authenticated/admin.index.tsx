@@ -16,6 +16,7 @@ import {
   updateBookingRoomPrices,
   saveLateCheckout,
   markDepositRefunded,
+  getBackupDownloadUrl,
 } from "@/lib/booking.functions";
 import { computeLateCheckout, LATE_CHECKOUT_HOURLY_FEE } from "@/lib/late-checkout";
 import { getStripeEnvironment } from "@/lib/stripe";
@@ -94,6 +95,7 @@ function AdminPage() {
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -224,6 +226,18 @@ function AdminPage() {
     }
   }
 
+  async function onDownloadBackup() {
+    setBackingUp(true);
+    try {
+      const res = await getBackupDownloadUrl();
+      window.open(res.url, "_blank");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Backup failed");
+    } finally {
+      setBackingUp(false);
+    }
+  }
+
   const filtered = (status: string) => bookings.filter((b) => b.status === status);
 
   return (
@@ -250,6 +264,13 @@ function AdminPage() {
                 className="rounded-full border border-forest px-5 py-2 text-xs font-medium uppercase tracking-widest text-forest hover:bg-coconut disabled:opacity-60"
               >
                 {syncing ? "Syncing…" : "Sync to Excel"}
+              </button>
+              <button
+                onClick={onDownloadBackup}
+                disabled={backingUp}
+                className="rounded-full border border-forest px-5 py-2 text-xs font-medium uppercase tracking-widest text-forest hover:bg-coconut disabled:opacity-60"
+              >
+                {backingUp ? "Preparing…" : "Download backup"}
               </button>
               <button
                 onClick={() => setShowAdd((v) => !v)}
