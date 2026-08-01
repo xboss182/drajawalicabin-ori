@@ -64,7 +64,7 @@ export const Route = createFileRoute("/api/public/exports/backup.csv")({
 
         const sections: string[] = [];
         for (const t of tables) {
-          const { data, error } = await supabaseAdmin.from(t.name).select(t.select);
+          const { data, error } = await db.from(t.name).select(t.select);
           if (error) {
             sections.push(`# ${t.name}\n# ERROR: ${error.message}\n`);
             continue;
