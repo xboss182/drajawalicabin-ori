@@ -44,6 +44,10 @@ export const Route = createFileRoute("/api/public/exports/backup.csv")({
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        // Cast to any so we can loop over dynamic table/column names.
+        const db = supabaseAdmin as unknown as {
+          from: (name: string) => { select: (cols: string) => Promise<{ data: unknown; error: { message: string } | null }> };
+        };
 
         const tables: Array<{ name: string; select: string }> = [
           { name: "booking_requests", select: "*" },
