@@ -229,13 +229,10 @@ function AdminPage() {
   async function onDownloadBackup() {
     setBackingUp(true);
     try {
-      const token = import.meta.env.VITE_BOOKINGS_EXPORT_TOKEN
-        ?? (await import("@/lib/booking.functions").then(() => "")) ?? "";
-      // The export token is server-only; fetch through a tiny server fn to avoid exposing it.
-      const url = await getBackupDownloadUrl();
-      window.open(url, "_blank");
-    } catch {
-      // Fallback handled by server fn below
+      const res = await getBackupDownloadUrl();
+      window.open(res.url, "_blank");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Backup failed");
     } finally {
       setBackingUp(false);
     }
