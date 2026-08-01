@@ -94,6 +94,7 @@ function AdminPage() {
   const [syncMsg, setSyncMsg] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
 
   async function refresh() {
     setLoading(true);
