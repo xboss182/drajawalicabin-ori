@@ -2428,3 +2428,16 @@ export const markDepositRefunded = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const getBackupDownloadUrl = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const token = process.env.BOOKINGS_EXPORT_TOKEN;
+    if (!token) throw new Error("Backup export token not configured");
+    return { url: `/api/public/exports/backup.csv?token=${encodeURIComponent(token)}` };
+  });
