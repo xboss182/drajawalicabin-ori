@@ -130,6 +130,30 @@ function CabinsPage() {
         </div>
         {err && <p className="mt-3 text-sm text-red-700">{err}</p>}
 
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4">
+          <span className="text-[10px] uppercase tracking-widest text-stone">Rate set</span>
+          <div className="flex overflow-hidden rounded-full border border-border">
+            {(["current", "legacy"] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => switchRateSet(s)}
+                disabled={switching}
+                className={`px-4 py-1.5 text-xs uppercase tracking-widest disabled:opacity-60 ${
+                  rateSet === s ? "bg-forest text-coconut" : "text-stone hover:bg-coconut"
+                }`}
+              >
+                {s === "current" ? "Current" : "Legacy"}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-stone">
+            {rateSet === "current"
+              ? "New bookings are priced with the current rates."
+              : "New bookings are priced with the old (legacy) rates."}{" "}
+            Existing bookings keep the price they were confirmed at.
+          </p>
+        </div>
+
         <div className="mt-6 overflow-auto rounded-xl border border-border bg-card">
           <table className="w-full text-sm">
             <thead className="bg-coconut/60 text-left text-[10px] uppercase tracking-widest text-stone">
@@ -137,9 +161,14 @@ function CabinsPage() {
                 <th className="p-2">Name</th>
                 <th className="p-2">Type</th>
                 <th className="p-2">Cap.</th>
-                <th className="p-2 text-right">Weekday</th>
-                <th className="p-2 text-right">Weekend</th>
-                <th className="p-2 text-right">Holiday</th>
+                <th className="p-2 text-right">
+                  Weekday{rateSet === "current" ? " ●" : ""}
+                </th>
+                <th className="p-2 text-right">Weekend{rateSet === "current" ? " ●" : ""}</th>
+                <th className="p-2 text-right">Holiday{rateSet === "current" ? " ●" : ""}</th>
+                <th className="p-2 text-right">Old wkday{rateSet === "legacy" ? " ●" : ""}</th>
+                <th className="p-2 text-right">Old wkend{rateSet === "legacy" ? " ●" : ""}</th>
+                <th className="p-2 text-right">Old hol.{rateSet === "legacy" ? " ●" : ""}</th>
                 <th className="p-2">Order</th>
                 <th className="p-2">Status</th>
                 <th className="p-2"></th>
@@ -151,9 +180,12 @@ function CabinsPage() {
                   <td className="p-2">{c.name}</td>
                   <td className="p-2 text-xs">{c.cabin_type}</td>
                   <td className="p-2">{c.capacity}</td>
-                  <td className="p-2 text-right">RM {Number(c.weekday_rate).toFixed(0)}</td>
-                  <td className="p-2 text-right">RM {Number(c.weekend_rate).toFixed(0)}</td>
-                  <td className="p-2 text-right">RM {Number(c.school_holiday_rate).toFixed(0)}</td>
+                  <td className={`p-2 text-right ${rateSet === "current" ? "font-semibold text-forest" : "text-stone"}`}>RM {Number(c.weekday_rate).toFixed(0)}</td>
+                  <td className={`p-2 text-right ${rateSet === "current" ? "font-semibold text-forest" : "text-stone"}`}>RM {Number(c.weekend_rate).toFixed(0)}</td>
+                  <td className={`p-2 text-right ${rateSet === "current" ? "font-semibold text-forest" : "text-stone"}`}>RM {Number(c.school_holiday_rate).toFixed(0)}</td>
+                  <td className={`p-2 text-right ${rateSet === "legacy" ? "font-semibold text-forest" : "text-stone"}`}>RM {Number(c.legacy_weekday_rate ?? c.weekday_rate).toFixed(0)}</td>
+                  <td className={`p-2 text-right ${rateSet === "legacy" ? "font-semibold text-forest" : "text-stone"}`}>RM {Number(c.legacy_weekend_rate ?? c.weekend_rate).toFixed(0)}</td>
+                  <td className={`p-2 text-right ${rateSet === "legacy" ? "font-semibold text-forest" : "text-stone"}`}>RM {Number(c.legacy_school_holiday_rate ?? c.school_holiday_rate).toFixed(0)}</td>
                   <td className="p-2">{c.display_order}</td>
                   <td className="p-2">
                     <span className={c.is_active ? "text-green-700" : "text-stone"}>
@@ -185,6 +217,9 @@ function CabinsPage() {
               <Field label="Weekday rate (RM)" type="number" value={String(editing.weekday_rate)} onChange={(v) => setEditing({ ...editing, weekday_rate: Number(v) || 0 })} />
               <Field label="Weekend rate (RM)" type="number" value={String(editing.weekend_rate)} onChange={(v) => setEditing({ ...editing, weekend_rate: Number(v) || 0 })} />
               <Field label="School holiday rate (RM)" type="number" value={String(editing.school_holiday_rate)} onChange={(v) => setEditing({ ...editing, school_holiday_rate: Number(v) || 0 })} />
+              <Field label="Old weekday rate (RM)" type="number" value={String(editing.legacy_weekday_rate ?? 0)} onChange={(v) => setEditing({ ...editing, legacy_weekday_rate: Number(v) || 0 })} />
+              <Field label="Old weekend rate (RM)" type="number" value={String(editing.legacy_weekend_rate ?? 0)} onChange={(v) => setEditing({ ...editing, legacy_weekend_rate: Number(v) || 0 })} />
+              <Field label="Old school holiday rate (RM)" type="number" value={String(editing.legacy_school_holiday_rate ?? 0)} onChange={(v) => setEditing({ ...editing, legacy_school_holiday_rate: Number(v) || 0 })} />
               <Field label="Display order" type="number" value={String(editing.display_order)} onChange={(v) => setEditing({ ...editing, display_order: Number(v) || 0 })} />
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} />
