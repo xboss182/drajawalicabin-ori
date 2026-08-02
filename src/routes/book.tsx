@@ -179,10 +179,32 @@ function BookPage() {
     (async () => {
       const { data } = await supabase
         .from("cabins")
-        .select("id, name, cabin_type, capacity, weekday_rate, weekend_rate, school_holiday_rate")
+        .select(
+          "id, name, cabin_type, capacity, weekday_rate, weekend_rate, school_holiday_rate, legacy_weekday_rate, legacy_weekend_rate, legacy_school_holiday_rate",
+        )
         .eq("is_active", true)
         .order("display_order");
-      const list = (data ?? []) as Cabin[];
+      let rateSet: "current" | "legacy" = "current";
+      try {
+        const res = await fetch("/api/public/rates/active-set");
+        if (res.ok) rateSet = (await res.json()).rateSet ?? "current";
+      } catch {
+        // keep current
+      }
+      const list = ((data ?? []) as any[]).map((c) => ({
+        ...c,
+        weekday_rate: Number(
+          rateSet === "legacy" ? (c.legacy_weekday_rate ?? c.weekday_rate) : c.weekday_rate,
+        ),
+        weekend_rate: Number(
+          rateSet === "legacy" ? (c.legacy_weekend_rate ?? c.weekend_rate) : c.weekend_rate,
+        ),
+        school_holiday_rate: Number(
+          rateSet === "legacy"
+            ? (c.legacy_school_holiday_rate ?? c.school_holiday_rate)
+            : c.school_holiday_rate,
+        ),
+      })) as Cabin[];
       setCabins(list);
       const match = list.find((c) => c.name === search.room || c.cabin_type === search.room);
       const startType = match?.cabin_type ?? list[0]?.cabin_type ?? "";

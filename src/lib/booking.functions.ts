@@ -1702,6 +1702,9 @@ export const getAppSettings = createServerFn({ method: "GET" })
     return {
       deposit_amount_default: Number(map.deposit_amount_default ?? 50),
       balance_due_days_before: Number(map.balance_due_days_before ?? 7),
+      active_rate_set: (map.active_rate_set === "legacy" ? "legacy" : "current") as
+        | "current"
+        | "legacy",
     };
   });
 
@@ -1754,6 +1757,9 @@ const cabinSchema = z.object({
   weekday_rate: z.number().min(0).max(100000),
   weekend_rate: z.number().min(0).max(100000),
   school_holiday_rate: z.number().min(0).max(100000),
+  legacy_weekday_rate: z.number().min(0).max(100000),
+  legacy_weekend_rate: z.number().min(0).max(100000),
+  legacy_school_holiday_rate: z.number().min(0).max(100000),
   description: z.string().max(2000).optional().nullable(),
   display_order: z.number().int().min(0).max(1000),
   is_active: z.boolean(),
@@ -1790,6 +1796,25 @@ export const setCabinActive = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+export const setActiveRateSet = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ rateSet: z.enum(["current", "legacy"]) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("app_settings")
+      .upsert({
+        key: "active_rate_set",
+        value: data.rateSet as any,
+        updated_at: new Date().toISOString(),
+      });
+    if (error) throw new Error(error.message);
+    return { ok: true, rateSet: data.rateSet };
   });
 
 // ============== ADMIN: school holidays ==============

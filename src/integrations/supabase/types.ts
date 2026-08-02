@@ -254,6 +254,9 @@ export type Database = {
           display_order: number
           id: string
           is_active: boolean
+          legacy_school_holiday_rate: number | null
+          legacy_weekday_rate: number | null
+          legacy_weekend_rate: number | null
           name: string
           school_holiday_rate: number
           slug: string
@@ -268,6 +271,9 @@ export type Database = {
           display_order?: number
           id?: string
           is_active?: boolean
+          legacy_school_holiday_rate?: number | null
+          legacy_weekday_rate?: number | null
+          legacy_weekend_rate?: number | null
           name: string
           school_holiday_rate: number
           slug: string
@@ -282,6 +288,9 @@ export type Database = {
           display_order?: number
           id?: string
           is_active?: boolean
+          legacy_school_holiday_rate?: number | null
+          legacy_weekday_rate?: number | null
+          legacy_weekend_rate?: number | null
           name?: string
           school_holiday_rate?: number
           slug?: string
