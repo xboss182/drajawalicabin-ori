@@ -1702,6 +1702,9 @@ export const getAppSettings = createServerFn({ method: "GET" })
     return {
       deposit_amount_default: Number(map.deposit_amount_default ?? 50),
       balance_due_days_before: Number(map.balance_due_days_before ?? 7),
+      active_rate_set: (map.active_rate_set === "legacy" ? "legacy" : "current") as
+        | "current"
+        | "legacy",
     };
   });
 
