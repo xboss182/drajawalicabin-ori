@@ -1,6 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { listCabinsAdmin, upsertCabin, setCabinActive } from "@/lib/booking.functions";
+import {
+  listCabinsAdmin,
+  upsertCabin,
+  setCabinActive,
+  getAppSettings,
+  setActiveRateSet,
+} from "@/lib/booking.functions";
 import { AdminTabs } from "./admin";
 
 export const Route = createFileRoute("/_authenticated/admin/cabins")({
@@ -17,6 +23,9 @@ type Cabin = {
   weekday_rate: number;
   weekend_rate: number;
   school_holiday_rate: number;
+  legacy_weekday_rate: number | null;
+  legacy_weekend_rate: number | null;
+  legacy_school_holiday_rate: number | null;
   description: string | null;
   display_order: number;
   is_active: boolean;
@@ -30,6 +39,9 @@ const empty: Cabin = {
   weekday_rate: 0,
   weekend_rate: 0,
   school_holiday_rate: 0,
+  legacy_weekday_rate: 0,
+  legacy_weekend_rate: 0,
+  legacy_school_holiday_rate: 0,
   description: "",
   display_order: 0,
   is_active: true,
@@ -39,11 +51,14 @@ function CabinsPage() {
   const [cabins, setCabins] = useState<Cabin[]>([]);
   const [editing, setEditing] = useState<Cabin | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [rateSet, setRateSet] = useState<"current" | "legacy">("current");
+  const [switching, setSwitching] = useState(false);
 
   async function load() {
     try {
-      const r = await listCabinsAdmin();
+      const [r, s] = await Promise.all([listCabinsAdmin(), getAppSettings()]);
       setCabins(r.cabins as Cabin[]);
+      setRateSet(s.active_rate_set);
     } catch (e: any) {
       setErr(e?.message ?? "Failed");
     }
@@ -51,6 +66,19 @@ function CabinsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  async function switchRateSet(next: "current" | "legacy") {
+    if (next === rateSet || switching) return;
+    setSwitching(true);
+    try {
+      await setActiveRateSet({ data: { rateSet: next } });
+      setRateSet(next);
+    } catch (e: any) {
+      alert(e?.message ?? "Failed");
+    } finally {
+      setSwitching(false);
+    }
+  }
 
   async function save() {
     if (!editing) return;
@@ -63,6 +91,9 @@ function CabinsPage() {
           weekday_rate: Number(editing.weekday_rate),
           weekend_rate: Number(editing.weekend_rate),
           school_holiday_rate: Number(editing.school_holiday_rate),
+          legacy_weekday_rate: Number(editing.legacy_weekday_rate ?? 0),
+          legacy_weekend_rate: Number(editing.legacy_weekend_rate ?? 0),
+          legacy_school_holiday_rate: Number(editing.legacy_school_holiday_rate ?? 0),
           display_order: Number(editing.display_order),
         },
       });
