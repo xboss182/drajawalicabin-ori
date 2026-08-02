@@ -1798,6 +1798,25 @@ export const setCabinActive = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const setActiveRateSet = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ rateSet: z.enum(["current", "legacy"]) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("app_settings")
+      .upsert({
+        key: "active_rate_set",
+        value: data.rateSet as any,
+        updated_at: new Date().toISOString(),
+      });
+    if (error) throw new Error(error.message);
+    return { ok: true, rateSet: data.rateSet };
+  });
+
 // ============== ADMIN: school holidays ==============
 
 export const listHolidays = createServerFn({ method: "GET" })
