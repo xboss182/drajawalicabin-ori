@@ -1065,10 +1065,10 @@ export const isAdminRecipient = createServerFn({ method: "GET" })
     return { allowed: Boolean(data) };
   });
 
-// Customer lookup: view manage-booking by email + reference without an email link.
+// Customer lookup: view manage-booking by email (reference optional).
 const lookupSchema = z.object({
   email: z.string().trim().email().max(255),
-  reference: z.string().trim().min(3).max(40),
+  reference: z.string().trim().max(40).optional(),
 });
 export const getBookingByEmailAndReference = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => lookupSchema.parse(d))
@@ -1088,14 +1088,16 @@ export const getBookingByEmailAndReference = createServerFn({ method: "POST" })
     }
     await supabaseAdmin.from("manage_link_requests").insert({ ip } as never);
 
-    const ref = data.reference.trim().toUpperCase();
+    const ref = data.reference?.trim().toUpperCase();
     const email = data.email.trim().toLowerCase();
-    const { data: rows } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("booking_requests")
       .select("id, booking_group_id, email, payment_reference, guest_token, status, created_at")
-      .ilike("payment_reference", ref)
-      .order("created_at", { ascending: true })
-      .limit(20);
+      .ilike("email", email)
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (ref) query = query.ilike("payment_reference", ref);
+    const { data: rows } = await query;
     const seen = new Set<string>();
     const leads = (rows ?? []).filter((r) => {
       const gid = (r.booking_group_id as string) ?? r.id;
@@ -1103,10 +1105,8 @@ export const getBookingByEmailAndReference = createServerFn({ method: "POST" })
       seen.add(gid);
       return true;
     });
-    const match = leads.find(
-      (r) => (r.email ?? "").trim().toLowerCase() === email && r.status !== "cancelled",
-    );
-    if (!match) throw new Error("No booking matches that email and reference.");
+    const match = leads.find((r) => r.status !== "cancelled");
+    if (!match) throw new Error("No booking found for that email.");
     return { bookingId: match.id as string, guestToken: match.guest_token as string };
   });
 
