@@ -40,7 +40,6 @@ function ManagePage() {
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
   const [lookupEmail, setLookupEmail] = useState("");
-  const [lookupRef, setLookupRef] = useState("");
   const [lookingUp, setLookingUp] = useState(false);
 
   async function load() {
@@ -64,7 +63,7 @@ function ManagePage() {
     setLookingUp(true);
     try {
       const { bookingId, guestToken } = await getBookingByEmailAndReference({
-        data: { email: lookupEmail.trim(), reference: lookupRef.trim() },
+        data: { email: lookupEmail.trim() },
       });
       navigate({ to: "/manage-booking", search: { id: bookingId, token: guestToken } });
     } catch (e: unknown) {
@@ -113,7 +112,7 @@ function ManagePage() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Manage booking</p>
             <h1 className="mt-2 font-display text-4xl text-forest">View your booking</h1>
             <p className="mt-3 text-foreground/75">
-              Enter the email you booked with and your booking reference (e.g. RJW-1234).
+              Enter the email you booked with — we'll open your latest booking.
             </p>
             <form onSubmit={lookup} className="mt-8 space-y-5 max-w-md">
               <label className="block">
@@ -126,18 +125,6 @@ function ManagePage() {
                   className="mt-2 w-full rounded-md border border-border bg-background px-4 py-3 text-sm focus:border-forest focus:outline-none"
                   placeholder="you@example.com"
                   autoComplete="email"
-                />
-              </label>
-              <label className="block">
-                <span className="text-[11px] uppercase tracking-[0.25em] text-stone">Booking reference</span>
-                <input
-                  type="text"
-                  required
-                  value={lookupRef}
-                  onChange={(e) => setLookupRef(e.target.value.toUpperCase())}
-                  className="mt-2 w-full rounded-md border border-border bg-background px-4 py-3 font-mono text-sm focus:border-forest focus:outline-none"
-                  placeholder="RJW-1234"
-                  maxLength={40}
                 />
               </label>
               {err && (
