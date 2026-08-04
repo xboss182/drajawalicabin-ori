@@ -23,6 +23,7 @@ export function AdminTabs({ current }: { current: string }) {
     { id: "stats", label: "Stats", to: "/admin/stats" },
     { id: "discounts", label: "Discounts", to: "/admin/discounts" },
     { id: "promo", label: "Promo", to: "/admin/promo" },
+    { id: "store", label: "Store", to: "/admin/store" },
     { id: "cabins", label: "Cabins", to: "/admin/cabins" },
     { id: "holidays", label: "Holidays", to: "/admin/holidays" },
     { id: "members", label: "Members", to: "/admin/members" },
