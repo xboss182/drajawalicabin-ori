@@ -710,6 +710,51 @@ export type Database = {
         }
         Relationships: []
       }
+      store_items: {
+        Row: {
+          created_at: string
+          description_bm: string | null
+          description_en: string | null
+          display_order: number
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name_bm: string
+          name_en: string
+          price: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description_bm?: string | null
+          description_en?: string | null
+          display_order?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name_bm: string
+          name_en: string
+          price?: number
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description_bm?: string | null
+          description_en?: string | null
+          display_order?: number
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name_bm?: string
+          name_en?: string
+          price?: number
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
