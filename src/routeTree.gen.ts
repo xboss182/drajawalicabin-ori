@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WhatsappStoreRouteImport } from './routes/whatsapp-store'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as McpRouteImport } from './routes/mcp'
@@ -51,6 +52,11 @@ import { Route as ApiPublicExportsBackupDotcsvRouteImport } from './routes/api/p
 import { Route as ApiPublicAvailabilityTakenDatesRouteImport } from './routes/api/public/availability/taken-dates'
 import { Route as AuthenticatedAdminInvoiceIdRouteImport } from './routes/_authenticated/admin.invoice.$id'
 
+const WhatsappStoreRoute = WhatsappStoreRouteImport.update({
+  id: '/whatsapp-store',
+  path: '/whatsapp-store',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
@@ -286,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/whatsapp-store': typeof WhatsappStoreRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -328,6 +335,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/whatsapp-store': typeof WhatsappStoreRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -371,6 +379,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
+  '/whatsapp-store': typeof WhatsappStoreRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -415,6 +424,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/sitemap.xml'
     | '/unsubscribe'
+    | '/whatsapp-store'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/sitemap.xml'
     | '/unsubscribe'
+    | '/whatsapp-store'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/checkout/return'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/sitemap.xml'
     | '/unsubscribe'
+    | '/whatsapp-store'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
@@ -543,6 +555,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
+  WhatsappStoreRoute: typeof WhatsappStoreRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
@@ -563,6 +576,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/whatsapp-store': {
+      id: '/whatsapp-store'
+      path: '/whatsapp-store'
+      fullPath: '/whatsapp-store'
+      preLoaderRoute: typeof WhatsappStoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/unsubscribe': {
       id: '/unsubscribe'
       path: '/unsubscribe'
@@ -920,6 +940,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   UnsubscribeRoute: UnsubscribeRoute,
+  WhatsappStoreRoute: WhatsappStoreRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
