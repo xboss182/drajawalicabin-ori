@@ -105,6 +105,7 @@ function WhatsAppStorePage() {
   const [cabins, setCabins] = useState<Cabin[]>([]);
   const [items, setItems] = useState<StoreItem[]>([]);
   const [phone, setPhone] = useState(FALLBACK_PHONE);
+  const [storeOpen, setStoreOpen] = useState(true);
   const [checkin, setCheckin] = useState(todayStr);
   const [checkout, setCheckout] = useState(tomorrowStr);
   const [adults, setAdults] = useState(2);
@@ -165,6 +166,7 @@ function WhatsAppStorePage() {
         if (res.ok) {
           const cfg = await res.json();
           if (typeof cfg.phone === "string") setPhone(cfg.phone);
+          if (typeof cfg.enabled === "boolean") setStoreOpen(cfg.enabled);
         }
       } catch {
         /* fallback */
@@ -339,6 +341,14 @@ function WhatsAppStorePage() {
             ? "Pilih tarikh, tambah kabin dan barangan tambahan ke troli, kemudian hantar satu mesej kemas kepada kami. Tiada bayaran dalam talian — tarikh hanya disahkan selepas kami membalas di WhatsApp."
             : "Pick your dates, add cabins and add-ons to the cart, then send us one tidy message. No online payment — nothing is reserved until we confirm in the chat."}
         </p>
+
+        {!storeOpen && (
+          <div className="mt-6 rounded-xl border border-border bg-coconut px-4 py-3 text-sm text-forest">
+            {bm
+              ? "Kedai WhatsApp ditutup buat sementara waktu. Sila tempah dalam talian atau hubungi kami terus."
+              : "The WhatsApp store is temporarily closed. Please book online or message us directly."}
+          </div>
+        )}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="flex flex-col gap-4">
