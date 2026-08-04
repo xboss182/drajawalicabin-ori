@@ -191,6 +191,7 @@ function Nav() {
           <a href="#about" className="hover:text-coconut">{t.nav.about}</a>
           <a href="#nearby" className="hover:text-coconut">{t.nav.nearby}</a>
           <Link to="/gallery" className="hover:text-coconut">Gallery</Link>
+          <Link to="/whatsapp-store" className="hover:text-coconut">Store</Link>
           <Link to="/booking-guide" className="hover:text-coconut">Guide</Link>
           <a href="#book" className="hover:text-coconut">{t.nav.book}</a>
           <Link
@@ -764,6 +765,21 @@ function WhyStay() {
                 View gallery →
               </span>
             </span>
+          </Link>
+          <Link
+            to="/whatsapp-store"
+            className="group rounded-2xl border border-forest/20 bg-coconut px-5 py-4 transition hover:bg-forest hover:text-coconut focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+            aria-label="Open the WhatsApp store"
+          >
+            <p className="text-[10px] uppercase tracking-[0.25em] text-forest group-hover:text-coconut/80">
+              WhatsApp store
+            </p>
+            <p className="mt-1 font-display text-lg text-forest group-hover:text-coconut">
+              Build your stay, order in one message →
+            </p>
+            <p className="mt-1 text-xs text-stone group-hover:text-coconut/80">
+              Cabins, BBQ set and add-ons — sent straight to our WhatsApp.
+            </p>
           </Link>
         </aside>
       </div>

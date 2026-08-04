@@ -8,6 +8,7 @@ Rajawali D'Cabin Chalet offers eight private cabins along the river in Chenderin
 
 - [Home](/): Overview of the chalet, amenities, nearby attractions, and FAQs.
 - [Book a Cabin](/book): Check availability and reserve a private cabin online.
+- [WhatsApp Store](/whatsapp-store): Pick dates, add cabins and add-ons to a cart, and send the order to the owner on WhatsApp.
 
 ## Optional
 
