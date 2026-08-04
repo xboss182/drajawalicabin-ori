@@ -42,6 +42,7 @@ import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiPublicStoreConfigRouteImport } from './routes/api/public/store/config'
 import { Route as ApiPublicRatesActiveSetRouteImport } from './routes/api/public/rates/active-set'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksSendBalanceRemindersRouteImport } from './routes/api/public/hooks/send-balance-reminders'
@@ -226,6 +227,11 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicStoreConfigRoute = ApiPublicStoreConfigRouteImport.update({
+  id: '/api/public/store/config',
+  path: '/api/public/store/config',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRatesActiveSetRoute = ApiPublicRatesActiveSetRouteImport.update({
   id: '/api/public/rates/active-set',
   path: '/api/public/rates/active-set',
@@ -305,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/rates/active-set': typeof ApiPublicRatesActiveSetRoute
+  '/api/public/store/config': typeof ApiPublicStoreConfigRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -345,6 +352,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/rates/active-set': typeof ApiPublicRatesActiveSetRoute
+  '/api/public/store/config': typeof ApiPublicStoreConfigRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -388,6 +396,7 @@ export interface FileRoutesById {
   '/api/public/hooks/send-balance-reminders': typeof ApiPublicHooksSendBalanceRemindersRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/rates/active-set': typeof ApiPublicRatesActiveSetRoute
+  '/api/public/store/config': typeof ApiPublicStoreConfigRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
@@ -431,6 +440,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
     | '/api/public/rates/active-set'
+    | '/api/public/store/config'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
     | '/api/public/rates/active-set'
+    | '/api/public/store/config'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -513,6 +524,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/send-balance-reminders'
     | '/api/public/payments/webhook'
     | '/api/public/rates/active-set'
+    | '/api/public/store/config'
     | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
@@ -543,6 +555,7 @@ export interface RootRouteChildren {
   ApiPublicHooksSendBalanceRemindersRoute: typeof ApiPublicHooksSendBalanceRemindersRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicRatesActiveSetRoute: typeof ApiPublicRatesActiveSetRoute
+  ApiPublicStoreConfigRoute: typeof ApiPublicStoreConfigRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -781,6 +794,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/store/config': {
+      id: '/api/public/store/config'
+      path: '/api/public/store/config'
+      fullPath: '/api/public/store/config'
+      preLoaderRoute: typeof ApiPublicStoreConfigRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/rates/active-set': {
       id: '/api/public/rates/active-set'
       path: '/api/public/rates/active-set'
@@ -914,6 +934,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicHooksSendBalanceRemindersRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicRatesActiveSetRoute: ApiPublicRatesActiveSetRoute,
+  ApiPublicStoreConfigRoute: ApiPublicStoreConfigRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
