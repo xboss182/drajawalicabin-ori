@@ -29,6 +29,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as AuthenticatedAdminStoreRouteImport } from './routes/_authenticated/admin.store'
 import { Route as AuthenticatedAdminStatsRouteImport } from './routes/_authenticated/admin.stats'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminPromoRouteImport } from './routes/_authenticated/admin.promo'
@@ -152,6 +153,11 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAdminStoreRoute = AuthenticatedAdminStoreRouteImport.update({
+  id: '/store',
+  path: '/store',
+  getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const AuthenticatedAdminStatsRoute = AuthenticatedAdminStatsRouteImport.update({
   id: '/stats',
@@ -309,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/admin/promo': typeof AuthenticatedAdminPromoRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/admin/store': typeof AuthenticatedAdminStoreRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
@@ -351,6 +358,7 @@ export interface FileRoutesByTo {
   '/admin/promo': typeof AuthenticatedAdminPromoRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/admin/store': typeof AuthenticatedAdminStoreRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
@@ -396,6 +404,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/promo': typeof AuthenticatedAdminPromoRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/stats': typeof AuthenticatedAdminStatsRoute
+  '/_authenticated/admin/store': typeof AuthenticatedAdminStoreRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
@@ -441,6 +450,7 @@ export interface FileRouteTypes {
     | '/admin/promo'
     | '/admin/settings'
     | '/admin/stats'
+    | '/admin/store'
     | '/lovable/email/suppression'
     | '/admin/'
     | '/admin/invoice/$id'
@@ -483,6 +493,7 @@ export interface FileRouteTypes {
     | '/admin/promo'
     | '/admin/settings'
     | '/admin/stats'
+    | '/admin/store'
     | '/lovable/email/suppression'
     | '/admin'
     | '/admin/invoice/$id'
@@ -527,6 +538,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/promo'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/stats'
+    | '/_authenticated/admin/store'
     | '/lovable/email/suppression'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/invoice/$id'
@@ -716,6 +728,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/store': {
+      id: '/_authenticated/admin/store'
+      path: '/store'
+      fullPath: '/admin/store'
+      preLoaderRoute: typeof AuthenticatedAdminStoreRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/stats': {
       id: '/_authenticated/admin/stats'
       path: '/stats'
@@ -883,6 +902,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminPromoRoute: typeof AuthenticatedAdminPromoRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStatsRoute: typeof AuthenticatedAdminStatsRoute
+  AuthenticatedAdminStoreRoute: typeof AuthenticatedAdminStoreRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminInvoiceIdRoute: typeof AuthenticatedAdminInvoiceIdRoute
 }
@@ -897,6 +917,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminPromoRoute: AuthenticatedAdminPromoRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminStatsRoute: AuthenticatedAdminStatsRoute,
+  AuthenticatedAdminStoreRoute: AuthenticatedAdminStoreRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminInvoiceIdRoute: AuthenticatedAdminInvoiceIdRoute,
 }
