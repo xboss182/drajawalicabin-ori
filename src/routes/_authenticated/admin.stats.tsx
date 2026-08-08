@@ -84,8 +84,6 @@ function StatsPage() {
                     <th className="p-2 text-right">Adults</th>
                     <th className="p-2 text-right">Children</th>
                     <th className="p-2 text-right">Revenue</th>
-                    <th className="p-2 text-right">Manual</th>
-                    <th className="p-2 text-right">Online</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -97,12 +95,10 @@ function StatsPage() {
                       <td className="p-2 text-right">{r.adults}</td>
                       <td className="p-2 text-right">{r.kids}</td>
                       <td className="p-2 text-right">RM {r.revenue.toFixed(2)}</td>
-                      <td className="p-2 text-right">RM {(r.revenueManual ?? 0).toFixed(2)}</td>
-                      <td className="p-2 text-right">RM {(r.revenueOnline ?? 0).toFixed(2)}</td>
                     </tr>
                   ))}
                   {stats.byType.length === 0 && (
-                    <tr><td colSpan={8} className="p-3 text-center text-stone">No data.</td></tr>
+                    <tr><td colSpan={6} className="p-3 text-center text-stone">No data.</td></tr>
                   )}
                 </tbody>
               </table>
