@@ -19,6 +19,7 @@ import {
   getBackupDownloadUrl,
 } from "@/lib/booking.functions";
 import { computeLateCheckout, LATE_CHECKOUT_HOURLY_FEE } from "@/lib/late-checkout";
+import { editBooking } from "@/lib/crm.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { syncBookingsToOneDrive } from "@/lib/excel-sync.functions";
 import { Calendar } from "@/components/ui/calendar";
