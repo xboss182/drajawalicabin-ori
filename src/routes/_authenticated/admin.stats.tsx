@@ -66,6 +66,8 @@ function StatsPage() {
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
               <Stat label="Rooms booked" value={String(stats.rooms)} />
               <Stat label="Confirmed revenue" value={`RM ${stats.confirmedRevenue.toFixed(2)}`} />
+              <Stat label="Manual revenue" value={`RM ${(stats.manualRevenue ?? 0).toFixed(2)}`} />
+              <Stat label="Online revenue" value={`RM ${(stats.onlineRevenue ?? 0).toFixed(2)}`} />
               <Stat label="Deposit revenue" value={`RM ${stats.depositRevenue.toFixed(2)}`} />
               <Stat label="Nights sold" value={String(stats.nightsSold)} />
               <Stat
@@ -84,6 +86,8 @@ function StatsPage() {
                     <th className="p-2 text-right">Adults</th>
                     <th className="p-2 text-right">Children</th>
                     <th className="p-2 text-right">Revenue</th>
+                    <th className="p-2 text-right">Manual</th>
+                    <th className="p-2 text-right">Online</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -95,10 +99,12 @@ function StatsPage() {
                       <td className="p-2 text-right">{r.adults}</td>
                       <td className="p-2 text-right">{r.kids}</td>
                       <td className="p-2 text-right">RM {r.revenue.toFixed(2)}</td>
+                      <td className="p-2 text-right">RM {(r.revenueManual ?? 0).toFixed(2)}</td>
+                      <td className="p-2 text-right">RM {(r.revenueOnline ?? 0).toFixed(2)}</td>
                     </tr>
                   ))}
                   {stats.byType.length === 0 && (
-                    <tr><td colSpan={6} className="p-3 text-center text-stone">No data.</td></tr>
+                    <tr><td colSpan={8} className="p-3 text-center text-stone">No data.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -118,6 +124,8 @@ function StatsPage() {
                     <th className="p-2 text-right">Children</th>
                     <th className="p-2 text-right">Occupancy</th>
                     <th className="p-2 text-right">Revenue</th>
+                    <th className="p-2 text-right">Manual</th>
+                    <th className="p-2 text-right">Online</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -135,6 +143,8 @@ function StatsPage() {
                           <td className="p-2 text-right">{r.kids}</td>
                           <td className="p-2 text-right">{r.roomNights ?? r.nights} / {r.capacity}</td>
                           <td className="p-2 text-right">RM {Number(r.revenue).toFixed(2)}</td>
+                          <td className="p-2 text-right">RM {Number(r.revenueManual ?? 0).toFixed(2)}</td>
+                          <td className="p-2 text-right">RM {Number(r.revenueOnline ?? 0).toFixed(2)}</td>
                         </tr>
                       );
                     })}
@@ -142,7 +152,7 @@ function StatsPage() {
                     ((stats as any).byMonth ?? []).filter(
                       (r: any) => Number(r.reservations) > 0 || Number(r.nights) > 0,
                     ).length === 0) && (
-                    <tr><td colSpan={7} className="p-3 text-center text-stone">No data.</td></tr>
+                    <tr><td colSpan={9} className="p-3 text-center text-stone">No data.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -160,6 +170,8 @@ function StatsPage() {
                     <th className="p-2 text-right">Children</th>
                     <th className="p-2 text-right">Occupancy</th>
                     <th className="p-2 text-right">Revenue</th>
+                    <th className="p-2 text-right">Manual</th>
+                    <th className="p-2 text-right">Online</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -174,13 +186,15 @@ function StatsPage() {
                       <td className="p-2 text-right">{r.kids}</td>
                       <td className="p-2 text-right">{(r as any).roomNights ?? r.nights} / {r.capacity}</td>
                       <td className="p-2 text-right">RM {Number(r.revenue).toFixed(2)}</td>
+                      <td className="p-2 text-right">RM {Number((r as any).revenueManual ?? 0).toFixed(2)}</td>
+                      <td className="p-2 text-right">RM {Number((r as any).revenueOnline ?? 0).toFixed(2)}</td>
                     </tr>
                   ))}
                   {(!stats.byYear ||
                     (stats.byYear ?? []).filter(
                       (r: any) => Number(r.reservations) > 0 || Number(r.nights) > 0,
                     ).length === 0) && (
-                    <tr><td colSpan={7} className="p-3 text-center text-stone">No data.</td></tr>
+                    <tr><td colSpan={9} className="p-3 text-center text-stone">No data.</td></tr>
                   )}
                 </tbody>
               </table>

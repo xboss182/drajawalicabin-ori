@@ -1989,7 +1989,7 @@ export const getBookingStats = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("booking_requests")
-      .select("booking_group_id, status, total_amount, deposit_amount, nights, room_type, cabin_id, created_at, check_in, check_out, guests, notes")
+      .select("booking_group_id, status, total_amount, deposit_amount, nights, room_type, cabin_id, created_at, check_in, check_out, guests, notes, email")
       .gte("check_in", data.from)
       .lte("check_in", data.to);
     if (error) throw new Error(error.message);
@@ -1998,18 +1998,25 @@ export const getBookingStats = createServerFn({ method: "POST" })
     // the full history/future regardless of the top-of-page date filter.
     const { data: allRows } = await supabaseAdmin
       .from("booking_requests")
-      .select("booking_group_id, id, status, total_amount, nights, check_in, guests, notes");
+      .select("booking_group_id, id, status, total_amount, nights, check_in, guests, notes, email");
+
+    // Manual bookings are created from the admin dashboard with a placeholder
+    // email; everything else came through the public website.
+    const isManualEmail = (e: unknown) =>
+      /^manual(\+[^@]*)?@admin\.local$/i.test(String(e ?? "").trim());
 
     const seenGroups = new Set<string>();
     let reservations = 0;
     let rooms = 0;
     let confirmedRevenue = 0;
     let depositRevenue = 0;
+    let manualRevenue = 0;
+    let onlineRevenue = 0;
     let nightsSold = 0;
     let roomNightsSold = 0;
     let adults = 0;
     let kids = 0;
-    const byType = new Map<string, { reservations: number; nights: number; revenue: number; adults: number; kids: number }>();
+    const byType = new Map<string, { reservations: number; nights: number; revenue: number; revenueManual: number; revenueOnline: number; adults: number; kids: number }>();
 
     const { data: cabins } = await supabaseAdmin.from("cabins").select("id, cabin_type, is_active");
     const typeByCabin = new Map<string, string>();
@@ -2038,11 +2045,11 @@ export const getBookingStats = createServerFn({ method: "POST" })
     }
     const byYear = new Map<
       string,
-      { reservations: number; nights: number; roomNights: number; revenue: number; adults: number; kids: number; capacity: number; occupancy: number }
+      { reservations: number; nights: number; roomNights: number; revenue: number; revenueManual: number; revenueOnline: number; adults: number; kids: number; capacity: number; occupancy: number }
     >();
     for (const key of yearList) {
       const yy = Number(key);
-      byYear.set(key, { reservations: 0, nights: 0, roomNights: 0, revenue: 0, adults: 0, kids: 0, capacity: activeCabins * daysInYear(yy), occupancy: 0 });
+      byYear.set(key, { reservations: 0, nights: 0, roomNights: 0, revenue: 0, revenueManual: 0, revenueOnline: 0, adults: 0, kids: 0, capacity: activeCabins * daysInYear(yy), occupancy: 0 });
     }
 
     function daysInMonth(year: number, month: number) {
@@ -2050,13 +2057,13 @@ export const getBookingStats = createServerFn({ method: "POST" })
     }
     const byMonth = new Map<
       string,
-      { reservations: number; nights: number; roomNights: number; revenue: number; adults: number; kids: number; capacity: number; occupancy: number }
+      { reservations: number; nights: number; roomNights: number; revenue: number; revenueManual: number; revenueOnline: number; adults: number; kids: number; capacity: number; occupancy: number }
     >();
     function ensureMonth(key: string) {
       let slot = byMonth.get(key);
       if (!slot) {
         const [yy, mm] = key.split("-").map(Number);
-        slot = { reservations: 0, nights: 0, roomNights: 0, revenue: 0, adults: 0, kids: 0, capacity: activeCabins * daysInMonth(yy, mm), occupancy: 0 };
+        slot = { reservations: 0, nights: 0, roomNights: 0, revenue: 0, revenueManual: 0, revenueOnline: 0, adults: 0, kids: 0, capacity: activeCabins * daysInMonth(yy, mm), occupancy: 0 };
         byMonth.set(key, slot);
       }
       return slot;
@@ -2081,9 +2088,13 @@ export const getBookingStats = createServerFn({ method: "POST" })
       const rowAdults = Number(r.guests ?? 0);
       const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
       const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
+      const rowRevenue = Number(r.total_amount ?? 0);
+      const rowManual = isManualEmail((r as any).email);
       if (ySlot) {
         ySlot.reservations += 1;
-        ySlot.revenue += Number(r.total_amount ?? 0);
+        ySlot.revenue += rowRevenue;
+        if (rowManual) ySlot.revenueManual += rowRevenue;
+        else ySlot.revenueOnline += rowRevenue;
         // roomNights: each row = one room-night contribution (rooms × nights).
         ySlot.roomNights += Number(r.nights ?? 0);
         if (countAdultsY) {
@@ -2095,7 +2106,9 @@ export const getBookingStats = createServerFn({ method: "POST" })
       if (/^\d{4}-\d{2}$/.test(monthKey)) {
         const mSlot = ensureMonth(monthKey);
         mSlot.reservations += 1;
-        mSlot.revenue += Number(r.total_amount ?? 0);
+        mSlot.revenue += rowRevenue;
+        if (rowManual) mSlot.revenueManual += rowRevenue;
+        else mSlot.revenueOnline += rowRevenue;
         mSlot.roomNights += Number(r.nights ?? 0);
         if (countAdultsM) {
           mSlot.nights += Number(r.nights ?? 0);
@@ -2114,16 +2127,22 @@ export const getBookingStats = createServerFn({ method: "POST" })
       const active = ["confirmed", "fully_paid", "awaiting_review"].includes(r.status as string);
       if (active) {
         rooms++;
-        confirmedRevenue += Number(r.total_amount ?? 0);
+        const rowRevenue = Number(r.total_amount ?? 0);
+        const rowManual = isManualEmail((r as any).email);
+        confirmedRevenue += rowRevenue;
+        if (rowManual) manualRevenue += rowRevenue;
+        else onlineRevenue += rowRevenue;
         depositRevenue += Number(r.deposit_amount ?? 0);
         roomNightsSold += Number(r.nights ?? 0);
         const rowAdults = Number(r.guests ?? 0);
         const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
         const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
         const type = (r.cabin_id ? typeByCabin.get(r.cabin_id) : null) ?? "Unknown";
-        const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0, adults: 0, kids: 0 };
+        const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0, revenueManual: 0, revenueOnline: 0, adults: 0, kids: 0 };
         slot.reservations += 1;
-        slot.revenue += Number(r.total_amount ?? 0);
+        slot.revenue += rowRevenue;
+        if (rowManual) slot.revenueManual += rowRevenue;
+        else slot.revenueOnline += rowRevenue;
         // Adults/kids are stored per row of a booking group (same values on every
         // room of the reservation). Only count once per (group, cabin type) so
         // multi-room bookings don't multiply pax.
@@ -2169,6 +2188,8 @@ export const getBookingStats = createServerFn({ method: "POST" })
       rooms,
       confirmedRevenue,
       depositRevenue,
+      manualRevenue,
+      onlineRevenue,
       nightsSold,
       roomNightsSold,
       occupancy,
