@@ -1388,6 +1388,24 @@ export const getInvoice = createServerFn({ method: "POST" })
     const total = rows.reduce((s, r: any) => s + Number(r.total_amount ?? 0), 0);
     const subtotal = rows.reduce((s, r: any) => s + Number(r.subtotal ?? 0), 0);
     const comforter_total = rows.reduce((s, r: any) => s + Number(r.comforter_total ?? 0), 0);
+    // The booking group's discount is stored on the lead row only. For the
+    // invoice we spread it across rooms proportionally to each room's gross
+    // amount so every line shows its own share instead of one big deduction.
+    const discountTotal = rows.reduce((s, r: any) => s + Number(r.discount_amount ?? 0), 0);
+    const discountCode =
+      (rows.find((r: any) => r.discount_code)?.discount_code as string | null) ?? null;
+    const grossPerRoom = rows.map(
+      (r: any) => Number(r.subtotal ?? 0) + Number(r.comforter_total ?? 0),
+    );
+    const grossSum = grossPerRoom.reduce((s, n) => s + n, 0);
+    const roomDiscounts = grossPerRoom.map((g) =>
+      grossSum > 0 ? Math.round(((discountTotal * g) / grossSum) * 100) / 100 : 0,
+    );
+    // absorb rounding drift on the last room
+    if (roomDiscounts.length > 0) {
+      const drift = Math.round((discountTotal - roomDiscounts.reduce((s, n) => s + n, 0)) * 100) / 100;
+      roomDiscounts[roomDiscounts.length - 1] = Math.round((roomDiscounts[roomDiscounts.length - 1] + drift) * 100) / 100;
+    }
     const hasOldBalance = rows.some((r: any) => r.balance_amount == null);
     const securityDeposit = hasOldBalance
       ? Number(head.deposit_amount ?? 50)
@@ -1417,18 +1435,21 @@ export const getInvoice = createServerFn({ method: "POST" })
       total,
       subtotal,
       comforter_total,
+      discountTotal,
+      discountCode,
       securityDeposit,
       balance,
       depositProofUrl,
       balanceProofUrl,
-      rooms: rows.map((r: any) => ({
+      rooms: rows.map((r: any, i: number) => ({
         id: r.id,
         cabinId: r.cabin_id,
         name: cleanRoomType(r.cabins?.name ?? r.room_type),
         nights: r.nights,
         subtotal: Number(r.subtotal ?? 0),
         comforterTotal: Number(r.comforter_total ?? 0),
-        total: Number(r.total_amount ?? 0),
+        discount: roomDiscounts[i] ?? 0,
+        total: Math.round((grossPerRoom[i] - (roomDiscounts[i] ?? 0)) * 100) / 100,
       })),
     };
   });
