@@ -19,6 +19,7 @@ import {
   getBackupDownloadUrl,
 } from "@/lib/booking.functions";
 import { computeLateCheckout, LATE_CHECKOUT_HOURLY_FEE } from "@/lib/late-checkout";
+import { editBooking } from "@/lib/crm.functions";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { syncBookingsToOneDrive } from "@/lib/excel-sync.functions";
 import { Calendar } from "@/components/ui/calendar";
@@ -324,25 +325,25 @@ function AdminPage() {
           <>
             <Section title={`Awaiting your confirmation (${filtered("awaiting_review").length})`} highlight>
               {filtered("awaiting_review").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
+                <Card key={b.id} cabins={cabins} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
               ))}
               {filtered("awaiting_review").length === 0 && <Empty />}
             </Section>
             <Section title={`Holding for payment (${filtered("pending_payment").length})`}>
               {filtered("pending_payment").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
+                <Card key={b.id} cabins={cabins} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
               ))}
               {filtered("pending_payment").length === 0 && <Empty />}
             </Section>
             <Section title={`Confirmed (${filtered("confirmed").length})`}>
               {filtered("confirmed").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onMarkPaid={onMarkPaid} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
+                <Card key={b.id} cabins={cabins} b={b} onConfirm={onConfirm} onReject={onReject} onMarkPaid={onMarkPaid} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
               ))}
               {filtered("confirmed").length === 0 && <Empty />}
             </Section>
             <Section title={`Fully paid (${filtered("fully_paid").length})`}>
               {filtered("fully_paid").map((b) => (
-                <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
+                <Card key={b.id} cabins={cabins} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} onCancelRefund={onCancelRefund} onRefresh={refresh} />
               ))}
               {filtered("fully_paid").length === 0 && <Empty />}
             </Section>
@@ -350,7 +351,7 @@ function AdminPage() {
               {bookings
                 .filter((b) => b.status === "cancelled" || b.status === "expired")
                 .map((b) => (
-                  <Card key={b.id} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} />
+                  <Card key={b.id} cabins={cabins} b={b} onConfirm={onConfirm} onReject={onReject} onDelete={onDelete} />
                 ))}
             </Section>
           </>
@@ -376,9 +377,10 @@ function Empty() {
 }
 
 function Card({
-  b, onConfirm, onReject, onMarkPaid, onDelete, onCancelRefund, onRefresh,
+  b, cabins = [], onConfirm, onReject, onMarkPaid, onDelete, onCancelRefund, onRefresh,
 }: {
   b: Booking;
+  cabins?: Array<{ id: string; name: string; cabin_type: string }>;
   onConfirm: (id: string) => void;
   onReject: (id: string) => void;
   onMarkPaid?: (b: Booking) => void;
@@ -389,11 +391,17 @@ function Card({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, number>>({});
   const [savingPrice, setSavingPrice] = useState(false);
+  const [cabinDraft, setCabinDraft] = useState<Record<string, string>>({});
 
   function openEdit() {
     const d: Record<string, number> = {};
-    for (const r of b.rooms ?? []) d[r.id] = Number(r.total ?? 0);
+    const c: Record<string, string> = {};
+    for (const r of b.rooms ?? []) {
+      d[r.id] = Number(r.total ?? 0);
+      c[r.id] = r.cabinId ?? "";
+    }
     setDraft(d);
+    setCabinDraft(c);
     setEditing(true);
   }
   async function savePrices() {
@@ -401,10 +409,16 @@ function Card({
     try {
       const rows = Object.entries(draft).map(([id, amount]) => ({ id, amount: Number(amount) || 0 }));
       await updateBookingRoomPrices({ data: { bookingId: b.id, rows } });
+      for (const r of b.rooms ?? []) {
+        const next = cabinDraft[r.id];
+        if (next && next !== (r.cabinId ?? "")) {
+          await editBooking({ data: { id: r.id, cabin_id: next } });
+        }
+      }
       setEditing(false);
       onRefresh?.();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed to update prices");
+      alert(e instanceof Error ? e.message : "Failed to update booking");
     } finally {
       setSavingPrice(false);
     }
@@ -452,7 +466,7 @@ function Card({
               onClick={openEdit}
               className="mt-1 ml-3 inline-block text-[11px] uppercase tracking-widest text-forest underline hover:no-underline"
             >
-              Edit prices
+              Edit rooms
             </button>
           )}
         </div>
@@ -469,11 +483,20 @@ function Card({
       )}
       {editing && b.rooms && (
         <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
-          <p className="text-[10px] uppercase tracking-widest text-amber-800">Edit room prices</p>
+          <p className="text-[10px] uppercase tracking-widest text-amber-800">Edit rooms &amp; prices</p>
           <ul className="mt-2 flex flex-col gap-2 text-sm">
             {b.rooms.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-2">
-                <span className="flex-1">{r.name}</span>
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2">
+                <select
+                  value={cabinDraft[r.id] ?? ""}
+                  onChange={(e) => setCabinDraft((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                  className="min-w-[10rem] flex-1 rounded border border-border bg-white px-2 py-1 text-sm"
+                >
+                  {!cabinDraft[r.id] && <option value="">{r.name}</option>}
+                  {cabins.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
                 <span className="flex items-center gap-1 text-xs">
                   RM
                   <input
@@ -500,7 +523,7 @@ function Card({
               disabled={savingPrice}
               className="rounded-full bg-forest px-4 py-1.5 text-[11px] uppercase tracking-widest text-coconut hover:bg-forest/90 disabled:opacity-60"
             >
-              {savingPrice ? "Saving…" : "Save prices"}
+              {savingPrice ? "Saving…" : "Save changes"}
             </button>
             <button
               type="button"
