@@ -66,8 +66,6 @@ function StatsPage() {
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
               <Stat label="Rooms booked" value={String(stats.rooms)} />
               <Stat label="Confirmed revenue" value={`RM ${stats.confirmedRevenue.toFixed(2)}`} />
-              <Stat label="Manual revenue" value={`RM ${(stats.manualRevenue ?? 0).toFixed(2)}`} />
-              <Stat label="Online revenue" value={`RM ${(stats.onlineRevenue ?? 0).toFixed(2)}`} />
               <Stat label="Deposit revenue" value={`RM ${stats.depositRevenue.toFixed(2)}`} />
               <Stat label="Nights sold" value={String(stats.nightsSold)} />
               <Stat
