@@ -2088,9 +2088,13 @@ export const getBookingStats = createServerFn({ method: "POST" })
       const rowAdults = Number(r.guests ?? 0);
       const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
       const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
+      const rowRevenue = Number(r.total_amount ?? 0);
+      const rowManual = isManualEmail((r as any).email);
       if (ySlot) {
         ySlot.reservations += 1;
-        ySlot.revenue += Number(r.total_amount ?? 0);
+        ySlot.revenue += rowRevenue;
+        if (rowManual) ySlot.revenueManual += rowRevenue;
+        else ySlot.revenueOnline += rowRevenue;
         // roomNights: each row = one room-night contribution (rooms × nights).
         ySlot.roomNights += Number(r.nights ?? 0);
         if (countAdultsY) {
@@ -2102,7 +2106,9 @@ export const getBookingStats = createServerFn({ method: "POST" })
       if (/^\d{4}-\d{2}$/.test(monthKey)) {
         const mSlot = ensureMonth(monthKey);
         mSlot.reservations += 1;
-        mSlot.revenue += Number(r.total_amount ?? 0);
+        mSlot.revenue += rowRevenue;
+        if (rowManual) mSlot.revenueManual += rowRevenue;
+        else mSlot.revenueOnline += rowRevenue;
         mSlot.roomNights += Number(r.nights ?? 0);
         if (countAdultsM) {
           mSlot.nights += Number(r.nights ?? 0);
@@ -2121,16 +2127,22 @@ export const getBookingStats = createServerFn({ method: "POST" })
       const active = ["confirmed", "fully_paid", "awaiting_review"].includes(r.status as string);
       if (active) {
         rooms++;
-        confirmedRevenue += Number(r.total_amount ?? 0);
+        const rowRevenue = Number(r.total_amount ?? 0);
+        const rowManual = isManualEmail((r as any).email);
+        confirmedRevenue += rowRevenue;
+        if (rowManual) manualRevenue += rowRevenue;
+        else onlineRevenue += rowRevenue;
         depositRevenue += Number(r.deposit_amount ?? 0);
         roomNightsSold += Number(r.nights ?? 0);
         const rowAdults = Number(r.guests ?? 0);
         const kidsMatch = /(\d+)\s*(?:kid|child|children)/i.exec(String(r.notes ?? ""));
         const rowKids = kidsMatch ? Number(kidsMatch[1]) : 0;
         const type = (r.cabin_id ? typeByCabin.get(r.cabin_id) : null) ?? "Unknown";
-        const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0, adults: 0, kids: 0 };
+        const slot = byType.get(type) ?? { reservations: 0, nights: 0, revenue: 0, revenueManual: 0, revenueOnline: 0, adults: 0, kids: 0 };
         slot.reservations += 1;
-        slot.revenue += Number(r.total_amount ?? 0);
+        slot.revenue += rowRevenue;
+        if (rowManual) slot.revenueManual += rowRevenue;
+        else slot.revenueOnline += rowRevenue;
         // Adults/kids are stored per row of a booking group (same values on every
         // room of the reservation). Only count once per (group, cabin type) so
         // multi-room bookings don't multiply pax.
@@ -2176,6 +2188,8 @@ export const getBookingStats = createServerFn({ method: "POST" })
       rooms,
       confirmedRevenue,
       depositRevenue,
+      manualRevenue,
+      onlineRevenue,
       nightsSold,
       roomNightsSold,
       occupancy,
