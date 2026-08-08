@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { claimAdminIfFirst, isAdminRecipient } from "@/lib/booking.functions";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (raw: Record<string, unknown>) => ({
+  validateSearch: (raw: Record<string, unknown>): { denied?: 1; next?: string } => ({
     denied: raw.denied === 1 || raw.denied === "1" ? 1 : undefined,
     next: typeof raw.next === "string" && raw.next.startsWith("/") && !raw.next.startsWith("//") ? raw.next : undefined,
   }),
