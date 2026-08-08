@@ -134,9 +134,9 @@ function BookPage() {
 
   const [cabins, setCabins] = useState<Cabin[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [checkin, setCheckin] = useState(search.checkin);
-  const [checkout, setCheckout] = useState(search.checkout);
-  const [guests, setGuests] = useState(search.guests);
+  const [checkin, setCheckin] = useState(search.checkin ?? todayStr);
+  const [checkout, setCheckout] = useState(search.checkout ?? tomorrowStr);
+  const [guests, setGuests] = useState(search.guests ?? "2");
   const [kids, setKids] = useState("0");
   const [comforter, setComforter] = useState(false);
 
