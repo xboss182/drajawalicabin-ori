@@ -17,6 +17,16 @@ import cabinFamilyImg from "@/assets/cabin-family.jpg";
 import cabinTripleImg from "@/assets/cabin-triple.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
+import {
+  formatIcNumber,
+  formatPhone,
+  formatVehicleNumber,
+  formatVehicleType,
+  isValidIcNumber,
+  isValidPhone,
+  isValidVehicleNumber,
+  isValidVehicleType,
+} from "@/lib/guest-fields";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Plus, Minus, X } from "lucide-react";
@@ -519,6 +529,10 @@ function BookPage() {
     if (name.trim().length < 2) return setError(bt.errors.name);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return setError(bt.errors.email);
     if (phone.trim().length < 5) return setError(bt.errors.phone);
+    if (!isValidPhone(phone)) return setError(bt.errors.phone);
+    if (!isValidIcNumber(icNumber)) return setError(bt.errors.icNumber);
+    if (!isValidVehicleType(vehicleType)) return setError(bt.errors.vehicleType);
+    if (!isValidVehicleNumber(vehicleNumber)) return setError(bt.errors.vehicleNumber);
     if (!agreed) return setError(bt.errors.terms);
 
     setSubmitting(true);
@@ -532,10 +546,10 @@ function BookPage() {
           comforter,
           guestName: name.trim(),
           email: email.trim(),
-          phone: phone.trim(),
+          phone: formatPhone(phone),
           relationship: relationship.trim() || undefined,
-          vehicleType: vehicleType.trim() || undefined,
-          vehicleNumber: vehicleNumber.trim() || undefined,
+          vehicleType: formatVehicleType(vehicleType).trim() || undefined,
+          vehicleNumber: formatVehicleNumber(vehicleNumber).trim() || undefined,
           notes: (() => {
             const nKids = Math.max(0, Number(kids) || 0);
             const parts: string[] = [];
@@ -1038,10 +1052,10 @@ function DetailsStep(props: {
         <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
           <Field label={bt.g.fullName} type="text" value={name} onChange={setName} placeholder={bt.g.fullNamePh} required />
           <Field label={bt.g.email} type="email" value={email} onChange={setEmail} placeholder={bt.g.emailPh} required />
-          <Field label={bt.g.phone} type="tel" value={phone} onChange={setPhone} placeholder={bt.g.phonePh} required />
-          <Field label={bt.g.icNumber} type="text" value={icNumber} onChange={setIcNumber} placeholder={bt.g.icNumberPh} />
-          <Field label={bt.g.vehicleType} type="text" value={vehicleType} onChange={setVehicleType} placeholder={bt.g.vehicleTypePh} />
-          <Field label={bt.g.vehicleNumber} type="text" value={vehicleNumber} onChange={setVehicleNumber} placeholder={bt.g.vehicleNumberPh} />
+          <Field label={bt.g.phone} type="tel" value={phone} onChange={(v) => setPhone(formatPhone(v))} placeholder={bt.g.phonePh} required />
+          <Field label={bt.g.icNumber} type="text" value={icNumber} onChange={(v) => setIcNumber(formatIcNumber(v))} placeholder={bt.g.icNumberPh} />
+          <Field label={bt.g.vehicleType} type="text" value={vehicleType} onChange={(v) => setVehicleType(formatVehicleType(v))} placeholder={bt.g.vehicleTypePh} />
+          <Field label={bt.g.vehicleNumber} type="text" value={vehicleNumber} onChange={(v) => setVehicleNumber(formatVehicleNumber(v))} placeholder={bt.g.vehicleNumberPh} />
           <Field label={bt.g.relationship} type="text" value={relationship} onChange={setRelationship} placeholder={bt.g.relationshipPh} full />
           <TextArea label={bt.g.notes} value={notes} onChange={setNotes} placeholder={bt.g.notesPh} />
         </div>

@@ -11,6 +11,7 @@ import {
   type NightBreakdown,
   type PricingCart,
 } from "@/lib/discounts";
+import { isValidPhone, isValidVehicleNumber, isValidVehicleType } from "@/lib/guest-fields";
 
 const SECURITY_DEPOSIT_PER_ROOM = 50;
 
@@ -54,10 +55,24 @@ const createSchema = z.object({
   comforter: z.boolean(),
   guestName: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
-  phone: z.string().trim().min(5).max(30),
+  phone: z
+    .string()
+    .trim()
+    .max(20)
+    .refine((v) => isValidPhone(v), "Invalid phone number"),
   relationship: z.string().trim().max(100).optional(),
-  vehicleType: z.string().trim().max(100).optional(),
-  vehicleNumber: z.string().trim().max(50).optional(),
+  vehicleType: z
+    .string()
+    .trim()
+    .max(40)
+    .refine((v) => isValidVehicleType(v), "Invalid vehicle type")
+    .optional(),
+  vehicleNumber: z
+    .string()
+    .trim()
+    .max(15)
+    .refine((v) => isValidVehicleNumber(v), "Invalid vehicle number")
+    .optional(),
   notes: z.string().trim().max(1000).optional(),
   paymentType: z.enum(["deposit", "full"]).optional(),
   couponCode: z.string().trim().min(1).max(40).optional(),
