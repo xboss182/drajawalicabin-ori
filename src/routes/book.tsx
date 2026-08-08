@@ -143,6 +143,7 @@ function BookPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [icNumber, setIcNumber] = useState("");
   const [relationship, setRelationship] = useState("");
   const [vehicleType, setVehicleType] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
@@ -538,6 +539,7 @@ function BookPage() {
           notes: (() => {
             const nKids = Math.max(0, Number(kids) || 0);
             const parts: string[] = [];
+            if (icNumber.trim()) parts.push(`IC number: ${icNumber.trim()}`);
             if (nKids > 0) parts.push(`Children under 12: ${nKids}`);
             if (notes.trim()) parts.push(notes.trim());
             return parts.length ? parts.join("\n") : undefined;
@@ -598,6 +600,7 @@ function BookPage() {
             guests, setGuests, comforter, setComforter,
             kids, setKids,
             name, setName, email, setEmail, phone, setPhone,
+            icNumber, setIcNumber,
             relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
             notes, setNotes,
             price, priceByType, previewCabin, blockedDates, blockedReasonByDate, totalRooms,
@@ -659,6 +662,7 @@ function DetailsStep(props: {
   name: string; setName: (s: string) => void;
   email: string; setEmail: (s: string) => void;
   phone: string; setPhone: (s: string) => void;
+  icNumber: string; setIcNumber: (s: string) => void;
   relationship: string; setRelationship: (s: string) => void;
   vehicleType: string; setVehicleType: (s: string) => void;
   vehicleNumber: string; setVehicleNumber: (s: string) => void;
@@ -701,6 +705,7 @@ function DetailsStep(props: {
     checkin, setCheckin, checkout, setCheckout,
     guests, setGuests, kids, setKids, comforter, setComforter,
     name, setName, email, setEmail, phone, setPhone,
+    icNumber, setIcNumber,
     relationship, setRelationship, vehicleType, setVehicleType, vehicleNumber, setVehicleNumber,
     notes, setNotes,
     price, priceByType, previewCabin, blockedDates, blockedReasonByDate, totalRooms, freeCabinsForType,
@@ -1034,6 +1039,7 @@ function DetailsStep(props: {
           <Field label={bt.g.fullName} type="text" value={name} onChange={setName} placeholder={bt.g.fullNamePh} required />
           <Field label={bt.g.email} type="email" value={email} onChange={setEmail} placeholder={bt.g.emailPh} required />
           <Field label={bt.g.phone} type="tel" value={phone} onChange={setPhone} placeholder={bt.g.phonePh} required full />
+          <Field label={bt.g.icNumber} type="text" value={icNumber} onChange={setIcNumber} placeholder={bt.g.icNumberPh} full />
           <Field label={bt.g.relationship} type="text" value={relationship} onChange={setRelationship} placeholder={bt.g.relationshipPh} />
           <Field label={bt.g.vehicleType} type="text" value={vehicleType} onChange={setVehicleType} placeholder={bt.g.vehicleTypePh} />
           <Field label={bt.g.vehicleNumber} type="text" value={vehicleNumber} onChange={setVehicleNumber} placeholder={bt.g.vehicleNumberPh} />
