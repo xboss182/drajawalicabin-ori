@@ -17,6 +17,16 @@ import cabinFamilyImg from "@/assets/cabin-family.jpg";
 import cabinTripleImg from "@/assets/cabin-triple.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
+import {
+  formatIcNumber,
+  formatPhone,
+  formatVehicleNumber,
+  formatVehicleType,
+  isValidIcNumber,
+  isValidPhone,
+  isValidVehicleNumber,
+  isValidVehicleType,
+} from "@/lib/guest-fields";
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { Plus, Minus, X } from "lucide-react";
