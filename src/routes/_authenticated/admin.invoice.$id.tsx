@@ -137,6 +137,7 @@ function InvoicePage() {
                   <th className="py-2 font-medium">Nights</th>
                   <th className="py-2 text-right font-medium">Subtotal</th>
                   <th className="py-2 text-right font-medium">Comforter</th>
+                  <th className="py-2 text-right font-medium">Discount</th>
                   <th className="py-2 text-right font-medium">Total</th>
                 </tr>
               </thead>
@@ -147,25 +148,34 @@ function InvoicePage() {
                     <td className="py-2">{r.nights ?? "—"}</td>
                     <td className="py-2 text-right">{money(r.subtotal)}</td>
                     <td className="py-2 text-right">{money(r.comforterTotal)}</td>
+                    <td className="py-2 text-right text-emerald-700">{r.discount > 0 ? `-${money(r.discount)}` : "—"}</td>
                     <td className="py-2 text-right">{money(r.total)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={4} className="pt-3 text-right text-xs uppercase tracking-widest text-stone">
+                  <td colSpan={5} className="pt-3 text-right text-xs uppercase tracking-widest text-stone">
                     Room rate
                   </td>
                   <td className="pt-3 text-right font-display text-xl text-forest">{money(inv.total)}</td>
                 </tr>
+                {inv.discountTotal > 0 && (
+                  <tr>
+                    <td colSpan={5} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
+                      Discount applied{inv.discountCode ? ` (${inv.discountCode})` : ""}
+                    </td>
+                    <td className="pt-1 text-right font-display text-lg text-emerald-700">-{money(inv.discountTotal)}</td>
+                  </tr>
+                )}
                 <tr>
-                  <td colSpan={4} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
+                  <td colSpan={5} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
                     Refundable security deposit
                   </td>
                   <td className="pt-1 text-right font-display text-lg text-forest">{money(inv.securityDeposit)}</td>
                 </tr>
                 <tr>
-                  <td colSpan={4} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
+                  <td colSpan={5} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
                     Total payable
                   </td>
                   <td className="pt-1 text-right font-display text-xl text-forest">{money(inv.total + inv.securityDeposit)}</td>
