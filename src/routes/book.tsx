@@ -103,7 +103,9 @@ function typeLabel(c: Cabin) {
 }
 
 export const Route = createFileRoute("/book")({
-  validateSearch: (raw: Record<string, unknown>) => ({
+  validateSearch: (
+    raw: Record<string, unknown>,
+  ): { checkin?: string; checkout?: string; guests?: string; room?: string } => ({
     checkin: typeof raw.checkin === "string" ? raw.checkin : todayStr,
     checkout: typeof raw.checkout === "string" ? raw.checkout : tomorrowStr,
     guests: typeof raw.guests === "string" ? raw.guests : "2",
@@ -132,9 +134,9 @@ function BookPage() {
 
   const [cabins, setCabins] = useState<Cabin[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [checkin, setCheckin] = useState(search.checkin);
-  const [checkout, setCheckout] = useState(search.checkout);
-  const [guests, setGuests] = useState(search.guests);
+  const [checkin, setCheckin] = useState(search.checkin ?? todayStr);
+  const [checkout, setCheckout] = useState(search.checkout ?? tomorrowStr);
+  const [guests, setGuests] = useState(search.guests ?? "2");
   const [kids, setKids] = useState("0");
   const [comforter, setComforter] = useState(false);
 
