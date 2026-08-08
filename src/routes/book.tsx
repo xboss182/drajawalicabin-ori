@@ -103,7 +103,9 @@ function typeLabel(c: Cabin) {
 }
 
 export const Route = createFileRoute("/book")({
-  validateSearch: (raw: Record<string, unknown>) => ({
+  validateSearch: (
+    raw: Record<string, unknown>,
+  ): { checkin?: string; checkout?: string; guests?: string; room?: string } => ({
     checkin: typeof raw.checkin === "string" ? raw.checkin : todayStr,
     checkout: typeof raw.checkout === "string" ? raw.checkout : tomorrowStr,
     guests: typeof raw.guests === "string" ? raw.guests : "2",
