@@ -1,103 +1,39 @@
-# Email Notification Workflow
+# Remove Store link + WhatsApp sales assistant
 
-## Current architecture
+## 1. Remove the "Store" nav link
+Delete the `Store` link from the desktop nav in `src/routes/index.tsx`. The `/whatsapp-store` page and the admin Store tab stay live and reachable by direct URL — only the nav entry goes.
 
-```text
-Guest action / Admin action
-        │
-        ▼
-┌─────────────────────────────┐
-│  Server function / API route  │
-│  (booking.functions.ts,       │
-│   crm.functions.ts, webhook)  │
-└─────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────┐
-│  sendTransactionalEmail()   │
-│  src/lib/email/send.server.ts │
-│  - picks React Email template │
-│  - checks suppression list    │
-│  - creates unsubscribe token│
-│  - renders HTML + plain text  │
-└─────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────┐
-│  email_send_log (pending)   │
-└─────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────┐
-│  pgmq.enqueue_email()       │
-│  queue: transactional_emails│
-└─────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────┐
-│  pg_cron → every 5 sec      │
-│  POST /lovable/email/queue/process
-└─────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────┐
-│  process.ts                 │
-│  - reads batch from pgmq      │
-│  - sends via @lovable.dev/email-js
-│  - updates email_send_log     │
-│    (sent / failed / dlq)    │
-└─────────────────────────────┘
-        │
-        ▼
-┌─────────────────────────────┐
-│  Mailgun / Lovable Email API│
-│  From: noreply@drajawalicabin.com
-│  Sender domain: notify.drajawalicabin.com
-└─────────────────────────────┘
-```
+## 2. WhatsApp sales assistant (guided flow, no WhatsApp API)
+A chat assistant lives on the site. The guest talks to it, it checks real availability and prices from the database, builds their stay, then hands the whole thing to WhatsApp as a fully written-out message to +60103328747. No business verification, no per-message cost, works instantly on mobile and desktop.
 
-## Triggers today
+### What the guest experiences
+1. A floating "Chat to book" button on every page. The plain WhatsApp button stays as-is.
+2. The assistant greets in the guest's language (EN/BM, follows the site language).
+3. It answers free-text questions about the property — facilities, directions, house rules, late check-out, BBQ pit and mattress add-ons, group bookings.
+4. When they mention dates, it shows an inline calendar card with fully booked dates blocked out.
+5. It shows which cabins are free for those dates with live weekday / weekend / holiday pricing, including the 10% second-night discount and any active promo.
+6. Guest picks rooms and pax in inline cards; a running total updates.
+7. It collects name, phone, IC number and vehicle details using the same validation rules as the booking page.
+8. Final step: a summary card with an "Open in WhatsApp" button. Tapping it opens WhatsApp with the entire booking written out — dates, rooms, pax, add-ons, total, guest details and a short reference code — ready to send.
+9. Alternative button: "Book on the website instead", deep-linking into `/book` with everything pre-filled for guests who prefer to pay online.
 
-| Event | Template | Recipients |
-|-------|----------|------------|
-| New booking created | `booking-summary` | Guest + admin alert (`admin-booking-alert`) |
-| Payment proof uploaded | `booking-summary` | Guest confirmation + admin alert |
-| Booking fully paid | `fully-paid` | Guest with locker code |
-| Balance due (7 days before check-in) | `balance-reminder` | Guest with payment link |
-| Manage-link requested | `manage-link` | Guest |
-| Marketing/broadcast (CRM) | `marketing-broadcast` | Selected guest list |
+### What you (admin) get
+- Every assistant session that reaches the summary is saved as a lead: guest name, phone, dates, rooms, quoted total, timestamp, and whether they tapped through to WhatsApp.
+- A "Chat leads" section inside the existing CRM page, so you can follow up on guests who asked but never sent.
+- Chat transcript viewable per lead.
 
-## Legacy path
+### Guardrails
+- The assistant only quotes prices and availability that come from the database — it cannot invent a rate or offer a room that is taken.
+- It never confirms a booking itself; the booking exists only once you reply in WhatsApp or the guest completes `/book`.
+- Fully booked dates return "no vacancy" plus the nearest alternative dates.
 
-`src/lib/email.server.ts` still writes to `email_outbox` for any code not yet migrated to `sendTransactionalEmail`. No active booking flow uses it today; it is a fallback only.
-
-## Domain health
-
-- Domain: `notify.drajawalicabin.com` ✅ Verified
-- Queue: healthy, 28 emails sent in the last 7 days
-- DNS delegated to Lovable nameservers
-
-## Proposed next step: Admin Email Dashboard
-
-Build a protected `/admin/emails` page so you can monitor delivery without asking me to query the database.
-
-### Features
-
-1. Time range filter: Last 24h / 7 days / 30 days / custom
-2. Template filter: all distinct `template_name` values
-3. Status filter: All / Sent / Failed (dlq) / Suppressed
-4. Summary cards: total unique emails, sent, failed, suppressed (deduplicated by `message_id`)
-5. Email log table: one row per unique email, sorted by latest timestamp, paginated
-6. Error preview for failed emails
-
-### Technical details
-
-- Reuse `_authenticated/admin.tsx` layout; add an "Emails" tab in the admin nav.
-- Create `src/lib/email.functions.ts` with `getEmailStats` and `getEmailLog` server functions.
-- Use `DISTINCT ON (message_id) ... ORDER BY message_id, created_at DESC` for deduplication.
-- Query `email_send_log` directly; no new tables needed.
-- Route: `src/routes/_authenticated/admin.emails.tsx`.
-
-## Open question
-
-Do you want me to build the admin email dashboard now, or do you only need the workflow documentation above?
+## Technical notes
+- Chat UI built from AI Elements primitives (`conversation`, `message`, `prompt-input`, `tool`, `shimmer`) in a new `src/components/chat/` set, mounted from `__root.tsx` as a floating widget.
+- Streaming endpoint at `src/routes/api/chat.ts` using AI SDK `streamText` through the Lovable AI Gateway; system prompt carries property facts, policies and tone.
+- Tools exposed to the model, all server-side, reusing existing logic:
+  - `checkAvailability(from,to)` — reuses the logic behind `src/routes/api/public/availability/taken-dates.ts`
+  - `quoteStay(from,to,cabinIds,adults,children)` — reuses `src/lib/booking-helpers.server.ts` pricing plus `src/lib/discounts.ts`
+  - `listAddOns()` — reads `store_items`
+  - `buildWhatsAppHandoff(payload)` — validates guest fields via `src/lib/guest-fields.ts`, saves the lead, returns the `wa.me` URL and a `/book` prefill URL
+- Conversation shape: one conversation per visitor, persisted in localStorage; lead records persisted server-side in a new `chat_leads` table (server-side insert only, admin read, RLS + grants).
+- Tool results render as custom cards (calendar, room picker, quote summary), not raw JSON.
