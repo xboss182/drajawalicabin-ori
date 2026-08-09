@@ -191,7 +191,6 @@ function Nav() {
           <a href="#about" className="hover:text-coconut">{t.nav.about}</a>
           <a href="#nearby" className="hover:text-coconut">{t.nav.nearby}</a>
           <Link to="/gallery" className="hover:text-coconut">Gallery</Link>
-          <Link to="/whatsapp-store" className="hover:text-coconut">Store</Link>
           <Link to="/booking-guide" className="hover:text-coconut">Guide</Link>
           <a href="#book" className="hover:text-coconut">{t.nav.book}</a>
           <Link
