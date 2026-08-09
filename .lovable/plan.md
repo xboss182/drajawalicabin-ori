@@ -7,8 +7,9 @@ Delete the `Store` link from the desktop nav in `src/routes/index.tsx`. The `/wh
 A chat assistant lives on the site. The guest talks to it, it checks real availability and prices from the database, builds their stay, then hands the whole thing to WhatsApp as a fully written-out message to +60103328747. No business verification, no per-message cost, works instantly on mobile and desktop.
 
 ### What the guest experiences
-1. A floating "Chat to book" button on every page. The plain WhatsApp button stays as-is.
-2. The assistant greets in the guest's language (EN/BM, follows the site language).
+1. Every WhatsApp button on the site (floating button, nav, hero, footer) now opens the assistant instead of jumping straight to WhatsApp. A small "Chat on WhatsApp directly" link inside the assistant keeps the old behaviour for guests who just want to message you.
+2. It opens with "When would you like to stay?" and a date-range calendar, greeting in the guest's language (EN/BM, follows the site language). Picking dates immediately lists the rooms still free for those nights with prices — no typing needed.
+3. From there the guest can keep tapping cards or just type questions; the assistant handles both.
 3. It answers free-text questions about the property — facilities, directions, house rules, late check-out, BBQ pit and mattress add-ons, group bookings.
 4. When they mention dates, it shows an inline calendar card with fully booked dates blocked out.
 5. It shows which cabins are free for those dates with live weekday / weekend / holiday pricing, including the 10% second-night discount and any active promo.
