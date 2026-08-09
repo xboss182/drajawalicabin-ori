@@ -156,7 +156,7 @@ function RootShell({ children }: { children: ReactNode }) {
         >
           Skip to content
         </a>
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
         <Scripts />
       </body>
     </html>
@@ -170,12 +170,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
-        <Toaster />
-        {!isAdmin && <OfficialNoticeToast />}
-      </LanguageProvider>
+      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <Outlet />
+      <Toaster />
+      {!isAdmin && <OfficialNoticeToast />}
     </QueryClientProvider>
   );
 }
