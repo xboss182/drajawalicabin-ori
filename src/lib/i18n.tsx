@@ -245,7 +245,7 @@ export const translations = {
     },
   },
   bm: {
-    nav: { cabins: "Bilik", about: "Tentang", nearby: "Berdekatan", book: "Tempah", whatsapp: "WhatsApp Kami", manageBooking: "Lihat / urus tempahan" },
+    nav: { cabins: "Bilik", about: "Tentang", nearby: "Berdekatan", book: "Tempah", whatsapp: "WhatsApp Kami", manageBooking: "Tempahan saya" },
     whatsappMessage:
       "Salam Team Rajawali D'Cabin Chalet, saya ada pertanyaan berkenaan penginapan saya. (Nota: Semua tempahan dan pembayaran dibuat hanya melalui laman web rasmi kami.)",
     hero: {
