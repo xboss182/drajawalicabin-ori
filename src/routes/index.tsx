@@ -176,12 +176,12 @@ function Nav() {
   const { t } = useLanguage();
   return (
     <header className="absolute left-0 right-0 top-0 z-30">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 md:py-6 lg:px-10">
         <a href="#top" className="flex items-center gap-2 text-coconut">
           <Leaf />
-          <span className="font-display text-lg leading-none">
+          <span className="font-display text-base leading-none md:text-lg">
             Rajawali D'Cabin
-            <span className="block text-[10px] uppercase tracking-[0.25em] opacity-80">
+            <span className="block text-[9px] uppercase tracking-[0.25em] opacity-80 md:text-[10px]">
               Chalet · Chendering
             </span>
           </span>
@@ -202,14 +202,14 @@ function Nav() {
             {t.nav.manageBooking}
           </Link>
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <LanguageToggle />
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-coconut px-2.5 py-1.5 text-[11px] font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
+            className="inline-flex items-center gap-1 rounded-full bg-coconut px-2 py-1 text-[10px] font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
           >
-            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+            <CalendarDays className="h-3 w-3" aria-hidden />
             {t.nav.manageBooking}
           </Link>
           <a
