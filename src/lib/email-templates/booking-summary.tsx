@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Heading, Text } from '@react-email/components'
+import { Button, Heading, Section, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 import { EmailLayout, fmtDate, money, styles } from './_layout'
 
@@ -16,6 +16,7 @@ interface Props {
   remaining?: number
   paymentType?: 'deposit' | 'full'
   rooms?: { name: string; total: number }[]
+  manageUrl?: string
 }
 
 const Email = (p: Props) => {
@@ -24,6 +25,14 @@ const Email = (p: Props) => {
   return (
     <EmailLayout preview={`Booking ${ref} received — ${isFull ? 'paid in full' : 'security deposit confirmed'}`}>
       <Heading as="h2" style={styles.h2}>Thank you, {p.guestName ?? 'guest'}</Heading>
+      {p.manageUrl && (
+        <Section style={{ textAlign: 'center', margin: '24px 0' }}>
+          <Button href={p.manageUrl} style={styles.cta}>Open my booking</Button>
+          <Text style={{ ...styles.p, fontSize: '12px', color: '#6b7280', textAlign: 'center' }}>
+            Save this link — use it any time to upload a payment receipt or check your booking.
+          </Text>
+        </Section>
+      )}
       <Text style={styles.p}>
         {isFull
           ? `We have received your full payment proof covering the room rate and refundable security deposit. Our team will verify the transfer shortly.`

@@ -17,6 +17,7 @@ import cabinFamilyImg from "@/assets/cabin-family.jpg";
 import cabinTripleImg from "@/assets/cabin-triple.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
+import { rememberBooking, readRememberedBooking } from "@/lib/my-booking";
 import {
   formatIcNumber,
   formatPhone,
@@ -175,6 +176,8 @@ function BookPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [booking, setBooking] = useState<{ bookingId: string; reference: string; total: number; securityDeposit: number; holdExpiresAt: string; guestToken: string; discount?: { label: string; amount: number } | null } | null>(null);
+  const [remembered, setRemembered] = useState<ReturnType<typeof readRememberedBooking>>(null);
+  useEffect(() => { setRemembered(readRememberedBooking()); }, []);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -563,6 +566,7 @@ function BookPage() {
         },
       });
       setBooking(res);
+      rememberBooking({ id: res.bookingId, token: res.guestToken, reference: res.reference });
       setStep("payment");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: unknown) {
@@ -657,7 +661,13 @@ function BookPage() {
         />
       )}
       {step === "done" && booking && (
-        <DoneStep name={name} email={email} reference={booking.reference} />
+        <DoneStep
+          name={name}
+          email={email}
+          reference={booking.reference}
+          bookingId={booking.bookingId}
+          guestToken={booking.guestToken}
+        />
       )}
     </main>
   );
@@ -1369,9 +1379,22 @@ function PaymentStep({
 }
 
 // ============ STEP 3: done ============
-function DoneStep({ name, email, reference }: { name: string; email: string; reference: string }) {
-  const { t } = useLanguage();
+function DoneStep({
+  name,
+  email,
+  reference,
+  bookingId,
+  guestToken,
+}: {
+  name: string;
+  email: string;
+  reference: string;
+  bookingId: string;
+  guestToken: string;
+}) {
+  const { t, lang } = useLanguage();
   const bt = t.book;
+  const isBM = lang === "bm";
   return (
     <section className="mx-auto max-w-2xl px-6 py-24 text-center lg:px-10">
       <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.done.eyebrow}</p>
@@ -1397,14 +1420,37 @@ function DoneStep({ name, email, reference }: { name: string; email: string; ref
         </ul>
       </div>
 
-      <div className="mt-10 flex flex-wrap justify-center gap-4">
+      <div className="mx-auto mt-10 max-w-xl rounded-2xl border-2 border-forest/40 bg-coconut p-6 text-left">
+        <p className="text-[11px] uppercase tracking-[0.3em] text-forest">
+          {isBM ? "Tempahan saya" : "My booking"}
+        </p>
+        <h2 className="mt-2 font-display text-2xl text-forest">
+          {isBM ? "Simpan link ini" : "Save this link"}
+        </h2>
+        <p className="mt-2 text-sm text-foreground/80">
+          {isBM
+            ? "Guna link ini bila-bila masa untuk muat naik resit bayaran atau semak tempahan anda — tak perlu tempah semula."
+            : "Use this any time to upload a payment receipt or check your booking — you never need to book again."}
+        </p>
+        <Link
+          to="/manage-booking"
+          search={{ id: bookingId, token: guestToken }}
+          className="mt-5 inline-block w-full rounded-full bg-forest px-7 py-4 text-center text-sm font-medium uppercase tracking-widest text-coconut hover:bg-forest/90 sm:w-auto"
+        >
+          {isBM ? "Buka tempahan saya" : "Open my booking"}
+        </Link>
+      </div>
+
+      <div className="mt-8 flex flex-wrap justify-center gap-4">
         <a
           href={`https://wa.me/601155007204?text=${encodeURIComponent(
             bt.done.whatsappText.replace("{ref}", reference).replace("{name}", name),
+          )}${encodeURIComponent(
+            `\n\nMy booking link: https://drajawalicabin.com/manage-booking?id=${bookingId}&token=${guestToken}`,
           )}`}
           target="_blank"
           rel="noreferrer"
-          className="rounded-full bg-forest px-7 py-3.5 text-sm font-medium text-coconut hover:bg-forest/90"
+          className="rounded-full border border-border px-7 py-3.5 text-sm"
         >
           {bt.done.whatsappCta}
         </a>
