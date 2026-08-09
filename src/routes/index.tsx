@@ -196,9 +196,9 @@ function Nav() {
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="inline-flex items-center gap-2 rounded-full bg-coconut px-4 py-2 text-sm font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand hover:text-forest"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coconut px-3 py-1.5 text-xs font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand hover:text-forest"
           >
-            <CalendarDays className="h-4 w-4" aria-hidden />
+            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
             {t.nav.manageBooking}
           </Link>
         </nav>
@@ -207,9 +207,9 @@ function Nav() {
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="inline-flex items-center gap-2 rounded-full bg-coconut px-3 py-2 text-xs font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coconut px-2.5 py-1.5 text-[11px] font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
           >
-            <CalendarDays className="h-4 w-4" aria-hidden />
+            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
             {t.nav.manageBooking}
           </Link>
           <a
