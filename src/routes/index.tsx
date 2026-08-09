@@ -539,19 +539,19 @@ function DateCell({ label, date }: { label: string; date?: Date }) {
         {label}
       </span>
       {date ? (
-        <div className="flex items-baseline gap-2">
-          <span className="font-display text-xl font-semibold leading-none text-foreground">
+        <div className="flex items-baseline gap-1.5 sm:gap-2">
+          <span className="font-display text-lg font-semibold leading-none text-foreground sm:text-xl">
             {date.getDate()}
           </span>
-          <span className="text-sm text-foreground/80">
+          <span className="text-xs text-foreground/80 sm:text-sm">
             {date.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
           </span>
         </div>
       ) : (
-        <span className="text-base text-stone">Select date</span>
+        <span className="text-sm text-stone sm:text-base">Select date</span>
       )}
       {date && (
-        <span className="text-xs text-stone">
+        <span className="text-[10px] text-stone sm:text-xs">
           {date.toLocaleDateString("en-US", { weekday: "long" })}
         </span>
       )}
