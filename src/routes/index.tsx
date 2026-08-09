@@ -928,15 +928,21 @@ function GoodToKnow() {
 function MobileCtaBar() {
   const { t } = useLanguage();
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 py-2 backdrop-blur md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-background/95 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+      <a
+        href="#book"
+        className="flex min-h-12 flex-1 items-center justify-center rounded-full bg-forest px-4 text-base font-semibold text-coconut"
+      >
+        {t.nav.book}
+      </a>
       <a
         href={waHref(t.whatsappMessage)}
         target="_blank"
         rel="noreferrer"
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-forest px-4 py-2.5 text-center text-sm font-semibold uppercase tracking-wider text-coconut"
+        aria-label={t.nav.whatsapp}
+        className="flex min-h-12 w-14 shrink-0 items-center justify-center rounded-full border border-forest/30 bg-card text-forest"
       >
-        <MessageCircle className="h-4 w-4" />
-        {t.nav.whatsapp}
+        <MessageCircle className="h-5 w-5" />
       </a>
     </div>
   );
