@@ -30,7 +30,6 @@ import { LanguageToggle, useLanguage } from "@/lib/i18n";
 import { Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getHeroPromoCta } from "@/lib/promo-cta.functions";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -157,7 +156,7 @@ const nearbyImages = [nearbyMosqueAsset.url, nearbyBeachAsset.url, nearbyCraftAs
 
 function Index() {
   return (
-    <main className="relative bg-background pb-20 text-foreground md:pb-0">
+    <main className="relative bg-background text-foreground">
       <Nav />
       <Hero />
       <AvailabilitySearch />
@@ -177,12 +176,12 @@ function Nav() {
   const { t } = useLanguage();
   return (
     <header className="absolute left-0 right-0 top-0 z-30">
-      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:px-6 sm:py-6 lg:px-10">
-        <a href="#top" className="flex min-w-0 items-center gap-2 text-coconut">
-          <span className="shrink-0"><Leaf /></span>
-          <span className="min-w-0 font-display text-base leading-tight sm:text-lg sm:leading-none">
-            <span className="block truncate">Rajawali D'Cabin</span>
-            <span className="hidden text-[11px] sm:text-[10px] uppercase tracking-[0.25em] opacity-80 sm:block">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
+        <a href="#top" className="flex items-center gap-2 text-coconut">
+          <Leaf />
+          <span className="font-display text-lg leading-none">
+            Rajawali D'Cabin
+            <span className="block text-[10px] uppercase tracking-[0.25em] opacity-80">
               Chalet · Chendering
             </span>
           </span>
@@ -203,14 +202,14 @@ function Nav() {
             {t.nav.manageBooking}
           </Link>
         </nav>
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-3">
           <LanguageToggle />
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full bg-coconut px-3 text-xs font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
+            className="inline-flex items-center gap-2 rounded-full bg-coconut px-3 py-2 text-xs font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
           >
-            <CalendarDays className="h-4 w-4 shrink-0" aria-hidden />
+            <CalendarDays className="h-4 w-4" aria-hidden />
             {t.nav.manageBooking}
           </Link>
           <a
@@ -262,8 +261,8 @@ function Hero() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/30 to-forest/85" />
-      <div className="relative mx-auto flex min-h-[62svh] max-w-7xl flex-col justify-end px-4 pb-10 pt-24 text-coconut sm:min-h-[78svh] sm:px-6 sm:pb-28 sm:pt-32 lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
-        <span className="mb-4 hidden w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-4 py-1.5 text-xs sm:text-[11px] uppercase tracking-[0.3em] backdrop-blur sm:mb-6 sm:inline-flex">
+      <div className="relative mx-auto flex min-h-[62svh] max-w-7xl flex-col justify-end px-6 pb-14 pt-20 text-coconut sm:min-h-[78svh] sm:pb-28 sm:pt-32 lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
+        <span className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.3em] backdrop-blur">
           <span className="size-1.5 rounded-full bg-coconut" /> {t.hero.badge}
         </span>
         <h1 className="max-w-3xl font-display text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
@@ -274,30 +273,29 @@ function Hero() {
             {t.hero.title1}<br />{t.hero.title2}
           </span>
         </h1>
-        <p className="mt-4 line-clamp-2 max-w-xl text-base text-coconut/85 sm:mt-5 sm:line-clamp-none sm:text-lg">
+        <p className="mt-5 max-w-xl text-base text-coconut/85 sm:text-lg">
           {t.hero.body}
         </p>
-        <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
           <a
             href="#book"
-            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-coconut px-7 text-base font-medium text-forest transition hover:bg-sand sm:flex-none sm:text-sm"
+            className="rounded-full bg-coconut px-7 py-3.5 text-sm font-medium text-forest transition hover:bg-sand"
           >
             {t.hero.cta}
           </a>
-          <a href="#stay" className="hidden text-sm text-coconut/85 underline-offset-4 hover:underline sm:inline">
+          <a href="#stay" className="text-sm text-coconut/85 underline-offset-4 hover:underline">
             {t.hero.view}
           </a>
           {promoEnabled && (
-            <div className="sm:ml-auto inline-flex w-full items-center gap-2 rounded-full border border-sand/50 bg-forest/40 px-4 py-2.5 text-sm leading-snug text-coconut shadow-lg backdrop-blur-md sm:w-auto sm:gap-3 sm:rounded-3xl sm:px-6 sm:py-3.5 sm:text-xl sm:leading-relaxed">
-              <Sparkles className="h-5 w-5 shrink-0 text-sand sm:h-6 sm:w-6" aria-hidden />
+            <div className="sm:ml-auto inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
+              <Sparkles className="h-6 w-6 shrink-0 text-sand" aria-hidden />
               <span className="leading-snug text-sand sm:leading-relaxed">
-                <span className="sm:hidden">{t.promo.short}</span>
-                <span className="hidden sm:inline">{promoText}</span>
+                {promoText}
               </span>
             </div>
           )}
         </div>
-        <div className="mt-4 hidden sm:block">
+        <div className="mt-4">
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
@@ -307,7 +305,7 @@ function Hero() {
             {t.hero.alreadyBooked}
           </Link>
         </div>
-        <div className="mt-6 hidden flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-[11px] uppercase tracking-[0.25em] text-coconut/70 sm:mt-8 sm:flex">
+        <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70">
           <span>8 private cabins</span>
           <span className="hidden sm:inline opacity-50">·</span>
           <span>Riverside · Chendering</span>
@@ -346,7 +344,6 @@ function AvailabilitySearch() {
   const [room, setRoom] = useState(t.search.anyCabin);
   const [openCal, setOpenCal] = useState(false);
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
   const fmtISO = (d: Date) => {
     const y = d.getFullYear();
@@ -433,7 +430,7 @@ function AvailabilitySearch() {
               <CalendarIcon className="h-5 w-5 shrink-0 text-forest" />
               <DateCell label={t.search.checkin} date={range?.from} />
               <div className="hidden flex-col items-center px-2 text-stone sm:flex">
-                <span className="text-[11px] sm:text-[10px] uppercase tracking-[0.2em]">
+                <span className="text-[10px] uppercase tracking-[0.2em]">
                   {nights} {nights === 1 ? "night" : "nights"}
                 </span>
                 <div className="mt-1 h-px w-8 bg-border" />
@@ -446,7 +443,7 @@ function AvailabilitySearch() {
               mode="range"
               selected={range}
               onSelect={handleRangeSelect}
-              numberOfMonths={isMobile ? 1 : 2}
+              numberOfMonths={2}
               disabled={{ before: todayDate }}
               defaultMonth={range?.from ?? todayDate}
               initialFocus
@@ -511,7 +508,7 @@ function AvailabilitySearch() {
         <button
           type="submit"
           className={cn(
-            "flex min-h-14 items-center justify-center gap-2 bg-forest px-8 text-base font-semibold text-coconut transition hover:bg-forest/90",
+            "flex items-center justify-center gap-2 bg-forest px-8 py-4 text-base font-semibold text-coconut transition hover:bg-forest/90",
             "lg:m-2 lg:rounded-2xl lg:px-10",
           )}
         >
@@ -519,7 +516,7 @@ function AvailabilitySearch() {
           {t.search.submit}
         </button>
       </form>
-      <p className="mx-auto mt-3 hidden max-w-3xl text-center text-xs text-foreground/70 sm:block sm:text-sm">
+      <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
         {t.search.note}
       </p>
       {promoText && (
@@ -566,10 +563,10 @@ function DateCell({ label, date }: { label: string; date?: Date }) {
 function About() {
   const { t } = useLanguage();
   return (
-    <section id="about" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-10 lg:py-24">
+    <section id="about" className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
       <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
         <div>
-          <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{t.about.eyebrow}</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.about.eyebrow}</p>
           <h2 className="font-display text-4xl leading-tight sm:text-5xl">
             {t.about.title1}<br />{t.about.title2}
           </h2>
@@ -581,7 +578,7 @@ function About() {
           <div className="mt-8 flex items-center gap-5 border-t border-border pt-6">
             <div>
               <p className="font-display text-3xl text-forest leading-none">{t.about.badgeNum}</p>
-              <p className="mt-1 text-xs sm:text-[11px] uppercase tracking-widest text-stone">{t.about.badgeLabel}</p>
+              <p className="mt-1 text-[11px] uppercase tracking-widest text-stone">{t.about.badgeLabel}</p>
             </div>
             <a href="#stay" className="ml-auto inline-flex items-center gap-2 text-sm text-forest hover:gap-3 transition-all">
               Explore the cabins →
@@ -664,11 +661,11 @@ function CabinCarousel({ images, alt }: { images: string[]; alt: string }) {
 function Accommodation() {
   const { t } = useLanguage();
   return (
-    <section id="stay" className="bg-secondary/40 py-12 sm:py-20 lg:py-24">
+    <section id="stay" className="bg-secondary/40 py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{t.stay.eyebrow}</p>
+            <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.stay.eyebrow}</p>
             <h2 className="max-w-2xl font-display text-4xl leading-tight sm:text-5xl">
               {t.stay.title1}<br />{t.stay.title2}
             </h2>
@@ -715,11 +712,11 @@ function Accommodation() {
 function WhyStay() {
   const { t } = useLanguage();
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-10 lg:py-24">
+    <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
       <div className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         {/* Left: reasons */}
         <div>
-          <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
           <h2 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">
             {t.why.title1}<br />{t.why.title2}
           </h2>
@@ -749,7 +746,7 @@ function WhyStay() {
                 className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
               />
             </div>
-            <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[11px] sm:text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
+            <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
               Pool
             </span>
             <span className="absolute inset-0 flex items-center justify-center bg-forest/0 text-coconut opacity-0 transition duration-300 group-hover:bg-forest/30 group-hover:opacity-100">
@@ -771,7 +768,7 @@ function WhyStay() {
                 className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
               />
             </div>
-            <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[11px] sm:text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
+            <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
               BBQ area
             </span>
             <span className="absolute inset-0 flex items-center justify-center bg-forest/0 text-coconut opacity-0 transition duration-300 group-hover:bg-forest/30 group-hover:opacity-100">
@@ -785,7 +782,7 @@ function WhyStay() {
             className="group rounded-2xl border border-forest/20 bg-coconut px-5 py-4 transition hover:bg-forest hover:text-coconut focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
             aria-label="Open the WhatsApp store"
           >
-            <p className="text-[11px] sm:text-[10px] uppercase tracking-[0.25em] text-forest group-hover:text-coconut/80">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-forest group-hover:text-coconut/80">
               WhatsApp store
             </p>
             <p className="mt-1 font-display text-lg text-forest group-hover:text-coconut">
@@ -809,10 +806,10 @@ function WhyStay() {
 function NearbySection() {
   const { t } = useLanguage();
   return (
-    <section id="nearby" className="bg-forest text-coconut py-12 sm:py-20 lg:py-24">
+    <section id="nearby" className="bg-forest text-coconut py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="mb-10 max-w-2xl">
-          <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-coconut/60">{t.nearby.eyebrow}</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-coconut/60">{t.nearby.eyebrow}</p>
           <h2 className="font-display text-4xl leading-tight sm:text-5xl">
             {t.nearby.title}
           </h2>
@@ -861,7 +858,7 @@ function Footer() {
           </p>
         </div>
         <div className="text-sm">
-          <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.25em] text-stone">{t.footer.visit}</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.25em] text-stone">{t.footer.visit}</p>
           <p className="text-foreground/80">
             {t.footer.address1}<br />{t.footer.address2}<br />{t.footer.address3}
           </p>
@@ -875,7 +872,7 @@ function Footer() {
           </a>
         </div>
         <div className="text-sm">
-          <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.25em] text-stone">{t.footer.reach}</p>
+          <p className="mb-3 text-[11px] uppercase tracking-[0.25em] text-stone">{t.footer.reach}</p>
           <ul className="space-y-2 text-foreground/80">
             <li>
               <a href={waHref(t.whatsappMessage)} target="_blank" rel="noreferrer" className="hover:text-forest">
@@ -904,9 +901,9 @@ function Footer() {
 function GoodToKnow() {
   const { t } = useLanguage();
   return (
-    <section className="bg-secondary/40 py-12 sm:py-16 lg:py-20">
+    <section className="bg-secondary/40 py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{t.goodToKnow.eyebrow}</p>
+        <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.goodToKnow.eyebrow}</p>
         <h2 className="mb-10 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">
           {t.goodToKnow.title}
         </h2>
@@ -928,21 +925,15 @@ function GoodToKnow() {
 function MobileCtaBar() {
   const { t } = useLanguage();
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-background/95 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
-      <a
-        href="#book"
-        className="flex min-h-12 flex-1 items-center justify-center rounded-full bg-forest px-4 text-base font-semibold text-coconut"
-      >
-        {t.nav.book}
-      </a>
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 px-4 py-2 backdrop-blur md:hidden">
       <a
         href={waHref(t.whatsappMessage)}
         target="_blank"
         rel="noreferrer"
-        aria-label={t.nav.whatsapp}
-        className="flex min-h-12 w-14 shrink-0 items-center justify-center rounded-full border border-forest/30 bg-card text-forest"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-forest px-4 py-2.5 text-center text-sm font-semibold uppercase tracking-wider text-coconut"
       >
-        <MessageCircle className="h-5 w-5" />
+        <MessageCircle className="h-4 w-4" />
+        {t.nav.whatsapp}
       </a>
     </div>
   );

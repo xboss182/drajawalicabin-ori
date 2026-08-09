@@ -4,7 +4,7 @@ export type Lang = "en" | "bm";
 
 export const translations = {
   en: {
-    nav: { cabins: "Cabins", about: "About", nearby: "Nearby", book: "Book", whatsapp: "WhatsApp Us", manageBooking: "My booking" },
+    nav: { cabins: "Cabins", about: "About", nearby: "Nearby", book: "Book", whatsapp: "WhatsApp Us", manageBooking: "View / manage booking" },
     whatsappMessage:
       "Salam Team Rajawali D'Cabin Chalet, I have a question regarding my staycation. (Note: All bookings and payments are made only through our official website.)",
     hero: {
@@ -12,14 +12,13 @@ export const translations = {
       title1: "Escape to nature,",
       title2: "stay in comfort.",
       body: "Private cabin-style accommodations in Chendering, Kuala Terengganu. A peaceful retreat for families, couples, and travellers chasing birdsong over notifications.",
-      cta: "Check dates",
+      cta: "Check availability",
       view: "View our cabins →",
-      alreadyBooked: "Manage booking →",
+      alreadyBooked: "Already booked? Manage your reservation →",
     },
     promo: {
       title: "Stay longer, save more",
       body: "10% off from your 2nd night onwards. Auto-applied.",
-      short: "10% off 2nd night",
     },
     search: {
       checkin: "Check-in",
@@ -245,7 +244,7 @@ export const translations = {
     },
   },
   bm: {
-    nav: { cabins: "Bilik", about: "Tentang", nearby: "Berdekatan", book: "Tempah", whatsapp: "WhatsApp Kami", manageBooking: "Tempahan saya" },
+    nav: { cabins: "Bilik", about: "Tentang", nearby: "Berdekatan", book: "Tempah", whatsapp: "WhatsApp Kami", manageBooking: "Lihat / urus tempahan" },
     whatsappMessage:
       "Salam Team Rajawali D'Cabin Chalet, saya ada pertanyaan berkenaan penginapan saya. (Nota: Semua tempahan dan pembayaran dibuat hanya melalui laman web rasmi kami.)",
     hero: {
@@ -253,14 +252,13 @@ export const translations = {
       title1: "Kembali ke alam,",
       title2: "nikmati keselesaan.",
       body: "Kabin persendirian di Chendering, Kuala Terengganu. Destinasi tenang buat keluarga, pasangan, dan pengembara yang inginkan kicauan burung berbanding bunyi notifikasi telefon.",
-      cta: "Semak tarikh",
+      cta: "Semak kekosongan",
       view: "Lihat kabin kami →",
-      alreadyBooked: "Urus tempahan →",
+      alreadyBooked: "Sudah tempah? Urus tempahan anda →",
     },
     promo: {
       title: "Menginap lebih lama, jimat lebih banyak",
       body: "Diskaun 10% mulai malam ke-2 dan seterusnya. Dikenakan secara automatik.",
-      short: "10% diskaun malam ke-2",
     },
     search: {
       checkin: "Daftar masuk",
