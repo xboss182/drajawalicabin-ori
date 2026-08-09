@@ -566,7 +566,7 @@ function DateCell({ label, date }: { label: string; date?: Date }) {
 function About() {
   const { t } = useLanguage();
   return (
-    <section id="about" className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
+    <section id="about" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-10 lg:py-24">
       <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
         <div>
           <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.about.eyebrow}</p>
@@ -664,7 +664,7 @@ function CabinCarousel({ images, alt }: { images: string[]; alt: string }) {
 function Accommodation() {
   const { t } = useLanguage();
   return (
-    <section id="stay" className="bg-secondary/40 py-20 lg:py-24">
+    <section id="stay" className="bg-secondary/40 py-12 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <div>
@@ -715,7 +715,7 @@ function Accommodation() {
 function WhyStay() {
   const { t } = useLanguage();
   return (
-    <section className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-10 lg:py-24">
       <div className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         {/* Left: reasons */}
         <div>
@@ -809,7 +809,7 @@ function WhyStay() {
 function NearbySection() {
   const { t } = useLanguage();
   return (
-    <section id="nearby" className="bg-forest text-coconut py-20 lg:py-24">
+    <section id="nearby" className="bg-forest text-coconut py-12 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="mb-10 max-w-2xl">
           <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-coconut/60">{t.nearby.eyebrow}</p>
@@ -904,7 +904,7 @@ function Footer() {
 function GoodToKnow() {
   const { t } = useLanguage();
   return (
-    <section className="bg-secondary/40 py-16 lg:py-20">
+    <section className="bg-secondary/40 py-12 sm:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.goodToKnow.eyebrow}</p>
         <h2 className="mb-10 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">
