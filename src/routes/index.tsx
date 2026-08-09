@@ -285,8 +285,8 @@ function Hero() {
             {t.hero.view}
           </a>
           {promoEnabled && (
-            <div className="sm:ml-auto inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
-              <Sparkles className="h-6 w-6 shrink-0 text-sand" aria-hidden />
+            <div className="sm:ml-auto inline-flex items-center gap-2 rounded-full border border-sand/50 bg-forest/40 px-3.5 py-2 text-xs font-medium leading-snug text-coconut shadow-md backdrop-blur-md sm:text-sm sm:leading-relaxed">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-sand" aria-hidden />
               <span className="leading-snug text-sand sm:leading-relaxed">
                 {promoText}
               </span>
