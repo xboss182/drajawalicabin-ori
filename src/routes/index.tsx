@@ -296,6 +296,16 @@ function Hero() {
             </div>
           )}
         </div>
+        <div className="mt-4">
+          <Link
+            to="/manage-booking"
+            search={{ id: "", token: "" }}
+            className="inline-flex items-center gap-2 rounded-full border border-coconut/40 bg-coconut/10 px-4 py-2 text-sm text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest"
+          >
+            <CalendarDays className="h-4 w-4" aria-hidden />
+            {t.hero.alreadyBooked}
+          </Link>
+        </div>
         <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70">
           <span>8 private cabins</span>
           <span className="hidden sm:inline opacity-50">·</span>
