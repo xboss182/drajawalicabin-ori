@@ -10,13 +10,13 @@ A chat assistant lives on the site. The guest talks to it, it checks real availa
 1. Every WhatsApp button on the site (floating button, nav, hero, footer) now opens the assistant instead of jumping straight to WhatsApp. A small "Chat on WhatsApp directly" link inside the assistant keeps the old behaviour for guests who just want to message you.
 2. It opens with "When would you like to stay?" and a date-range calendar, greeting in the guest's language (EN/BM, follows the site language). Picking dates immediately lists the rooms still free for those nights with prices — no typing needed.
 3. From there the guest can keep tapping cards or just type questions; the assistant handles both.
-3. It answers free-text questions about the property — facilities, directions, house rules, late check-out, BBQ pit and mattress add-ons, group bookings.
-4. When they mention dates, it shows an inline calendar card with fully booked dates blocked out.
-5. It shows which cabins are free for those dates with live weekday / weekend / holiday pricing, including the 10% second-night discount and any active promo.
-6. Guest picks rooms and pax in inline cards; a running total updates.
-7. It collects name, phone, IC number and vehicle details using the same validation rules as the booking page.
-8. Final step: a summary card with an "Open in WhatsApp" button. Tapping it opens WhatsApp with the entire booking written out — dates, rooms, pax, add-ons, total, guest details and a short reference code — ready to send.
-9. Alternative button: "Book on the website instead", deep-linking into `/book` with everything pre-filled for guests who prefer to pay online.
+4. Fully booked dates are blocked out on the calendar; if the whole property is full it says so and offers the nearest free dates.
+5. Room cards show live weekday / weekend / holiday pricing, including the 10% second-night discount and any active promo.
+6. Guest picks rooms, pax and add-ons in inline cards; a running total updates.
+7. It answers free-text questions along the way — facilities, directions, house rules, late check-out, BBQ pit and mattress add-ons, group bookings.
+8. It collects name, phone, IC number and vehicle details using the same validation rules as the booking page.
+9. Final step: a summary card with an "Open in WhatsApp" button. Tapping it opens WhatsApp with the entire booking written out — dates, rooms, pax, add-ons, total, guest details and a short reference code — ready to send.
+10. Alternative button: "Book on the website instead", deep-linking into `/book` with everything pre-filled for guests who prefer to pay online.
 
 ### What you (admin) get
 - Every assistant session that reaches the summary is saved as a lead: guest name, phone, dates, rooms, quoted total, timestamp, and whether they tapped through to WhatsApp.
