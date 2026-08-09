@@ -30,6 +30,7 @@ import { LanguageToggle, useLanguage } from "@/lib/i18n";
 import { Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getHeroPromoCta } from "@/lib/promo-cta.functions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createFileRoute("/")({
   head: () => ({
