@@ -265,7 +265,7 @@ function Hero() {
         <span className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-3 py-1 text-[10px] uppercase tracking-[0.3em] backdrop-blur sm:mb-6 sm:px-4 sm:py-1.5 sm:text-[11px]">
           <span className="size-1.5 rounded-full bg-coconut" /> {t.hero.badge}
         </span>
-        <h1 className="max-w-3xl font-display text-3xl leading-[1.05] sm:text-5xl lg:text-6xl">
+        <h1 className="max-w-3xl font-display text-2xl leading-[1.05] sm:text-5xl lg:text-6xl">
           <span className="sr-only">
             Rajawali D'Cabin Chalet — Riverside Cabin Accommodations in Chendering, Kuala Terengganu
           </span>
@@ -273,7 +273,7 @@ function Hero() {
             {t.hero.title1}<br />{t.hero.title2}
           </span>
         </h1>
-        <p className="mt-3 max-w-xl text-sm text-coconut/85 sm:mt-5 sm:text-lg">
+        <p className="mt-3 hidden max-w-xl text-sm text-coconut/85 sm:mt-5 sm:block sm:text-lg">
           {t.hero.body}
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-2 sm:mt-8 sm:gap-3">
@@ -287,8 +287,8 @@ function Hero() {
             {t.hero.view}
           </a>
           {promoEnabled && (
-            <div className="mt-1 inline-flex w-full items-center gap-2 rounded-2xl border border-sand/50 bg-forest/40 px-3 py-2 text-sm leading-snug text-coconut shadow-lg backdrop-blur-md sm:mt-0 sm:ml-auto sm:w-auto sm:rounded-3xl sm:px-6 sm:py-3.5 sm:text-xl sm:leading-relaxed">
-              <Sparkles className="h-4 w-4 shrink-0 text-sand sm:h-6 sm:w-6" aria-hidden />
+            <div className="mt-1 inline-flex w-auto items-center gap-2 rounded-full border border-sand/50 bg-forest/40 px-3 py-1.5 text-xs leading-snug text-coconut shadow-lg backdrop-blur-md sm:mt-0 sm:ml-auto sm:gap-3 sm:rounded-3xl sm:px-6 sm:py-3.5 sm:text-xl sm:leading-relaxed">
+              <Sparkles className="h-3.5 w-3.5 shrink-0 text-sand sm:h-6 sm:w-6" aria-hidden />
               <span className="leading-snug text-sand sm:leading-relaxed">
                 {promoText}
               </span>
@@ -299,7 +299,7 @@ function Hero() {
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-coconut/40 bg-coconut/10 px-3 py-1.5 text-xs text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest sm:px-4 sm:py-2 sm:text-sm"
+            className="inline-flex items-center gap-1.5 rounded-full border border-coconut/40 bg-coconut/10 px-3 py-1.5 text-[11px] text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest sm:px-4 sm:py-2 sm:text-sm"
           >
             <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
             {t.hero.alreadyBooked}
@@ -310,7 +310,7 @@ function Hero() {
           <span className="hidden sm:inline opacity-50">·</span>
           <span className="hidden sm:inline">Riverside · Chendering</span>
           <span className="hidden sm:inline opacity-50">·</span>
-          <a href={waHref(t.whatsappMessage)} target="_blank" rel="noreferrer" className="hover:text-coconut">WhatsApp booking</a>
+          <a href={waHref(t.whatsappMessage)} target="_blank" rel="noreferrer" className="hidden hover:text-coconut sm:inline">WhatsApp booking</a>
         </div>
       </div>
     </section>
