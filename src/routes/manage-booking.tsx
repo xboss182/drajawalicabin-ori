@@ -255,7 +255,7 @@ function ManagePage() {
       <button
         onClick={upload}
         disabled={!file || uploading}
-        className="mt-4 w-full rounded-full bg-forest px-7 py-4 text-sm font-medium uppercase tracking-widest text-coconut hover:bg-forest/90 disabled:opacity-60 sm:w-auto"
+        className="mt-4 min-h-14 w-full rounded-full bg-forest px-7 text-base font-medium text-coconut hover:bg-forest/90 disabled:opacity-60 sm:w-auto sm:text-sm sm:uppercase sm:tracking-widest"
       >
         {uploading ? c.uploading : c.submit}
       </button>
