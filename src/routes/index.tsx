@@ -261,8 +261,8 @@ function Hero() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/30 to-forest/85" />
-      <div className="relative mx-auto flex min-h-[62svh] max-w-7xl flex-col justify-end px-6 pb-14 pt-20 text-coconut sm:min-h-[78svh] sm:pb-28 sm:pt-32 lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
-        <span className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.3em] backdrop-blur">
+      <div className="relative mx-auto flex min-h-[62svh] max-w-7xl flex-col justify-end px-4 pb-10 pt-24 text-coconut sm:min-h-[78svh] sm:px-6 sm:pb-28 sm:pt-32 lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
+        <span className="mb-4 hidden w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.3em] backdrop-blur sm:mb-6 sm:inline-flex">
           <span className="size-1.5 rounded-full bg-coconut" /> {t.hero.badge}
         </span>
         <h1 className="max-w-3xl font-display text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
@@ -273,29 +273,30 @@ function Hero() {
             {t.hero.title1}<br />{t.hero.title2}
           </span>
         </h1>
-        <p className="mt-5 max-w-xl text-base text-coconut/85 sm:text-lg">
+        <p className="mt-4 line-clamp-2 max-w-xl text-base text-coconut/85 sm:mt-5 sm:line-clamp-none sm:text-lg">
           {t.hero.body}
         </p>
-        <div className="mt-8 flex flex-wrap items-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
           <a
             href="#book"
-            className="rounded-full bg-coconut px-7 py-3.5 text-sm font-medium text-forest transition hover:bg-sand"
+            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-coconut px-7 text-base font-medium text-forest transition hover:bg-sand sm:flex-none sm:text-sm"
           >
             {t.hero.cta}
           </a>
-          <a href="#stay" className="text-sm text-coconut/85 underline-offset-4 hover:underline">
+          <a href="#stay" className="hidden text-sm text-coconut/85 underline-offset-4 hover:underline sm:inline">
             {t.hero.view}
           </a>
           {promoEnabled && (
-            <div className="sm:ml-auto inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
-              <Sparkles className="h-6 w-6 shrink-0 text-sand" aria-hidden />
+            <div className="sm:ml-auto inline-flex w-full items-center gap-2 rounded-full border border-sand/50 bg-forest/40 px-4 py-2.5 text-sm leading-snug text-coconut shadow-lg backdrop-blur-md sm:w-auto sm:gap-3 sm:rounded-3xl sm:px-6 sm:py-3.5 sm:text-xl sm:leading-relaxed">
+              <Sparkles className="h-5 w-5 shrink-0 text-sand sm:h-6 sm:w-6" aria-hidden />
               <span className="leading-snug text-sand sm:leading-relaxed">
-                {promoText}
+                <span className="sm:hidden">{t.promo.short}</span>
+                <span className="hidden sm:inline">{promoText}</span>
               </span>
             </div>
           )}
         </div>
-        <div className="mt-4">
+        <div className="mt-4 hidden sm:block">
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
@@ -305,7 +306,7 @@ function Hero() {
             {t.hero.alreadyBooked}
           </Link>
         </div>
-        <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70">
+        <div className="mt-6 hidden flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70 sm:mt-8 sm:flex">
           <span>8 private cabins</span>
           <span className="hidden sm:inline opacity-50">·</span>
           <span>Riverside · Chendering</span>
