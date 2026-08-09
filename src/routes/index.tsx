@@ -211,7 +211,7 @@ function Nav() {
           >
             <CalendarDays className="h-4 w-4" aria-hidden />
             <span className="hidden sm:inline">{t.nav.manageBooking}</span>
-            <span className="sm:hidden">{t.nav.book}</span>
+            <span className="sm:hidden">My booking</span>
           </Link>
           <a
             href={waHref(t.whatsappMessage)}
