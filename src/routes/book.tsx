@@ -783,10 +783,10 @@ function DetailsStep(props: {
   }
 
   return (
-    <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
+    <section className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
       <form onSubmit={submit} className="order-1 lg:order-1">
         <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
-        <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
+        <h1 className="mb-6 font-display text-3xl leading-tight sm:mb-10 sm:text-4xl lg:text-5xl">{bt.title}</h1>
 
         {isAnyCabin && (
           <div className="mb-4 rounded-xl border border-forest/30 bg-forest/[0.04] p-3">
@@ -1256,7 +1256,7 @@ function PaymentStep({
   const cardEnabled = isPaymentsConfigured();
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-16 lg:px-10 lg:py-20">
+    <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-16 lg:px-10 lg:py-20">
       <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{bt.pay.eyebrow}</p>
       <h1 className="mt-2 font-display text-4xl text-forest">{bt.pay.title}</h1>
       <p className="mt-3 text-foreground/75">
