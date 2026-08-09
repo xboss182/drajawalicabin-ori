@@ -4,7 +4,7 @@ export type Lang = "en" | "bm";
 
 export const translations = {
   en: {
-    nav: { cabins: "Cabins", about: "About", nearby: "Nearby", book: "Book", whatsapp: "WhatsApp Us" },
+    nav: { cabins: "Cabins", about: "About", nearby: "Nearby", book: "Book", whatsapp: "WhatsApp Us", manageBooking: "View / manage booking" },
     whatsappMessage:
       "Salam Team Rajawali D'Cabin Chalet, I have a question regarding my staycation. (Note: All bookings and payments are made only through our official website.)",
     hero: {
@@ -14,6 +14,7 @@ export const translations = {
       body: "Private cabin-style accommodations in Chendering, Kuala Terengganu. A peaceful retreat for families, couples, and travellers chasing birdsong over notifications.",
       cta: "Check availability",
       view: "View our cabins →",
+      alreadyBooked: "Already booked? Manage your reservation →",
     },
     promo: {
       title: "Stay longer, save more",
@@ -243,7 +244,7 @@ export const translations = {
     },
   },
   bm: {
-    nav: { cabins: "Bilik", about: "Tentang", nearby: "Berdekatan", book: "Tempah", whatsapp: "WhatsApp Kami" },
+    nav: { cabins: "Bilik", about: "Tentang", nearby: "Berdekatan", book: "Tempah", whatsapp: "WhatsApp Kami", manageBooking: "Lihat / urus tempahan" },
     whatsappMessage:
       "Salam Team Rajawali D'Cabin Chalet, saya ada pertanyaan berkenaan penginapan saya. (Nota: Semua tempahan dan pembayaran dibuat hanya melalui laman web rasmi kami.)",
     hero: {
