@@ -210,8 +210,7 @@ function Nav() {
             className="inline-flex items-center gap-2 rounded-full bg-coconut px-3 py-2 text-xs font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
           >
             <CalendarDays className="h-4 w-4" aria-hidden />
-            <span className="hidden sm:inline">{t.nav.manageBooking}</span>
-            <span className="sm:hidden">My booking</span>
+            {t.nav.manageBooking}
           </Link>
           <a
             href={waHref(t.whatsappMessage)}
