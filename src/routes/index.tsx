@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CalendarIcon, Users, BedDouble, Search, MessageCircle } from "lucide-react";
+import { CalendarIcon, Users, BedDouble, Search, MessageCircle, CalendarDays } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -196,9 +196,10 @@ function Nav() {
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="rounded-full border border-coconut/40 bg-coconut/10 px-4 py-1.5 text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest"
+            className="inline-flex items-center gap-2 rounded-full bg-coconut px-4 py-2 text-sm font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand hover:text-forest"
           >
-            My booking
+            <CalendarDays className="h-4 w-4" aria-hidden />
+            {t.nav.manageBooking}
           </Link>
         </nav>
         <div className="flex items-center gap-3">
@@ -206,9 +207,11 @@ function Nav() {
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="rounded-full border border-coconut/40 bg-coconut/10 px-3 py-1.5 text-[11px] uppercase tracking-widest text-coconut md:hidden"
+            className="inline-flex items-center gap-2 rounded-full bg-coconut px-3 py-2 text-xs font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
           >
-            My booking
+            <CalendarDays className="h-4 w-4" aria-hidden />
+            <span className="hidden sm:inline">{t.nav.manageBooking}</span>
+            <span className="sm:hidden">{t.nav.book}</span>
           </Link>
           <a
             href={waHref(t.whatsappMessage)}
