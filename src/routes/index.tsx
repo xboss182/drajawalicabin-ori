@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { CalendarIcon, Users, BedDouble, Search, MessageCircle, CalendarDays } from "lucide-react";
+import { CalendarIcon, Users, BedDouble, Search, MessageCircle } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -196,10 +196,9 @@ function Nav() {
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-coconut px-3 py-1.5 text-xs font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand hover:text-forest"
+            className="rounded-full border border-coconut/40 bg-coconut/10 px-4 py-1.5 text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest"
           >
-            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
-            {t.nav.manageBooking}
+            My booking
           </Link>
         </nav>
         <div className="flex items-center gap-3">
@@ -207,10 +206,9 @@ function Nav() {
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-coconut px-2.5 py-1.5 text-[11px] font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
+            className="rounded-full border border-coconut/40 bg-coconut/10 px-3 py-1.5 text-[11px] uppercase tracking-widest text-coconut md:hidden"
           >
-            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
-            {t.nav.manageBooking}
+            My booking
           </Link>
           <a
             href={waHref(t.whatsappMessage)}
@@ -294,16 +292,6 @@ function Hero() {
               </span>
             </div>
           )}
-        </div>
-        <div className="mt-4">
-          <Link
-            to="/manage-booking"
-            search={{ id: "", token: "" }}
-            className="inline-flex items-center gap-2 rounded-full border border-coconut/40 bg-coconut/10 px-4 py-2 text-sm text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest"
-          >
-            <CalendarDays className="h-4 w-4" aria-hidden />
-            {t.hero.alreadyBooked}
-          </Link>
         </div>
         <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70">
           <span>8 private cabins</span>
