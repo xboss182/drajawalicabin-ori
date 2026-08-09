@@ -345,6 +345,7 @@ function AvailabilitySearch() {
   const [room, setRoom] = useState(t.search.anyCabin);
   const [openCal, setOpenCal] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const fmtISO = (d: Date) => {
     const y = d.getFullYear();
@@ -444,7 +445,7 @@ function AvailabilitySearch() {
               mode="range"
               selected={range}
               onSelect={handleRangeSelect}
-              numberOfMonths={2}
+              numberOfMonths={isMobile ? 1 : 2}
               disabled={{ before: todayDate }}
               defaultMonth={range?.from ?? todayDate}
               initialFocus
@@ -509,7 +510,7 @@ function AvailabilitySearch() {
         <button
           type="submit"
           className={cn(
-            "flex items-center justify-center gap-2 bg-forest px-8 py-4 text-base font-semibold text-coconut transition hover:bg-forest/90",
+            "flex min-h-14 items-center justify-center gap-2 bg-forest px-8 text-base font-semibold text-coconut transition hover:bg-forest/90",
             "lg:m-2 lg:rounded-2xl lg:px-10",
           )}
         >
@@ -517,7 +518,7 @@ function AvailabilitySearch() {
           {t.search.submit}
         </button>
       </form>
-      <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
+      <p className="mx-auto mt-3 hidden max-w-3xl text-center text-xs text-foreground/70 sm:block sm:text-sm">
         {t.search.note}
       </p>
       {promoText && (
