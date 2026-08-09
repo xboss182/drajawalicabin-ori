@@ -330,7 +330,7 @@ export const createBooking = createServerFn({ method: "POST" })
       const gid = (lead.booking_group_id as string) ?? (lead.id as string);
       const { data: groupRows } = await supabaseAdmin
         .from("booking_requests")
-        .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, subtotal, comforter, comforter_total, total_amount, deposit_amount, balance_amount, payment_reference, payment_type")
+        .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, subtotal, comforter, comforter_total, total_amount, deposit_amount, balance_amount, payment_reference, payment_type, guest_token")
         .eq("booking_group_id", gid)
         .order("created_at", { ascending: true });
       const leadRow = groupRows?.[0];
@@ -351,6 +351,7 @@ export const createBooking = createServerFn({ method: "POST" })
           remaining,
           paymentType: (leadRow as any).payment_type ?? "deposit",
           rooms: (groupRows ?? []).map((r) => ({ name: cleanRoomType(r.room_type), total: Number(r.total_amount ?? 0) })),
+          manageUrl: `https://drajawalicabin.com/manage-booking?id=${leadRow.id}&token=${(leadRow as any).guest_token}`,
         };
         const { sendTransactionalEmail, getAdminRecipients } = await import("./email/send.server");
         if (!isManual) {
@@ -433,7 +434,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
     // Group rows for the summary email
     const { data: groupRows } = await supabaseAdmin
       .from("booking_requests")
-      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, cabin_id, subtotal, comforter, comforter_total, total_amount, deposit_amount, balance_amount, payment_reference, payment_type, locker_code, confirmation_email_sent_at, created_at")
+      .select("id, guest_name, email, phone, check_in, check_out, guests, nights, room_type, cabin_id, subtotal, comforter, comforter_total, total_amount, deposit_amount, balance_amount, payment_reference, payment_type, locker_code, confirmation_email_sent_at, created_at, guest_token")
       .eq("booking_group_id", groupId)
       .order("created_at", { ascending: true });
     const leadRow = groupRows?.[0];
@@ -460,6 +461,7 @@ export const attachPaymentProof = createServerFn({ method: "POST" })
         remaining,
         paymentType: (leadRow as any).payment_type ?? 'deposit',
         rooms: (groupRows ?? []).map((r) => ({ name: cleanRoomType(r.room_type), total: Number(r.total_amount ?? 0) })),
+        manageUrl: `https://drajawalicabin.com/manage-booking?id=${leadRow.id}&token=${(leadRow as any).guest_token}`,
       };
       const { sendTransactionalEmail, getAdminRecipients } = await import("./email/send.server");
       // Guest copy
@@ -1233,7 +1235,7 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
     const { data: rows } = await supabaseAdmin
       .from("booking_requests")
       .select(
-        "id, guest_name, email, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, balance_paid_at, payment_reference, status, locker_code, comforter, comforter_total, guest_token, created_at"
+        "id, guest_name, email, check_in, check_out, guests, nights, room_type, total_amount, deposit_amount, balance_amount, balance_paid_at, payment_reference, status, locker_code, comforter, comforter_total, guest_token, created_at, payment_proof_path, balance_proof_path"
       )
       .eq("booking_group_id", gid)
       .order("created_at", { ascending: true });
@@ -1262,6 +1264,8 @@ export const getBookingForGuest = createServerFn({ method: "POST" })
       securityDeposit,
       remaining,
       status: head.status,
+      paymentProofPath: (head as { payment_proof_path?: string | null }).payment_proof_path ?? null,
+      balanceProofPath: (head as { balance_proof_path?: string | null }).balance_proof_path ?? null,
       lockerCode: head.locker_code,
       balancePaidAt: head.balance_paid_at,
       comforter: head.comforter,

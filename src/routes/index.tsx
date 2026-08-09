@@ -196,9 +196,9 @@ function Nav() {
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="hover:text-coconut"
+            className="rounded-full border border-coconut/40 bg-coconut/10 px-4 py-1.5 text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest"
           >
-            Manage booking
+            My booking
           </Link>
         </nav>
         <div className="flex items-center gap-3">
@@ -206,9 +206,9 @@ function Nav() {
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="text-xs uppercase tracking-widest text-coconut/90 hover:text-coconut md:hidden"
+            className="rounded-full border border-coconut/40 bg-coconut/10 px-3 py-1.5 text-[11px] uppercase tracking-widest text-coconut md:hidden"
           >
-            Manage booking
+            My booking
           </Link>
           <a
             href={waHref(t.whatsappMessage)}
