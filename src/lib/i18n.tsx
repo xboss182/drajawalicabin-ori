@@ -253,13 +253,14 @@ export const translations = {
       title1: "Kembali ke alam,",
       title2: "nikmati keselesaan.",
       body: "Kabin persendirian di Chendering, Kuala Terengganu. Destinasi tenang buat keluarga, pasangan, dan pengembara yang inginkan kicauan burung berbanding bunyi notifikasi telefon.",
-      cta: "Semak kekosongan",
+      cta: "Semak tarikh",
       view: "Lihat kabin kami →",
-      alreadyBooked: "Sudah tempah? Urus tempahan anda →",
+      alreadyBooked: "Urus tempahan →",
     },
     promo: {
       title: "Menginap lebih lama, jimat lebih banyak",
       body: "Diskaun 10% mulai malam ke-2 dan seterusnya. Dikenakan secara automatik.",
+      short: "10% diskaun malam ke-2",
     },
     search: {
       checkin: "Daftar masuk",
