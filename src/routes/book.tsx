@@ -610,6 +610,24 @@ function BookPage() {
   return (
     <main className="min-h-[100svh] bg-background text-foreground">
       <BookHeader />
+      {step === "details" && remembered && (
+        <div className="mx-auto mt-6 max-w-3xl px-6 lg:px-10">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-forest/30 bg-coconut px-5 py-4">
+            <p className="text-sm text-foreground/85">
+              You already have booking{" "}
+              <span className="font-mono text-forest">{remembered.reference || "—"}</span>. Need to send a
+              receipt? Open it instead of booking again.
+            </p>
+            <Link
+              to="/manage-booking"
+              search={{ id: remembered.id, token: remembered.token }}
+              className="rounded-full bg-forest px-5 py-2.5 text-xs font-medium uppercase tracking-widest text-coconut hover:bg-forest/90"
+            >
+              Open my booking
+            </Link>
+          </div>
+        </div>
+      )}
       {step === "details" && (
         <DetailsStep
           {...{
