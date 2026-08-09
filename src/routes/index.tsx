@@ -176,12 +176,12 @@ function Nav() {
   const { t } = useLanguage();
   return (
     <header className="absolute left-0 right-0 top-0 z-30">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
-        <a href="#top" className="flex items-center gap-2 text-coconut">
-          <Leaf />
-          <span className="font-display text-lg leading-none">
-            Rajawali D'Cabin
-            <span className="block text-[10px] uppercase tracking-[0.25em] opacity-80">
+      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:px-6 sm:py-6 lg:px-10">
+        <a href="#top" className="flex min-w-0 items-center gap-2 text-coconut">
+          <span className="shrink-0"><Leaf /></span>
+          <span className="min-w-0 font-display text-base leading-tight sm:text-lg sm:leading-none">
+            <span className="block truncate">Rajawali D'Cabin</span>
+            <span className="hidden text-[10px] uppercase tracking-[0.25em] opacity-80 sm:block">
               Chalet · Chendering
             </span>
           </span>
@@ -202,14 +202,14 @@ function Nav() {
             {t.nav.manageBooking}
           </Link>
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <LanguageToggle />
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="inline-flex items-center gap-2 rounded-full bg-coconut px-3 py-2 text-xs font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
+            className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full bg-coconut px-3 text-xs font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
           >
-            <CalendarDays className="h-4 w-4" aria-hidden />
+            <CalendarDays className="h-4 w-4 shrink-0" aria-hidden />
             {t.nav.manageBooking}
           </Link>
           <a
