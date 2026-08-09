@@ -176,12 +176,12 @@ function Nav() {
   const { t } = useLanguage();
   return (
     <header className="absolute left-0 right-0 top-0 z-30">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 md:py-6 lg:px-10">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
         <a href="#top" className="flex items-center gap-2 text-coconut">
           <Leaf />
-          <span className="font-display text-base leading-none md:text-lg">
+          <span className="font-display text-lg leading-none">
             Rajawali D'Cabin
-            <span className="block text-[9px] uppercase tracking-[0.25em] opacity-80 md:text-[10px]">
+            <span className="block text-[10px] uppercase tracking-[0.25em] opacity-80">
               Chalet · Chendering
             </span>
           </span>
@@ -202,14 +202,14 @@ function Nav() {
             {t.nav.manageBooking}
           </Link>
         </nav>
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-3">
           <LanguageToggle />
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="inline-flex items-center gap-1 rounded-full bg-coconut px-2 py-1 text-[10px] font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
+            className="inline-flex items-center gap-1.5 rounded-full bg-coconut px-2.5 py-1.5 text-[11px] font-medium text-forest shadow-lg shadow-forest/20 transition hover:bg-sand md:hidden"
           >
-            <CalendarDays className="h-3 w-3" aria-hidden />
+            <CalendarDays className="h-3.5 w-3.5" aria-hidden />
             {t.nav.manageBooking}
           </Link>
           <a
@@ -251,7 +251,7 @@ function Hero() {
     : `${t.promo.title} — ${t.promo.body}`;
   const promoEnabled = promo ? activePromo !== null : true;
   return (
-    <section id="top" className="relative min-h-[48svh] w-full overflow-hidden sm:min-h-[78svh] lg:min-h-[82svh]">
+    <section id="top" className="relative min-h-[62svh] w-full overflow-hidden sm:min-h-[78svh] lg:min-h-[82svh]">
       <img
         src={heroRiverside}
         alt="Riverside cabins at Rajawali D'Cabin Chalet at twilight, Chendering, Kuala Terengganu"
@@ -261,11 +261,11 @@ function Hero() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/30 to-forest/85" />
-      <div className="relative mx-auto flex min-h-[48svh] max-w-7xl flex-col justify-end px-4 pb-10 pt-20 text-coconut sm:min-h-[78svh] sm:pb-28 sm:pt-32 lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
-        <span className="mb-4 inline-flex w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-3 py-1 text-[10px] uppercase tracking-[0.3em] backdrop-blur sm:mb-6 sm:px-4 sm:py-1.5 sm:text-[11px]">
+      <div className="relative mx-auto flex min-h-[62svh] max-w-7xl flex-col justify-end px-6 pb-14 pt-20 text-coconut sm:min-h-[78svh] sm:pb-28 sm:pt-32 lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
+        <span className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.3em] backdrop-blur">
           <span className="size-1.5 rounded-full bg-coconut" /> {t.hero.badge}
         </span>
-        <h1 className="max-w-3xl font-display text-2xl leading-[1.05] sm:text-5xl lg:text-6xl">
+        <h1 className="max-w-3xl font-display text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
           <span className="sr-only">
             Rajawali D'Cabin Chalet — Riverside Cabin Accommodations in Chendering, Kuala Terengganu
           </span>
@@ -273,13 +273,13 @@ function Hero() {
             {t.hero.title1}<br />{t.hero.title2}
           </span>
         </h1>
-        <p className="mt-3 hidden max-w-xl text-sm text-coconut/85 sm:mt-5 sm:block sm:text-lg">
+        <p className="mt-5 max-w-xl text-base text-coconut/85 sm:text-lg">
           {t.hero.body}
         </p>
-        <div className="mt-5 flex flex-wrap items-center gap-2 sm:mt-8 sm:gap-3">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
           <a
             href="#book"
-            className="rounded-full bg-coconut px-5 py-2.5 text-sm font-medium text-forest transition hover:bg-sand sm:px-7 sm:py-3.5"
+            className="rounded-full bg-coconut px-7 py-3.5 text-sm font-medium text-forest transition hover:bg-sand"
           >
             {t.hero.cta}
           </a>
@@ -287,30 +287,30 @@ function Hero() {
             {t.hero.view}
           </a>
           {promoEnabled && (
-            <div className="mt-1 inline-flex w-auto items-center gap-2 rounded-full border border-sand/50 bg-forest/40 px-3 py-1.5 text-xs leading-snug text-coconut shadow-lg backdrop-blur-md sm:mt-0 sm:ml-auto sm:gap-3 sm:rounded-3xl sm:px-6 sm:py-3.5 sm:text-xl sm:leading-relaxed">
-              <Sparkles className="h-3.5 w-3.5 shrink-0 text-sand sm:h-6 sm:w-6" aria-hidden />
+            <div className="sm:ml-auto inline-flex items-center gap-3 rounded-3xl border border-sand/50 bg-forest/40 px-6 py-3.5 text-lg leading-snug text-coconut shadow-lg backdrop-blur-md sm:text-xl sm:leading-relaxed">
+              <Sparkles className="h-6 w-6 shrink-0 text-sand" aria-hidden />
               <span className="leading-snug text-sand sm:leading-relaxed">
                 {promoText}
               </span>
             </div>
           )}
         </div>
-        <div className="mt-3 sm:mt-4">
+        <div className="mt-4">
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-coconut/40 bg-coconut/10 px-3 py-1.5 text-[11px] text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest sm:px-4 sm:py-2 sm:text-sm"
+            className="inline-flex items-center gap-2 rounded-full border border-coconut/40 bg-coconut/10 px-4 py-2 text-sm text-coconut backdrop-blur transition hover:bg-coconut hover:text-forest"
           >
-            <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
+            <CalendarDays className="h-4 w-4" aria-hidden />
             {t.hero.alreadyBooked}
           </Link>
         </div>
-        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] uppercase tracking-[0.25em] text-coconut/70 sm:mt-8 sm:gap-x-5 sm:gap-y-2 sm:text-[11px]">
+        <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70">
           <span>8 private cabins</span>
           <span className="hidden sm:inline opacity-50">·</span>
-          <span className="hidden sm:inline">Riverside · Chendering</span>
+          <span>Riverside · Chendering</span>
           <span className="hidden sm:inline opacity-50">·</span>
-          <a href={waHref(t.whatsappMessage)} target="_blank" rel="noreferrer" className="hidden hover:text-coconut sm:inline">WhatsApp booking</a>
+          <a href={waHref(t.whatsappMessage)} target="_blank" rel="noreferrer" className="hover:text-coconut">WhatsApp booking</a>
         </div>
       </div>
     </section>
@@ -415,19 +415,19 @@ function AvailabilitySearch() {
   };
 
   return (
-    <section id="book" className="relative z-20 -mt-10 px-4 sm:-mt-24 sm:px-6 lg:px-10">
+    <section id="book" className="relative z-20 -mt-24 px-4 sm:px-6 lg:px-10">
       <form
         onSubmit={submit}
-        className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl shadow-forest/25 sm:rounded-3xl lg:flex-row lg:items-stretch"
+        className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-2xl shadow-forest/25 lg:flex-row lg:items-stretch"
       >
         {/* Dates - wider */}
         <Popover open={openCal} onOpenChange={setOpenCal}>
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="group flex flex-[1.6] min-w-0 items-center gap-3 px-4 py-2.5 text-left transition hover:bg-muted/40 sm:gap-4 sm:px-5 sm:py-3 lg:px-7 lg:py-4"
+              className="group flex flex-[1.6] min-w-0 items-center gap-4 px-5 py-3 text-left transition hover:bg-muted/40 lg:px-7 lg:py-4"
             >
-              <CalendarIcon className="h-4 w-4 shrink-0 text-forest sm:h-5 sm:w-5" />
+              <CalendarIcon className="h-5 w-5 shrink-0 text-forest" />
               <DateCell label={t.search.checkin} date={range?.from} />
               <div className="hidden flex-col items-center px-2 text-stone sm:flex">
                 <span className="text-[10px] uppercase tracking-[0.2em]">
@@ -455,14 +455,14 @@ function AvailabilitySearch() {
         <div className="h-px w-full bg-border lg:h-auto lg:w-px" />
 
         {/* Guests - narrower */}
-        <div className="flex flex-[0.6] min-w-0 items-center gap-3 px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-3 lg:px-6 lg:py-4">
-          <Users className="h-4 w-4 shrink-0 text-forest sm:h-5 sm:w-5" />
+        <div className="flex flex-[0.6] min-w-0 items-center gap-4 px-5 py-3 lg:px-6 lg:py-4">
+          <Users className="h-5 w-5 shrink-0 text-forest" />
           <div className="flex flex-1 min-w-0 flex-col gap-0.5">
             <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
               {t.search.guests}
             </span>
             <Select value={guests} onValueChange={setGuests}>
-              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-sm font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 sm:text-base [&>span]:truncate">
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-base font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 [&>span]:truncate">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -479,14 +479,14 @@ function AvailabilitySearch() {
         <div className="h-px w-full bg-border lg:h-auto lg:w-px" />
 
         {/* Room type - narrower */}
-        <div className="flex flex-[0.8] min-w-0 items-center gap-3 px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-3 lg:px-6 lg:py-4">
-          <BedDouble className="h-4 w-4 shrink-0 text-forest sm:h-5 sm:w-5" />
+        <div className="flex flex-[0.8] min-w-0 items-center gap-4 px-5 py-3 lg:px-6 lg:py-4">
+          <BedDouble className="h-5 w-5 shrink-0 text-forest" />
           <div className="flex flex-1 min-w-0 flex-col gap-0.5">
             <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
               {t.search.room}
             </span>
             <Select value={room} onValueChange={setRoom}>
-              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-sm font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 sm:text-base [&>span]:truncate">
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-base font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 [&>span]:truncate">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -508,15 +508,15 @@ function AvailabilitySearch() {
         <button
           type="submit"
           className={cn(
-            "flex items-center justify-center gap-2 bg-forest px-6 py-3 text-sm font-semibold text-coconut transition hover:bg-forest/90 sm:px-8 sm:py-4 sm:text-base",
+            "flex items-center justify-center gap-2 bg-forest px-8 py-4 text-base font-semibold text-coconut transition hover:bg-forest/90",
             "lg:m-2 lg:rounded-2xl lg:px-10",
           )}
         >
-          <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+          <Search className="h-5 w-5" />
           {t.search.submit}
         </button>
       </form>
-      <p className="mx-auto mt-2 max-w-3xl text-center text-[11px] text-foreground/70 sm:mt-3 sm:text-sm">
+      <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
         {t.search.note}
       </p>
       {promoText && (
@@ -539,19 +539,19 @@ function DateCell({ label, date }: { label: string; date?: Date }) {
         {label}
       </span>
       {date ? (
-        <div className="flex items-baseline gap-1.5 sm:gap-2">
-          <span className="font-display text-lg font-semibold leading-none text-foreground sm:text-xl">
+        <div className="flex items-baseline gap-2">
+          <span className="font-display text-xl font-semibold leading-none text-foreground">
             {date.getDate()}
           </span>
-          <span className="text-xs text-foreground/80 sm:text-sm">
+          <span className="text-sm text-foreground/80">
             {date.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
           </span>
         </div>
       ) : (
-        <span className="text-sm text-stone sm:text-base">Select date</span>
+        <span className="text-base text-stone">Select date</span>
       )}
       {date && (
-        <span className="text-[10px] text-stone sm:text-xs">
+        <span className="text-xs text-stone">
           {date.toLocaleDateString("en-US", { weekday: "long" })}
         </span>
       )}
