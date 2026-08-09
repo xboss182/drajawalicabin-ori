@@ -92,7 +92,7 @@ function FindBookingPage() {
       </header>
 
       <section className="mx-auto max-w-xl px-6 py-20 lg:px-10">
-        <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-stone">{copy.eyebrow}</p>
+        <p className="mb-4 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{copy.eyebrow}</p>
         <h1 className="font-display text-3xl leading-tight sm:text-4xl">{copy.title}</h1>
         <p className="mt-4 text-foreground/75">{copy.intro}</p>
 
@@ -110,7 +110,7 @@ function FindBookingPage() {
         ) : (
           <form onSubmit={onSubmit} className="mt-10 space-y-5">
             <label className="block">
-              <span className="text-[11px] uppercase tracking-[0.25em] text-stone">{copy.emailLabel}</span>
+              <span className="text-xs sm:text-[11px] uppercase tracking-[0.25em] text-stone">{copy.emailLabel}</span>
               <input
                 type="email"
                 required
@@ -122,7 +122,7 @@ function FindBookingPage() {
               />
             </label>
             <label className="block">
-              <span className="text-[11px] uppercase tracking-[0.25em] text-stone">{copy.refLabel}</span>
+              <span className="text-xs sm:text-[11px] uppercase tracking-[0.25em] text-stone">{copy.refLabel}</span>
               <input
                 type="text"
                 required

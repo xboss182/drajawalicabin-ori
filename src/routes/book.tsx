@@ -783,15 +783,15 @@ function DetailsStep(props: {
   }
 
   return (
-    <section className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
+    <section className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:gap-12 sm:px-6 sm:py-16 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:px-10 lg:py-20">
       <form onSubmit={submit} className="order-1 lg:order-1">
-        <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
-        <h1 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">{bt.title}</h1>
+        <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step1Eyebrow}</p>
+        <h1 className="mb-6 font-display text-3xl leading-tight sm:mb-10 sm:text-4xl lg:text-5xl">{bt.title}</h1>
 
         {isAnyCabin && (
           <div className="mb-4 rounded-xl border border-forest/30 bg-forest/[0.04] p-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-forest">Recommended for your party</p>
+              <p className="text-[11px] sm:text-[10px] uppercase tracking-[0.25em] text-forest">Recommended for your party</p>
               <p className="text-[10px] text-stone">
                 {guests} guest{Number(guests.replace("+", "")) > 1 ? "s" : ""}
               </p>
@@ -846,7 +846,7 @@ function DetailsStep(props: {
         <div className="mt-4 rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-stone">Availability</p>
+              <p className="text-[11px] sm:text-[10px] uppercase tracking-[0.3em] text-stone">Availability</p>
               <h3 className="mt-0.5 font-display text-base text-forest">
                 {cart.length > 0
                   ? `${totalRooms} room${totalRooms > 1 ? "s" : ""} · live calendar`
@@ -858,7 +858,7 @@ function DetailsStep(props: {
                   : `${blockedDates.length} night${blockedDates.length === 1 ? "" : "s"} unavailable for this cart — hover a red date to see why.`}
               </p>
             </div>
-            <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-stone">
+            <div className="flex items-center gap-3 text-[11px] sm:text-[10px] uppercase tracking-widest text-stone">
               <span className="flex items-center gap-1">
                 <span className="inline-block h-2 w-2 rounded-full border border-border bg-background" />
                 Available
@@ -943,10 +943,10 @@ function DetailsStep(props: {
         <div className="mt-4 rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="flex items-end justify-between gap-2">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-stone">Your rooms</p>
+              <p className="text-[11px] sm:text-[10px] uppercase tracking-[0.3em] text-stone">Your rooms</p>
               <h3 className="mt-0.5 font-display text-base text-forest">Pick the cabins for this stay</h3>
             </div>
-            <span className="rounded-full bg-coconut px-2.5 py-0.5 text-[10px] uppercase tracking-widest text-forest">
+            <span className="rounded-full bg-coconut px-2.5 py-0.5 text-[11px] sm:text-[10px] uppercase tracking-widest text-forest">
               {totalRooms} room{totalRooms === 1 ? "" : "s"}
             </span>
           </div>
@@ -1022,7 +1022,7 @@ function DetailsStep(props: {
 
           {remainingGroups.length > 0 && (
             <div className="mt-3 border-t border-border pt-3">
-              <p className="text-[11px] uppercase tracking-widest text-stone">Add another room</p>
+              <p className="text-xs sm:text-[11px] uppercase tracking-widest text-stone">Add another room</p>
               <div className="mt-1.5 flex flex-nowrap items-center gap-2 overflow-x-auto">
                 {remainingGroups.map((g) => (
                   <button
@@ -1076,7 +1076,7 @@ function DetailsStep(props: {
           </span>
         </label>
 
-        <p className="mt-8 mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step2Eyebrow}</p>
+        <p className="mt-8 mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{bt.step2Eyebrow}</p>
         <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2">
           <Field label={bt.g.fullName} type="text" value={name} onChange={setName} placeholder={bt.g.fullNamePh} required />
           <Field label={bt.g.email} type="email" value={email} onChange={setEmail} placeholder={bt.g.emailPh} required />
@@ -1121,7 +1121,7 @@ function DetailsStep(props: {
         </div>
 
         <div className="mt-8 rounded-2xl border border-border bg-card p-5">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Payment option</p>
+          <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">Payment option</p>
           <h3 className="mt-2 font-display text-lg text-forest">How would you like to pay?</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className={`cursor-pointer rounded-xl border p-4 transition ${paymentType === "deposit" ? "border-forest bg-forest/[0.04]" : "border-border bg-card hover:border-forest/40"}`}>
@@ -1146,7 +1146,7 @@ function DetailsStep(props: {
         </div>
 
         <div className="mt-8 rounded-2xl border border-border bg-card p-5">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.terms.eyebrow}</p>
+          <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{bt.terms.eyebrow}</p>
           <h3 className="mt-2 font-display text-lg text-forest">{bt.terms.title}</h3>
           {paymentType === "deposit" ? (
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-foreground/80">
@@ -1256,8 +1256,8 @@ function PaymentStep({
   const cardEnabled = isPaymentsConfigured();
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-16 lg:px-10 lg:py-20">
-      <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.pay.eyebrow}</p>
+    <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-16 lg:px-10 lg:py-20">
+      <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{bt.pay.eyebrow}</p>
       <h1 className="mt-2 font-display text-4xl text-forest">{bt.pay.title}</h1>
       <p className="mt-3 text-foreground/75">
         {bt.pay.holdPrefix}{" "}
@@ -1306,7 +1306,7 @@ function PaymentStep({
         <div className="mt-6 rounded-2xl border border-forest/30 bg-coconut p-6">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.25em] text-forest">Fastest — auto-confirm</p>
+              <p className="text-xs sm:text-[11px] uppercase tracking-[0.25em] text-forest">Fastest — auto-confirm</p>
               <h2 className="mt-1 font-display text-xl text-forest">Pay by card</h2>
               <p className="mt-1 text-sm text-foreground/75">
                 Card payment auto-confirms your booking — no proof upload, no waiting for approval.
@@ -1323,7 +1323,7 @@ function PaymentStep({
         </div>
       )}
 
-      <p className="mt-8 text-[11px] uppercase tracking-[0.3em] text-stone">
+      <p className="mt-8 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">
         Or — pay manually (admin approval required)
       </p>
 
@@ -1336,7 +1336,7 @@ function PaymentStep({
               <dt className="text-stone">{bt.pay.acctNum}</dt>
               <dd className="flex items-center gap-2">
                 <span className="font-mono">{acctNum}</span>
-                <button onClick={() => copy(acctNum)} className="text-[10px] uppercase tracking-widest text-forest hover:underline">{bt.pay.copy}</button>
+                <button onClick={() => copy(acctNum)} className="text-[11px] sm:text-[10px] uppercase tracking-widest text-forest hover:underline">{bt.pay.copy}</button>
               </dd>
             </div>
             <div className="flex items-center justify-between gap-3">
@@ -1415,7 +1415,7 @@ function DoneStep({
   const isBM = lang === "bm";
   return (
     <section className="mx-auto max-w-2xl px-6 py-24 text-center lg:px-10">
-      <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-stone">{bt.done.eyebrow}</p>
+      <p className="mb-4 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{bt.done.eyebrow}</p>
       <h1 className="font-display text-4xl leading-tight sm:text-5xl">
         {bt.done.thanks.replace("{name}", name.split(" ")[0])}
       </h1>
@@ -1426,7 +1426,7 @@ function DoneStep({
       </p>
 
       <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-border bg-card p-6 text-left">
-        <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.houseRules.title}</p>
+        <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{bt.houseRules.title}</p>
         <p className="mt-2 text-sm text-foreground/75">{bt.houseRules.intro}</p>
         <ul className="mt-4 space-y-2 text-sm text-foreground/85">
           {bt.houseRules.items.map((it, i) => (
@@ -1439,7 +1439,7 @@ function DoneStep({
       </div>
 
       <div className="mx-auto mt-10 max-w-xl rounded-2xl border-2 border-forest/40 bg-coconut p-6 text-left">
-        <p className="text-[11px] uppercase tracking-[0.3em] text-forest">
+        <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-forest">
           {isBM ? "Tempahan saya" : "My booking"}
         </p>
         <h2 className="mt-2 font-display text-2xl text-forest">
@@ -1534,7 +1534,7 @@ function StaySummaryCard(props: StaySummaryCardProps) {
         className="aspect-[4/3] w-full object-cover"
       />
       <div className="p-6">
-        <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{bt.summary.eyebrow}</p>
+        <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{bt.summary.eyebrow}</p>
         <h2 className="mt-2 font-display text-2xl text-forest">
           {cart.length === 0
             ? bt.summary.pickCabin
@@ -1602,7 +1602,7 @@ function StaySummaryCard(props: StaySummaryCardProps) {
                         maxLength={24}
                         aria-invalid={couponError ? true : undefined}
                         aria-describedby={couponError ? "coupon-error" : undefined}
-                        className={`h-7 flex-1 rounded-md border bg-background px-2 text-[11px] uppercase tracking-wide outline-none transition focus:ring-2 focus:ring-forest/30 ${
+                        className={`h-7 flex-1 rounded-md border bg-background px-2 text-xs sm:text-[11px] uppercase tracking-wide outline-none transition focus:ring-2 focus:ring-forest/30 ${
                           couponError
                             ? "border-red-500 focus:border-red-500 focus:ring-red-200"
                             : "border-border focus:border-forest"

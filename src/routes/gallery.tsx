@@ -157,7 +157,7 @@ function GalleryPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link to="/" className="font-display text-lg leading-tight">
             Rajawali D'Cabin
-            <span className="block text-[10px] uppercase tracking-[0.25em] opacity-80">
+            <span className="block text-[11px] sm:text-[10px] uppercase tracking-[0.25em] opacity-80">
               Chalet · Chendering
             </span>
           </Link>
@@ -218,7 +218,7 @@ function GalleryPage() {
                     ▶
                   </span>
                 </div>
-                <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[11px] sm:text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
                   {item.cat}
                 </span>
               </button>
@@ -236,7 +236,7 @@ function GalleryPage() {
                   loading="lazy"
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-                <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 text-left text-[11px] sm:text-[10px] uppercase tracking-widest text-white opacity-0 transition-opacity group-hover:opacity-100">
                   {item.cat}
                 </span>
               </button>
