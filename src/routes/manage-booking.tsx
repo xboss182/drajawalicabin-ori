@@ -266,23 +266,23 @@ function ManagePage() {
   return (
     <main className="min-h-[100svh] bg-background text-foreground">
       <header className="border-b border-border bg-coconut">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
-          <Link to="/" className="font-display text-lg text-forest">Rajawali D'Cabin</Link>
-          <div className="flex items-center gap-5">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:px-6 sm:py-5 lg:px-10">
+          <Link to="/" className="truncate font-display text-base text-forest sm:text-lg">Rajawali D'Cabin</Link>
+          <div className="flex shrink-0 items-center gap-3 sm:gap-5">
             <LanguageToggle variant="dark" />
-            <Link to="/find-booking" className="text-xs uppercase tracking-widest text-stone hover:text-forest">{c.lost}</Link>
+            <Link to="/find-booking" className="hidden text-xs uppercase tracking-widest text-stone hover:text-forest sm:inline">{c.lost}</Link>
             <Link to="/" className="text-xs uppercase tracking-widest text-stone hover:text-forest">{c.home}</Link>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl px-6 py-12 lg:px-10 lg:py-16">
+      <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12 lg:px-10 lg:py-16">
         {loading && <p className="text-stone">{c.loading}</p>}
 
         {!id || !token ? (
           <div>
             <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{c.eyebrow}</p>
-            <h1 className="mt-2 font-display text-4xl text-forest">{c.lookupTitle}</h1>
+            <h1 className="mt-2 font-display text-3xl text-forest sm:text-4xl">{c.lookupTitle}</h1>
             <p className="mt-3 text-foreground/75">{c.lookupIntro}</p>
             <form onSubmit={lookup} className="mt-8 max-w-md space-y-5">
               <label className="block">
@@ -312,7 +312,7 @@ function ManagePage() {
               <button
                 type="submit"
                 disabled={lookingUp}
-                className="w-full rounded-full bg-forest px-7 py-4 text-sm font-medium text-coconut hover:bg-forest/90 disabled:opacity-60"
+                className="min-h-14 w-full rounded-full bg-forest px-7 text-base font-medium text-coconut hover:bg-forest/90 disabled:opacity-60"
               >
                 {lookingUp ? c.opening : c.open}
               </button>
@@ -330,7 +330,7 @@ function ManagePage() {
         {b && (
           <>
             <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{c.eyebrow}</p>
-            <h1 className="mt-2 font-display text-4xl text-forest">{c.hi} {b.guestName.split(" ")[0]},</h1>
+            <h1 className="mt-2 font-display text-3xl text-forest sm:text-4xl">{c.hi} {b.guestName.split(" ")[0]},</h1>
             <p className="mt-3 text-foreground/75">
               {c.ref} <span className="font-mono text-forest">{b.reference ?? b.id.slice(0, 8)}</span>
             </p>
@@ -349,7 +349,7 @@ function ManagePage() {
                 )}
               </div>
             ) : (
-              <div className="mt-8 rounded-2xl border-2 border-forest/40 bg-coconut p-6">
+              <div className="mt-6 rounded-2xl border-2 border-forest/40 bg-coconut p-4 sm:mt-8 sm:p-6">
                 <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-forest">{c.nextStep}</p>
                 <h2 className="mt-2 font-display text-2xl text-forest">
                   {stage === "review" ? c.reviewTitle : stage === "deposit" ? c.needDeposit : c.needBalance}
