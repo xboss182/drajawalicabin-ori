@@ -229,14 +229,14 @@ function ManagePage() {
   const payBlock = b ? (
     <div className="mt-4 grid gap-4 sm:grid-cols-2">
       <div className="rounded-xl border border-border bg-background p-4 text-sm">
-        <p className="text-[10px] uppercase tracking-widest text-stone">{c.bank}</p>
+        <p className="text-[11px] sm:text-[10px] uppercase tracking-widest text-stone">{c.bank}</p>
         <p className="mt-1 font-display text-base text-forest">CIMB Bank</p>
         <p className="mt-2 font-mono text-base">8600095810</p>
         <p className="text-stone">Mohd Fauzi Awang</p>
         <p className="mt-3 text-xs text-stone">{c.ref}: <strong className="font-mono text-forest">{b.reference}</strong></p>
       </div>
       <div className="rounded-xl border border-border bg-background p-4">
-        <p className="text-[10px] uppercase tracking-widest text-stone">{c.qr}</p>
+        <p className="text-[11px] sm:text-[10px] uppercase tracking-widest text-stone">{c.qr}</p>
         <img src={duitnowQrAsset.url} alt="DuitNow QR" className="mt-2 aspect-square w-full rounded-md object-contain" />
       </div>
     </div>
@@ -281,12 +281,12 @@ function ManagePage() {
 
         {!id || !token ? (
           <div>
-            <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{c.eyebrow}</p>
+            <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{c.eyebrow}</p>
             <h1 className="mt-2 font-display text-4xl text-forest">{c.lookupTitle}</h1>
             <p className="mt-3 text-foreground/75">{c.lookupIntro}</p>
             <form onSubmit={lookup} className="mt-8 max-w-md space-y-5">
               <label className="block">
-                <span className="text-[11px] uppercase tracking-[0.25em] text-stone">{c.email}</span>
+                <span className="text-xs sm:text-[11px] uppercase tracking-[0.25em] text-stone">{c.email}</span>
                 <input
                   type="email"
                   required
@@ -297,7 +297,7 @@ function ManagePage() {
                 />
               </label>
               <label className="block">
-                <span className="text-[11px] uppercase tracking-[0.25em] text-stone">{c.refOptional}</span>
+                <span className="text-xs sm:text-[11px] uppercase tracking-[0.25em] text-stone">{c.refOptional}</span>
                 <input
                   type="text"
                   value={lookupRef}
@@ -329,7 +329,7 @@ function ManagePage() {
 
         {b && (
           <>
-            <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{c.eyebrow}</p>
+            <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{c.eyebrow}</p>
             <h1 className="mt-2 font-display text-4xl text-forest">{c.hi} {b.guestName.split(" ")[0]},</h1>
             <p className="mt-3 text-foreground/75">
               {c.ref} <span className="font-mono text-forest">{b.reference ?? b.id.slice(0, 8)}</span>
@@ -338,7 +338,7 @@ function ManagePage() {
             {/* ===== Next step — always first, always one clear action ===== */}
             {stage === "paid" ? (
               <div className="mt-8 rounded-2xl border border-forest/30 bg-coconut p-6">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-forest">{c.paidTitle}</p>
+                <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-forest">{c.paidTitle}</p>
                 <h2 className="mt-2 font-display text-2xl text-forest">{c.paidBody}</h2>
                 {b.lockerCode ? (
                   <p className="mt-4 rounded-xl bg-card px-5 py-4 font-mono text-2xl text-forest">
@@ -350,7 +350,7 @@ function ManagePage() {
               </div>
             ) : (
               <div className="mt-8 rounded-2xl border-2 border-forest/40 bg-coconut p-6">
-                <p className="text-[11px] uppercase tracking-[0.3em] text-forest">{c.nextStep}</p>
+                <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-forest">{c.nextStep}</p>
                 <h2 className="mt-2 font-display text-2xl text-forest">
                   {stage === "review" ? c.reviewTitle : stage === "deposit" ? c.needDeposit : c.needBalance}
                 </h2>
@@ -377,7 +377,7 @@ function ManagePage() {
                       </div>
                     )}
 
-                    <p className="mt-6 text-[11px] uppercase tracking-[0.3em] text-stone">{c.or}</p>
+                    <p className="mt-6 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{c.or}</p>
                     <p className="mt-3 text-sm font-medium text-forest">{c.payQr}</p>
                     {payBlock}
                   </>
@@ -389,7 +389,7 @@ function ManagePage() {
 
             {/* ===== Stay details ===== */}
             <div className="mt-8 rounded-2xl border border-border bg-card p-6">
-              <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{c.stay}</p>
+              <p className="text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{c.stay}</p>
               <dl className="mt-4 grid grid-cols-2 gap-y-2 text-sm">
                 <dt className="text-stone">{c.cabin}</dt>
                 <dd>

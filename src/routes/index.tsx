@@ -182,7 +182,7 @@ function Nav() {
           <span className="shrink-0"><Leaf /></span>
           <span className="min-w-0 font-display text-base leading-tight sm:text-lg sm:leading-none">
             <span className="block truncate">Rajawali D'Cabin</span>
-            <span className="hidden text-[10px] uppercase tracking-[0.25em] opacity-80 sm:block">
+            <span className="hidden text-[11px] sm:text-[10px] uppercase tracking-[0.25em] opacity-80 sm:block">
               Chalet · Chendering
             </span>
           </span>
@@ -263,7 +263,7 @@ function Hero() {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-forest/40 via-forest/30 to-forest/85" />
       <div className="relative mx-auto flex min-h-[62svh] max-w-7xl flex-col justify-end px-4 pb-10 pt-24 text-coconut sm:min-h-[78svh] sm:px-6 sm:pb-28 sm:pt-32 lg:min-h-[82svh] lg:px-10 lg:pb-32 lg:pt-36">
-        <span className="mb-4 hidden w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-4 py-1.5 text-[11px] uppercase tracking-[0.3em] backdrop-blur sm:mb-6 sm:inline-flex">
+        <span className="mb-4 hidden w-fit items-center gap-2 rounded-full border border-coconut/30 bg-coconut/5 px-4 py-1.5 text-xs sm:text-[11px] uppercase tracking-[0.3em] backdrop-blur sm:mb-6 sm:inline-flex">
           <span className="size-1.5 rounded-full bg-coconut" /> {t.hero.badge}
         </span>
         <h1 className="max-w-3xl font-display text-4xl leading-[1.05] sm:text-5xl lg:text-6xl">
@@ -307,7 +307,7 @@ function Hero() {
             {t.hero.alreadyBooked}
           </Link>
         </div>
-        <div className="mt-6 hidden flex-wrap items-center gap-x-5 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-coconut/70 sm:mt-8 sm:flex">
+        <div className="mt-6 hidden flex-wrap items-center gap-x-5 gap-y-2 text-xs sm:text-[11px] uppercase tracking-[0.25em] text-coconut/70 sm:mt-8 sm:flex">
           <span>8 private cabins</span>
           <span className="hidden sm:inline opacity-50">·</span>
           <span>Riverside · Chendering</span>
@@ -433,7 +433,7 @@ function AvailabilitySearch() {
               <CalendarIcon className="h-5 w-5 shrink-0 text-forest" />
               <DateCell label={t.search.checkin} date={range?.from} />
               <div className="hidden flex-col items-center px-2 text-stone sm:flex">
-                <span className="text-[10px] uppercase tracking-[0.2em]">
+                <span className="text-[11px] sm:text-[10px] uppercase tracking-[0.2em]">
                   {nights} {nights === 1 ? "night" : "nights"}
                 </span>
                 <div className="mt-1 h-px w-8 bg-border" />
@@ -569,7 +569,7 @@ function About() {
     <section id="about" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-10 lg:py-24">
       <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-center">
         <div>
-          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.about.eyebrow}</p>
+          <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{t.about.eyebrow}</p>
           <h2 className="font-display text-4xl leading-tight sm:text-5xl">
             {t.about.title1}<br />{t.about.title2}
           </h2>
@@ -581,7 +581,7 @@ function About() {
           <div className="mt-8 flex items-center gap-5 border-t border-border pt-6">
             <div>
               <p className="font-display text-3xl text-forest leading-none">{t.about.badgeNum}</p>
-              <p className="mt-1 text-[11px] uppercase tracking-widest text-stone">{t.about.badgeLabel}</p>
+              <p className="mt-1 text-xs sm:text-[11px] uppercase tracking-widest text-stone">{t.about.badgeLabel}</p>
             </div>
             <a href="#stay" className="ml-auto inline-flex items-center gap-2 text-sm text-forest hover:gap-3 transition-all">
               Explore the cabins →
@@ -668,7 +668,7 @@ function Accommodation() {
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.stay.eyebrow}</p>
+            <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{t.stay.eyebrow}</p>
             <h2 className="max-w-2xl font-display text-4xl leading-tight sm:text-5xl">
               {t.stay.title1}<br />{t.stay.title2}
             </h2>
@@ -719,7 +719,7 @@ function WhyStay() {
       <div className="grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         {/* Left: reasons */}
         <div>
-          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
+          <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{t.why.eyebrow}</p>
           <h2 className="mb-10 font-display text-4xl leading-tight sm:text-5xl">
             {t.why.title1}<br />{t.why.title2}
           </h2>
@@ -749,7 +749,7 @@ function WhyStay() {
                 className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
               />
             </div>
-            <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
+            <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[11px] sm:text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
               Pool
             </span>
             <span className="absolute inset-0 flex items-center justify-center bg-forest/0 text-coconut opacity-0 transition duration-300 group-hover:bg-forest/30 group-hover:opacity-100">
@@ -771,7 +771,7 @@ function WhyStay() {
                 className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
               />
             </div>
-            <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
+            <span className="absolute bottom-3 left-3 rounded-full bg-coconut/90 px-3 py-1 text-[11px] sm:text-[10px] uppercase tracking-[0.25em] text-forest backdrop-blur">
               BBQ area
             </span>
             <span className="absolute inset-0 flex items-center justify-center bg-forest/0 text-coconut opacity-0 transition duration-300 group-hover:bg-forest/30 group-hover:opacity-100">
@@ -785,7 +785,7 @@ function WhyStay() {
             className="group rounded-2xl border border-forest/20 bg-coconut px-5 py-4 transition hover:bg-forest hover:text-coconut focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
             aria-label="Open the WhatsApp store"
           >
-            <p className="text-[10px] uppercase tracking-[0.25em] text-forest group-hover:text-coconut/80">
+            <p className="text-[11px] sm:text-[10px] uppercase tracking-[0.25em] text-forest group-hover:text-coconut/80">
               WhatsApp store
             </p>
             <p className="mt-1 font-display text-lg text-forest group-hover:text-coconut">
@@ -812,7 +812,7 @@ function NearbySection() {
     <section id="nearby" className="bg-forest text-coconut py-12 sm:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         <div className="mb-10 max-w-2xl">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-coconut/60">{t.nearby.eyebrow}</p>
+          <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-coconut/60">{t.nearby.eyebrow}</p>
           <h2 className="font-display text-4xl leading-tight sm:text-5xl">
             {t.nearby.title}
           </h2>
@@ -861,7 +861,7 @@ function Footer() {
           </p>
         </div>
         <div className="text-sm">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.25em] text-stone">{t.footer.visit}</p>
+          <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.25em] text-stone">{t.footer.visit}</p>
           <p className="text-foreground/80">
             {t.footer.address1}<br />{t.footer.address2}<br />{t.footer.address3}
           </p>
@@ -875,7 +875,7 @@ function Footer() {
           </a>
         </div>
         <div className="text-sm">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.25em] text-stone">{t.footer.reach}</p>
+          <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.25em] text-stone">{t.footer.reach}</p>
           <ul className="space-y-2 text-foreground/80">
             <li>
               <a href={waHref(t.whatsappMessage)} target="_blank" rel="noreferrer" className="hover:text-forest">
@@ -906,7 +906,7 @@ function GoodToKnow() {
   return (
     <section className="bg-secondary/40 py-12 sm:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <p className="mb-3 text-[11px] uppercase tracking-[0.3em] text-stone">{t.goodToKnow.eyebrow}</p>
+        <p className="mb-3 text-xs sm:text-[11px] uppercase tracking-[0.3em] text-stone">{t.goodToKnow.eyebrow}</p>
         <h2 className="mb-10 max-w-2xl font-display text-3xl leading-tight sm:text-4xl">
           {t.goodToKnow.title}
         </h2>
