@@ -415,19 +415,19 @@ function AvailabilitySearch() {
   };
 
   return (
-    <section id="book" className="relative z-20 -mt-24 px-4 sm:px-6 lg:px-10">
+    <section id="book" className="relative z-20 -mt-10 px-4 sm:-mt-24 sm:px-6 lg:px-10">
       <form
         onSubmit={submit}
-        className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-2xl shadow-forest/25 lg:flex-row lg:items-stretch"
+        className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-2xl border border-border/60 bg-card shadow-2xl shadow-forest/25 sm:rounded-3xl lg:flex-row lg:items-stretch"
       >
         {/* Dates - wider */}
         <Popover open={openCal} onOpenChange={setOpenCal}>
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="group flex flex-[1.6] min-w-0 items-center gap-4 px-5 py-3 text-left transition hover:bg-muted/40 lg:px-7 lg:py-4"
+              className="group flex flex-[1.6] min-w-0 items-center gap-3 px-4 py-2.5 text-left transition hover:bg-muted/40 sm:gap-4 sm:px-5 sm:py-3 lg:px-7 lg:py-4"
             >
-              <CalendarIcon className="h-5 w-5 shrink-0 text-forest" />
+              <CalendarIcon className="h-4 w-4 shrink-0 text-forest sm:h-5 sm:w-5" />
               <DateCell label={t.search.checkin} date={range?.from} />
               <div className="hidden flex-col items-center px-2 text-stone sm:flex">
                 <span className="text-[10px] uppercase tracking-[0.2em]">
@@ -455,14 +455,14 @@ function AvailabilitySearch() {
         <div className="h-px w-full bg-border lg:h-auto lg:w-px" />
 
         {/* Guests - narrower */}
-        <div className="flex flex-[0.6] min-w-0 items-center gap-4 px-5 py-3 lg:px-6 lg:py-4">
-          <Users className="h-5 w-5 shrink-0 text-forest" />
+        <div className="flex flex-[0.6] min-w-0 items-center gap-3 px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-3 lg:px-6 lg:py-4">
+          <Users className="h-4 w-4 shrink-0 text-forest sm:h-5 sm:w-5" />
           <div className="flex flex-1 min-w-0 flex-col gap-0.5">
             <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
               {t.search.guests}
             </span>
             <Select value={guests} onValueChange={setGuests}>
-              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-base font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 [&>span]:truncate">
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-sm font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 sm:text-base [&>span]:truncate">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -479,14 +479,14 @@ function AvailabilitySearch() {
         <div className="h-px w-full bg-border lg:h-auto lg:w-px" />
 
         {/* Room type - narrower */}
-        <div className="flex flex-[0.8] min-w-0 items-center gap-4 px-5 py-3 lg:px-6 lg:py-4">
-          <BedDouble className="h-5 w-5 shrink-0 text-forest" />
+        <div className="flex flex-[0.8] min-w-0 items-center gap-3 px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-3 lg:px-6 lg:py-4">
+          <BedDouble className="h-4 w-4 shrink-0 text-forest sm:h-5 sm:w-5" />
           <div className="flex flex-1 min-w-0 flex-col gap-0.5">
             <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
               {t.search.room}
             </span>
             <Select value={room} onValueChange={setRoom}>
-              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-base font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 [&>span]:truncate">
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-sm font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 sm:text-base [&>span]:truncate">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -508,15 +508,15 @@ function AvailabilitySearch() {
         <button
           type="submit"
           className={cn(
-            "flex items-center justify-center gap-2 bg-forest px-8 py-4 text-base font-semibold text-coconut transition hover:bg-forest/90",
+            "flex items-center justify-center gap-2 bg-forest px-6 py-3 text-sm font-semibold text-coconut transition hover:bg-forest/90 sm:px-8 sm:py-4 sm:text-base",
             "lg:m-2 lg:rounded-2xl lg:px-10",
           )}
         >
-          <Search className="h-5 w-5" />
+          <Search className="h-4 w-4 sm:h-5 sm:w-5" />
           {t.search.submit}
         </button>
       </form>
-      <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
+      <p className="mx-auto mt-2 max-w-3xl text-center text-[11px] text-foreground/70 sm:mt-3 sm:text-sm">
         {t.search.note}
       </p>
       {promoText && (
