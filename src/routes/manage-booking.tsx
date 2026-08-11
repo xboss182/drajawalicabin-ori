@@ -275,7 +275,6 @@ function ManagePage() {
           <Link to="/" className="font-display text-lg text-forest">Rajawali D'Cabin</Link>
           <div className="flex items-center gap-5">
             <LanguageToggle variant="dark" />
-            <Link to="/find-booking" className="text-xs uppercase tracking-widest text-stone hover:text-forest">{c.lost}</Link>
             <Link to="/" className="text-xs uppercase tracking-widest text-stone hover:text-forest">{c.home}</Link>
           </div>
         </div>
