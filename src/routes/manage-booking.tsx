@@ -492,7 +492,7 @@ function ManagePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {invoice.rooms.map((r) => (
+                        {invoice.rooms.map((r: Invoice["rooms"][number]) => (
                           <tr key={r.id} className="border-b border-border/60">
                             <td className="py-2">{r.name}</td>
                             <td className="py-2">{r.nights ?? "—"}</td>
