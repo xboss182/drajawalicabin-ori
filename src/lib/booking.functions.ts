@@ -1282,6 +1282,22 @@ const balanceProofSchema = z.object({
   path: z.string().min(3).max(500),
 });
 
+export const getGuestInvoice = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => getByIdSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { buildGuestInvoice } = await import("@/lib/guest-invoice.server");
+    return buildGuestInvoice(supabaseAdmin, data.bookingId, data.guestToken);
+  });
+
+export const getMyOtherBookings = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => getByIdSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { listGuestBookings } = await import("@/lib/guest-invoice.server");
+    return listGuestBookings(supabaseAdmin, data.bookingId, data.guestToken);
+  });
+
 export const attachBalanceProof = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => balanceProofSchema.parse(d))
   .handler(async ({ data }) => {
