@@ -6,6 +6,8 @@ import {
   attachBalanceProof,
   attachPaymentProof,
   getBookingByEmailAndReference,
+  getGuestInvoice,
+  getMyOtherBookings,
 } from "@/lib/booking.functions";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { isPaymentsConfigured } from "@/lib/stripe";
@@ -13,6 +15,7 @@ import { LanguageToggle, useLanguage } from "@/lib/i18n";
 import { rememberBooking } from "@/lib/my-booking";
 
 type Booking = Awaited<ReturnType<typeof getBookingForGuest>>;
+type Invoice = Awaited<ReturnType<typeof getGuestInvoice>>;
 
 export const Route = createFileRoute("/manage-booking")({
   validateSearch: (raw: Record<string, unknown>) => ({
