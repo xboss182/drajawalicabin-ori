@@ -1281,6 +1281,7 @@ const balanceProofSchema = z.object({
   guestToken: z.string().uuid(),
   path: z.string().min(3).max(500),
 });
+
 export const attachBalanceProof = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => balanceProofSchema.parse(d))
   .handler(async ({ data }) => {
