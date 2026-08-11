@@ -301,16 +301,6 @@ function ManagePage() {
                   autoComplete="email"
                 />
               </label>
-              <label className="block">
-                <span className="text-[11px] uppercase tracking-[0.25em] text-stone">{c.refOptional}</span>
-                <input
-                  type="text"
-                  value={lookupRef}
-                  onChange={(e) => setLookupRef(e.target.value.toUpperCase())}
-                  className="mt-2 w-full rounded-md border border-border bg-background px-4 py-3 font-mono text-base focus:border-forest focus:outline-none"
-                  maxLength={40}
-                />
-              </label>
               {err && (
                 <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{err}</p>
               )}
@@ -321,6 +311,30 @@ function ManagePage() {
               >
                 {lookingUp ? c.opening : c.open}
               </button>
+              {choices.length > 1 && (
+                <div className="rounded-xl border border-border bg-card p-3">
+                  <p className="px-1 text-[11px] uppercase tracking-[0.25em] text-stone">{c.pick}</p>
+                  <ul className="mt-2 divide-y divide-border">
+                    {choices.map((ch) => (
+                      <li key={ch.bookingId}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate({ to: "/manage-booking", search: { id: ch.bookingId, token: ch.guestToken } })
+                          }
+                          className="flex w-full items-center justify-between gap-3 px-1 py-3 text-left hover:bg-coconut/60"
+                        >
+                          <span>
+                            <span className="block font-mono text-sm text-forest">{ch.reference || ch.bookingId.slice(0, 8)}</span>
+                            <span className="block text-xs text-stone">{ch.roomType} · {ch.checkIn}</span>
+                          </span>
+                          <span className="text-stone">›</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <p className="text-xs text-stone">
                 <Link to="/find-booking" className="underline text-forest">{c.emailMeLink}</Link>
               </p>
