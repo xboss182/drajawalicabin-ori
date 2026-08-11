@@ -176,12 +176,12 @@ function Nav() {
   const { t } = useLanguage();
   return (
     <header className="absolute left-0 right-0 top-0 z-30">
-      <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:px-6 sm:py-6 lg:px-10">
-        <a href="#top" className="flex min-w-0 items-center gap-2 text-coconut">
-          <span className="shrink-0"><Leaf /></span>
-          <span className="min-w-0 font-display text-base leading-none sm:text-lg">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
+        <a href="#top" className="flex items-center gap-2 text-coconut">
+          <Leaf />
+          <span className="font-display text-lg leading-none">
             Rajawali D'Cabin
-            <span className="block truncate text-[9px] uppercase tracking-[0.2em] opacity-80 sm:text-[10px] sm:tracking-[0.25em]">
+            <span className="block text-[10px] uppercase tracking-[0.25em] opacity-80">
               Chalet · Chendering
             </span>
           </span>
@@ -201,12 +201,12 @@ function Nav() {
             My booking
           </Link>
         </nav>
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-3">
           <LanguageToggle />
           <Link
             to="/manage-booking"
             search={{ id: "", token: "" }}
-            className="whitespace-nowrap rounded-full border border-coconut/40 bg-coconut/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-coconut backdrop-blur md:hidden"
+            className="rounded-full border border-coconut/40 bg-coconut/10 px-3 py-1.5 text-[11px] uppercase tracking-widest text-coconut md:hidden"
           >
             My booking
           </Link>
