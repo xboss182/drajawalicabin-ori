@@ -42,7 +42,7 @@ function useCopy() {
         lookupTitle: "Buka tempahan anda",
         lookupIntro: "Masukkan e-mel yang anda guna semasa menempah. Kami akan terus buka tempahan terkini anda.",
         email: "E-mel",
-        refOptional: "Ada lebih satu tempahan? Masukkan nombor rujukan (pilihan)",
+        pick: "Anda ada beberapa tempahan — pilih satu",
         open: "Buka tempahan saya",
         opening: "Membuka…",
         emailMeLink: "Hantar link ke e-mel saya",
@@ -91,7 +91,7 @@ function useCopy() {
         lookupTitle: "Open your booking",
         lookupIntro: "Enter the email you booked with — we'll open your latest booking right away.",
         email: "Email",
-        refOptional: "More than one booking? Enter the reference (optional)",
+        pick: "You have more than one booking — choose one",
         open: "Open my booking",
         opening: "Opening…",
         emailMeLink: "Email me the link instead",
@@ -148,8 +148,10 @@ function ManagePage() {
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
   const [lookupEmail, setLookupEmail] = useState("");
-  const [lookupRef, setLookupRef] = useState("");
   const [lookingUp, setLookingUp] = useState(false);
+  const [choices, setChoices] = useState<
+    { bookingId: string; guestToken: string; reference: string; roomType: string; checkIn: string; status: string }[]
+  >([]);
 
   async function load() {
     if (!id || !token) return;
@@ -171,14 +173,17 @@ function ManagePage() {
     e.preventDefault();
     setErr(null);
     setLookingUp(true);
+    setChoices([]);
     try {
-      const { bookingId, guestToken } = await getBookingByEmailAndReference({
-        data: {
-          email: lookupEmail.trim(),
-          ...(lookupRef.trim() ? { reference: lookupRef.trim() } : {}),
-        },
+      const { bookings } = await getBookingByEmailAndReference({
+        data: { email: lookupEmail.trim() },
       });
-      navigate({ to: "/manage-booking", search: { id: bookingId, token: guestToken } });
+      if (bookings.length === 1) {
+        const only = bookings[0]!;
+        navigate({ to: "/manage-booking", search: { id: only.bookingId, token: only.guestToken } });
+      } else {
+        setChoices(bookings);
+      }
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Could not find booking");
     } finally {
@@ -270,7 +275,6 @@ function ManagePage() {
           <Link to="/" className="font-display text-lg text-forest">Rajawali D'Cabin</Link>
           <div className="flex items-center gap-5">
             <LanguageToggle variant="dark" />
-            <Link to="/find-booking" className="text-xs uppercase tracking-widest text-stone hover:text-forest">{c.lost}</Link>
             <Link to="/" className="text-xs uppercase tracking-widest text-stone hover:text-forest">{c.home}</Link>
           </div>
         </div>
@@ -296,16 +300,6 @@ function ManagePage() {
                   autoComplete="email"
                 />
               </label>
-              <label className="block">
-                <span className="text-[11px] uppercase tracking-[0.25em] text-stone">{c.refOptional}</span>
-                <input
-                  type="text"
-                  value={lookupRef}
-                  onChange={(e) => setLookupRef(e.target.value.toUpperCase())}
-                  className="mt-2 w-full rounded-md border border-border bg-background px-4 py-3 font-mono text-base focus:border-forest focus:outline-none"
-                  maxLength={40}
-                />
-              </label>
               {err && (
                 <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{err}</p>
               )}
@@ -316,6 +310,30 @@ function ManagePage() {
               >
                 {lookingUp ? c.opening : c.open}
               </button>
+              {choices.length > 1 && (
+                <div className="rounded-xl border border-border bg-card p-3">
+                  <p className="px-1 text-[11px] uppercase tracking-[0.25em] text-stone">{c.pick}</p>
+                  <ul className="mt-2 divide-y divide-border">
+                    {choices.map((ch) => (
+                      <li key={ch.bookingId}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate({ to: "/manage-booking", search: { id: ch.bookingId, token: ch.guestToken } })
+                          }
+                          className="flex w-full items-center justify-between gap-3 px-1 py-3 text-left hover:bg-coconut/60"
+                        >
+                          <span>
+                            <span className="block font-mono text-sm text-forest">{ch.reference || ch.bookingId.slice(0, 8)}</span>
+                            <span className="block text-xs text-stone">{ch.roomType} · {ch.checkIn}</span>
+                          </span>
+                          <span className="text-stone">›</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <p className="text-xs text-stone">
                 <Link to="/find-booking" className="underline text-forest">{c.emailMeLink}</Link>
               </p>
