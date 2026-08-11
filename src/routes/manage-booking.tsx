@@ -42,7 +42,7 @@ function useCopy() {
         lookupTitle: "Buka tempahan anda",
         lookupIntro: "Masukkan e-mel yang anda guna semasa menempah. Kami akan terus buka tempahan terkini anda.",
         email: "E-mel",
-        refOptional: "Ada lebih satu tempahan? Masukkan nombor rujukan (pilihan)",
+        pick: "Anda ada beberapa tempahan — pilih satu",
         open: "Buka tempahan saya",
         opening: "Membuka…",
         emailMeLink: "Hantar link ke e-mel saya",
@@ -91,7 +91,7 @@ function useCopy() {
         lookupTitle: "Open your booking",
         lookupIntro: "Enter the email you booked with — we'll open your latest booking right away.",
         email: "Email",
-        refOptional: "More than one booking? Enter the reference (optional)",
+        pick: "You have more than one booking — choose one",
         open: "Open my booking",
         opening: "Opening…",
         emailMeLink: "Email me the link instead",
@@ -148,8 +148,10 @@ function ManagePage() {
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
   const [lookupEmail, setLookupEmail] = useState("");
-  const [lookupRef, setLookupRef] = useState("");
   const [lookingUp, setLookingUp] = useState(false);
+  const [choices, setChoices] = useState<
+    { bookingId: string; guestToken: string; reference: string; roomType: string; checkIn: string; status: string }[]
+  >([]);
 
   async function load() {
     if (!id || !token) return;
@@ -171,14 +173,17 @@ function ManagePage() {
     e.preventDefault();
     setErr(null);
     setLookingUp(true);
+    setChoices([]);
     try {
-      const { bookingId, guestToken } = await getBookingByEmailAndReference({
-        data: {
-          email: lookupEmail.trim(),
-          ...(lookupRef.trim() ? { reference: lookupRef.trim() } : {}),
-        },
+      const { bookings } = await getBookingByEmailAndReference({
+        data: { email: lookupEmail.trim() },
       });
-      navigate({ to: "/manage-booking", search: { id: bookingId, token: guestToken } });
+      if (bookings.length === 1) {
+        const only = bookings[0]!;
+        navigate({ to: "/manage-booking", search: { id: only.bookingId, token: only.guestToken } });
+      } else {
+        setChoices(bookings);
+      }
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Could not find booking");
     } finally {
