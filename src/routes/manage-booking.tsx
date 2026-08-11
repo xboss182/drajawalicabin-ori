@@ -408,11 +408,122 @@ function ManagePage() {
 
         {b && (
           <>
+            <div className="mb-4 flex flex-wrap items-center gap-3 print:hidden">
+              <button
+                type="button"
+                onClick={() => navigate({ to: "/manage-booking", search: { id: "", token: "" } })}
+                className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest text-stone hover:border-forest hover:text-forest"
+              >
+                {c.backToList}
+              </button>
+              <button
+                type="button"
+                onClick={toggleInvoice}
+                className="rounded-full border border-forest/40 px-4 py-2 text-xs uppercase tracking-widest text-forest hover:bg-coconut"
+              >
+                {showInvoice ? c.hideInvoice : c.viewInvoice}
+              </button>
+            </div>
             <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{c.eyebrow}</p>
             <h1 className="mt-2 font-display text-4xl text-forest">{c.hi} {b.guestName.split(" ")[0]},</h1>
             <p className="mt-3 text-foreground/75">
               {c.ref} <span className="font-mono text-forest">{b.reference ?? b.id.slice(0, 8)}</span>
             </p>
+
+            {others.length > 1 && (
+              <div className="mt-6 rounded-2xl border border-border bg-card p-4 print:hidden">
+                <p className="text-[11px] uppercase tracking-[0.25em] text-stone">{c.others}</p>
+                <ul className="mt-2 divide-y divide-border">
+                  {others.map((o) => {
+                    const isCurrent = o.bookingId === id;
+                    return (
+                      <li key={o.bookingId}>
+                        <button
+                          type="button"
+                          disabled={isCurrent}
+                          onClick={() =>
+                            navigate({ to: "/manage-booking", search: { id: o.bookingId, token: o.guestToken } })
+                          }
+                          className="flex w-full items-center justify-between gap-3 px-1 py-3 text-left disabled:opacity-60 hover:bg-coconut/60"
+                        >
+                          <span>
+                            <span className="block font-mono text-sm text-forest">
+                              {o.reference || o.bookingId.slice(0, 8)}
+                            </span>
+                            <span className="block text-xs text-stone">{o.roomType} · {o.checkIn}</span>
+                          </span>
+                          <span className="text-xs text-stone">{isCurrent ? c.current : "›"}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {showInvoice && (
+              <div className="mt-6 rounded-2xl border border-border bg-card p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{c.invoice}</p>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest text-stone hover:border-forest hover:text-forest print:hidden"
+                  >
+                    {c.print}
+                  </button>
+                </div>
+                {invoiceLoading && <p className="mt-3 text-sm text-stone">{c.loading}</p>}
+                {invoice && (
+                  <>
+                    <p className="mt-2 font-display text-2xl text-forest">
+                      {invoice.reference}
+                    </p>
+                    <p className="text-xs text-stone">
+                      {invoice.guestName} · {invoice.checkIn} → {invoice.checkOut}
+                    </p>
+                    <table className="mt-4 w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-stone">
+                          <th className="py-2">{c.room}</th>
+                          <th className="py-2">{c.nightsCol}</th>
+                          <th className="py-2 text-right">{c.discount}</th>
+                          <th className="py-2 text-right">{c.amount}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invoice.rooms.map((r) => (
+                          <tr key={r.id} className="border-b border-border/60">
+                            <td className="py-2">{r.name}</td>
+                            <td className="py-2">{r.nights ?? "—"}</td>
+                            <td className="py-2 text-right">{r.discount ? `−RM ${r.discount.toFixed(2)}` : "—"}</td>
+                            <td className="py-2 text-right">RM {r.total.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <dl className="mt-4 grid grid-cols-2 gap-y-1 text-sm">
+                      <dt className="text-stone">{c.subtotalRow}</dt>
+                      <dd className="text-right">RM {invoice.subtotal.toFixed(2)}</dd>
+                      {invoice.discountTotal > 0 && (
+                        <>
+                          <dt className="text-stone">
+                            {c.discount}{invoice.discountCode ? ` (${invoice.discountCode})` : ""}
+                          </dt>
+                          <dd className="text-right">−RM {invoice.discountTotal.toFixed(2)}</dd>
+                        </>
+                      )}
+                      <dt className="text-stone">{c.roomRate}</dt>
+                      <dd className="text-right">RM {invoice.total.toFixed(2)}</dd>
+                      <dt className="text-stone">{c.depositPaid}</dt>
+                      <dd className="text-right">RM {invoice.securityDeposit.toFixed(2)}</dd>
+                      <dt className="font-medium text-stone">{c.balanceDue}</dt>
+                      <dd className="text-right font-medium text-forest">RM {invoice.balance.toFixed(2)}</dd>
+                    </dl>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* ===== Next step — always first, always one clear action ===== */}
             {stage === "paid" ? (
