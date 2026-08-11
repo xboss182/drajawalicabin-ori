@@ -462,66 +462,139 @@ function ManagePage() {
             )}
 
             {showInvoice && (
-              <div className="mt-6 rounded-2xl border border-border bg-card p-6">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-stone">{c.invoice}</p>
-                  <button
-                    type="button"
-                    onClick={() => window.print()}
-                    className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest text-stone hover:border-forest hover:text-forest print:hidden"
-                  >
-                    {c.print}
-                  </button>
-                </div>
-                {invoiceLoading && <p className="mt-3 text-sm text-stone">{c.loading}</p>}
-                {invoice && (
-                  <>
-                    <p className="mt-2 font-display text-2xl text-forest">
-                      {invoice.reference}
-                    </p>
-                    <p className="text-xs text-stone">
-                      {invoice.guestName} · {invoice.checkIn} → {invoice.checkOut}
-                    </p>
-                    <table className="mt-4 w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-stone">
-                          <th className="py-2">{c.room}</th>
-                          <th className="py-2">{c.nightsCol}</th>
-                          <th className="py-2 text-right">{c.discount}</th>
-                          <th className="py-2 text-right">{c.amount}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {invoice.rooms.map((r: Invoice["rooms"][number]) => (
-                          <tr key={r.id} className="border-b border-border/60">
-                            <td className="py-2">{r.name}</td>
-                            <td className="py-2">{r.nights ?? "—"}</td>
-                            <td className="py-2 text-right">{r.discount ? `−RM ${r.discount.toFixed(2)}` : "—"}</td>
-                            <td className="py-2 text-right">RM {r.total.toFixed(2)}</td>
+              <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 backdrop-blur-sm print:static print:bg-transparent print:backdrop-blur-none">
+                <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+                  <div className="mb-4 flex items-center justify-between gap-3 print:hidden">
+                    <button
+                      type="button"
+                      onClick={toggleInvoice}
+                      className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest text-stone hover:border-forest hover:text-forest"
+                    >
+                      {c.hideInvoice}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="rounded-full bg-forest px-4 py-2 text-xs uppercase tracking-widest text-coconut"
+                    >
+                      {c.print}
+                    </button>
+                  </div>
+                  {invoiceLoading && <p className="text-sm text-stone">{c.loading}</p>}
+                  {invoice && (
+                    <div className="rounded-xl border border-border bg-card p-6 sm:p-8 print:border-0 print:p-0">
+                      <div className="flex flex-wrap items-start justify-between gap-6">
+                        <div>
+                          <p className="font-display text-2xl text-forest">Rajawali D'Cabin Chalet</p>
+                          <p className="mt-1 max-w-[16rem] text-xs leading-relaxed text-stone">
+                            Lot 1234, Kampung Chendering,<br />
+                            21080 Kuala Terengganu,<br />
+                            Terengganu, Malaysia
+                          </p>
+                          <p className="mt-1 text-xs text-stone">WhatsApp 011-5500 7204</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[11px] uppercase tracking-widest text-stone">{c.invoice}</p>
+                          <p className="font-display text-xl text-forest">{invoice.reference}</p>
+                          <span className="mt-2 inline-block rounded-full bg-coconut px-3 py-0.5 text-[10px] uppercase tracking-widest text-forest">
+                            {invoice.status.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                        <div className="rounded-lg border border-border/60 p-4 text-sm">
+                          <p className="text-[10px] uppercase tracking-widest text-stone">{c.hi}</p>
+                          <p className="mt-1">{invoice.guestName}</p>
+                          <p className="text-stone">{invoice.email}</p>
+                          {invoice.phone && <p className="text-stone">{invoice.phone}</p>}
+                        </div>
+                        <div className="rounded-lg border border-border/60 p-4 text-sm">
+                          <p className="text-[10px] uppercase tracking-widest text-stone">{c.stay}</p>
+                          <p className="mt-1">{c.checkIn}: {invoice.checkIn}</p>
+                          <p>{c.checkOut}: {invoice.checkOut}</p>
+                          <p className="text-stone">
+                            {invoice.nights ?? "—"} · {invoice.guests} {c.guests}
+                          </p>
+                        </div>
+                      </div>
+
+                      <table className="mt-8 w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-stone">
+                            <th className="py-2">{c.room}</th>
+                            <th className="py-2">{c.nightsCol}</th>
+                            <th className="py-2 text-right">{c.subtotalRow}</th>
+                            <th className="py-2 text-right">{c.discount}</th>
+                            <th className="py-2 text-right">{c.amount}</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <dl className="mt-4 grid grid-cols-2 gap-y-1 text-sm">
-                      <dt className="text-stone">{c.subtotalRow}</dt>
-                      <dd className="text-right">RM {invoice.subtotal.toFixed(2)}</dd>
-                      {invoice.discountTotal > 0 && (
-                        <>
-                          <dt className="text-stone">
-                            {c.discount}{invoice.discountCode ? ` (${invoice.discountCode})` : ""}
-                          </dt>
-                          <dd className="text-right">−RM {invoice.discountTotal.toFixed(2)}</dd>
-                        </>
-                      )}
-                      <dt className="text-stone">{c.roomRate}</dt>
-                      <dd className="text-right">RM {invoice.total.toFixed(2)}</dd>
-                      <dt className="text-stone">{c.depositPaid}</dt>
-                      <dd className="text-right">RM {invoice.securityDeposit.toFixed(2)}</dd>
-                      <dt className="font-medium text-stone">{c.balanceDue}</dt>
-                      <dd className="text-right font-medium text-forest">RM {invoice.balance.toFixed(2)}</dd>
-                    </dl>
-                  </>
-                )}
+                        </thead>
+                        <tbody>
+                          {invoice.rooms.map((r: Invoice["rooms"][number]) => (
+                            <Fragment key={r.id}>
+                              <tr className={r.comforterTotal > 0 ? "" : "border-b border-border/40"}>
+                                <td className="py-2">{r.name}</td>
+                                <td className="py-2">{r.nights ?? "—"}</td>
+                                <td className="py-2 text-right">RM {r.subtotal.toFixed(2)}</td>
+                                <td className="py-2 text-right text-emerald-700">
+                                  {r.discount > 0 ? `−RM ${r.discount.toFixed(2)}` : "—"}
+                                </td>
+                                <td className="py-2 text-right">RM {r.total.toFixed(2)}</td>
+                              </tr>
+                              {r.comforterTotal > 0 && (
+                                <tr className="border-b border-border/40">
+                                  <td className="pb-2 pl-4 text-xs text-stone">Comforter</td>
+                                  <td className="pb-2" />
+                                  <td className="pb-2 text-right text-xs text-stone">RM {r.comforterTotal.toFixed(2)}</td>
+                                  <td className="pb-2" />
+                                  <td className="pb-2" />
+                                </tr>
+                              )}
+                            </Fragment>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          {invoice.discountTotal > 0 && (
+                            <tr>
+                              <td colSpan={4} className="pt-3 text-right text-xs uppercase tracking-widest text-stone">
+                                {c.discount}{invoice.discountCode ? ` (${invoice.discountCode})` : ""}
+                              </td>
+                              <td className="pt-3 text-right font-display text-lg text-emerald-700">
+                                −RM {invoice.discountTotal.toFixed(2)}
+                              </td>
+                            </tr>
+                          )}
+                          <tr>
+                            <td colSpan={4} className="pt-2 text-right text-xs uppercase tracking-widest text-stone">
+                              {c.roomRate}
+                            </td>
+                            <td className="pt-2 text-right font-display text-xl text-forest">
+                              RM {invoice.total.toFixed(2)}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
+                              {c.depositPaid}
+                            </td>
+                            <td className="pt-1 text-right font-display text-lg text-forest">
+                              RM {invoice.securityDeposit.toFixed(2)}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td colSpan={4} className="pt-1 text-right text-xs uppercase tracking-widest text-stone">
+                              {c.balanceDue}
+                            </td>
+                            <td className="pt-1 text-right font-display text-xl text-forest">
+                              RM {invoice.balance.toFixed(2)}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+
+                      <p className="mt-8 text-[11px] text-stone">WhatsApp 011-5500 7204 · drajawalicabin.com</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
