@@ -88,6 +88,18 @@ function useCopy() {
         policy: "Daftar keluar sebelum 12:00 tengah hari. Lewat dikenakan RM10 sejam (dibundarkan ke atas) dan ditolak daripada deposit.",
         home: "Utama",
         lost: "Hilang link?",
+        others: "Tempahan lain anda",
+        backToList: "← Tempahan saya yang lain",
+        viewInvoice: "Lihat invois",
+        hideInvoice: "Sembunyi invois",
+        invoice: "Invois",
+        print: "Cetak / Simpan PDF",
+        room: "Bilik",
+        nightsCol: "Malam",
+        amount: "Jumlah",
+        discount: "Diskaun",
+        subtotalRow: "Subjumlah",
+        current: "Sedang dibuka",
       }
     : {
         eyebrow: "My booking",
@@ -137,6 +149,18 @@ function useCopy() {
         policy: "Check-out is by 12:00 PM. Late check-out is RM10 per hour (rounded up) and is deducted from your refundable security deposit.",
         home: "Home",
         lost: "Lost link?",
+        others: "Your other bookings",
+        backToList: "← My other bookings",
+        viewInvoice: "View invoice",
+        hideInvoice: "Hide invoice",
+        invoice: "Invoice",
+        print: "Print / Save PDF",
+        room: "Room",
+        nightsCol: "Nights",
+        amount: "Amount",
+        discount: "Discount",
+        subtotalRow: "Subtotal",
+        current: "Currently open",
       };
 }
 
