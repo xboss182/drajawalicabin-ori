@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.booking_accepts_proof(uuid) TO anon;
