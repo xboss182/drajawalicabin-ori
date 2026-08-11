@@ -179,6 +179,12 @@ function ManagePage() {
   const [choices, setChoices] = useState<
     { bookingId: string; guestToken: string; reference: string; roomType: string; checkIn: string; status: string }[]
   >([]);
+  const [others, setOthers] = useState<
+    { bookingId: string; guestToken: string; reference: string; roomType: string; checkIn: string; status: string }[]
+  >([]);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
 
   async function load() {
     if (!id || !token) return;
@@ -195,6 +201,34 @@ function ManagePage() {
     }
   }
   useEffect(() => { load(); }, [id, token]);
+
+  // Other bookings on the same email — lets guests hop between reservations.
+  useEffect(() => {
+    if (!id || !token) { setOthers([]); return; }
+    let alive = true;
+    getMyOtherBookings({ data: { bookingId: id, guestToken: token } })
+      .then((r) => { if (alive) setOthers(r.bookings); })
+      .catch(() => { if (alive) setOthers([]); });
+    return () => { alive = false; };
+  }, [id, token]);
+
+  // Reset invoice when switching bookings.
+  useEffect(() => { setInvoice(null); setShowInvoice(false); }, [id]);
+
+  async function toggleInvoice() {
+    if (showInvoice) { setShowInvoice(false); return; }
+    setShowInvoice(true);
+    if (invoice || !id || !token) return;
+    setInvoiceLoading(true);
+    try {
+      const data = await getGuestInvoice({ data: { bookingId: id, guestToken: token } });
+      setInvoice(data);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Could not load invoice");
+    } finally {
+      setInvoiceLoading(false);
+    }
+  }
 
   async function lookup(e: React.FormEvent) {
     e.preventDefault();
