@@ -20,10 +20,11 @@ export const HOLIDAY_SEED_ROWS: SeedRow[] = [
   { label: "Malaysia Day", starts_on: "2026-09-16", ends_on: "2026-09-16", kind: "public_holiday" },
   { label: "Deepavali", starts_on: "2026-11-08", ends_on: "2026-11-08", kind: "public_holiday" },
   { label: "Christmas Day", starts_on: "2026-12-25", ends_on: "2026-12-25", kind: "public_holiday" },
-  { label: "School Break — Term 1", starts_on: "2026-03-14", ends_on: "2026-03-22", kind: "school_break" },
-  { label: "School Break — Term 2", starts_on: "2026-05-23", ends_on: "2026-06-07", kind: "school_break" },
-  { label: "School Break — Term 3", starts_on: "2026-08-22", ends_on: "2026-08-30", kind: "school_break" },
-  { label: "School Break — Year End", starts_on: "2026-12-12", ends_on: "2027-01-03", kind: "school_break" },
+  // Official KPM Kalendar Akademik 2026 — Kumpulan A (Kedah, Kelantan, Terengganu)
+  { label: "Cuti Penggal 1 (KPM Kumpulan A)", starts_on: "2026-03-20", ends_on: "2026-03-28", kind: "school_break" },
+  { label: "Cuti Pertengahan Tahun (KPM Kumpulan A)", starts_on: "2026-05-22", ends_on: "2026-06-06", kind: "school_break" },
+  { label: "Cuti Penggal 2 (KPM Kumpulan A)", starts_on: "2026-08-28", ends_on: "2026-09-05", kind: "school_break" },
+  { label: "Cuti Akhir Persekolahan (KPM Kumpulan A)", starts_on: "2026-12-04", ends_on: "2026-12-31", kind: "school_break" },
 
   // ===== 2027 =====
   { label: "New Year's Day", starts_on: "2027-01-01", ends_on: "2027-01-01", kind: "public_holiday" },
