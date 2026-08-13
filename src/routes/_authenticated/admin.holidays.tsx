@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { listHolidays, upsertHoliday, deleteHoliday, seedHolidays } from "@/lib/booking.functions";
+import { listHolidays, upsertHoliday, deleteHoliday, previewHolidaySeed, importHolidays } from "@/lib/booking.functions";
 import { AdminTabs } from "./admin";
 
 export const Route = createFileRoute("/_authenticated/admin/holidays")({
@@ -16,8 +16,13 @@ type H = {
   kind: "public_holiday" | "school_break";
 };
 
+type PreviewRow = H & { status: "new" | "duplicate" | "overlap"; note?: string };
+
 function HolidaysPage() {
   const [rows, setRows] = useState<H[]>([]);
+  const [preview, setPreview] = useState<PreviewRow[] | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<H | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -50,13 +55,45 @@ function HolidaysPage() {
   }
 
   async function populate() {
-    if (!confirm("Populate Malaysian public holidays & school breaks through end of 2027? Existing rows are skipped.")) return;
+    setBusy(true);
     try {
-      const r = await seedHolidays();
+      const r = await previewHolidaySeed();
+      const list = r.rows as PreviewRow[];
+      setPreview(list);
+      setSelected(
+        new Set(list.map((x, i) => (x.status === "new" ? i : -1)).filter((i) => i >= 0)),
+      );
+    } catch (e: any) {
+      alert(e?.message ?? "Failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function toggle(i: number) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  }
+
+  async function approveImport() {
+    if (!preview || selected.size === 0) return;
+    setBusy(true);
+    try {
+      const chosen = preview
+        .filter((_, i) => selected.has(i))
+        .map(({ label, starts_on, ends_on, kind }) => ({ label, starts_on, ends_on, kind }));
+      const r = await importHolidays({ data: { rows: chosen } });
       alert(`Added ${r.inserted} holidays (skipped ${r.skipped} existing).`);
+      setPreview(null);
+      setSelected(new Set());
       load();
     } catch (e: any) {
       alert(e?.message ?? "Failed");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -76,7 +113,7 @@ function HolidaysPage() {
               onClick={populate}
               className="rounded-full border border-forest px-4 py-1.5 text-xs uppercase tracking-widest text-forest"
             >
-              Populate through 2027
+              {busy && !preview ? "Loading…" : "Populate through 2027"}
             </button>
             <button
               onClick={() =>
@@ -136,6 +173,100 @@ function HolidaysPage() {
             </tbody>
           </table>
         </div>
+
+        {preview && (
+          <div className="mt-6 rounded-xl border border-forest/40 bg-card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="font-display text-lg text-forest">Review imported dates</h2>
+                <p className="mt-1 text-xs text-stone">
+                  Nothing affects pricing or availability until you approve. Tick the rows you
+                  want to add — {selected.size} of {preview.length} selected.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelected(new Set(preview.map((_, i) => i)))}
+                  className="rounded-full border border-border px-3 py-1 text-[10px] uppercase tracking-widest text-stone"
+                >
+                  Select all
+                </button>
+                <button
+                  onClick={() => setSelected(new Set())}
+                  className="rounded-full border border-border px-3 py-1 text-[10px] uppercase tracking-widest text-stone"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 max-h-[420px] overflow-y-auto rounded-lg border border-border">
+              <table className="w-full table-fixed text-sm">
+                <thead className="sticky top-0 bg-coconut text-[10px] uppercase tracking-widest text-stone">
+                  <tr>
+                    <th className="w-10 px-2 py-2" />
+                    <th className="w-[38%] px-2 py-2 text-left">Holiday</th>
+                    <th className="w-[28%] px-2 py-2 text-left">Dates</th>
+                    <th className="px-2 py-2 text-left">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.map((r, i) => (
+                    <tr key={`${r.label}-${r.starts_on}`} className="border-t border-border align-top">
+                      <td className="px-2 py-2">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(i)}
+                          onChange={() => toggle(i)}
+                          disabled={r.status === "duplicate"}
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <div className="text-forest">{r.label}</div>
+                        <div className="text-[10px] uppercase tracking-widest text-stone">
+                          {r.kind === "public_holiday" ? "Weekend rate" : "Holiday rate"}
+                        </div>
+                      </td>
+                      <td className="px-2 py-2 text-stone">
+                        {r.starts_on}{r.ends_on !== r.starts_on ? ` → ${r.ends_on}` : ""}
+                      </td>
+                      <td className="px-2 py-2">
+                        <span
+                          className={
+                            r.status === "new"
+                              ? "text-forest"
+                              : r.status === "overlap"
+                                ? "text-amber-600"
+                                : "text-stone"
+                          }
+                        >
+                          {r.status === "new" ? "New" : r.status === "overlap" ? "Overlap" : "Already added"}
+                        </span>
+                        {r.note && <div className="text-[11px] text-stone">{r.note}</div>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={approveImport}
+                disabled={busy || selected.size === 0}
+                className="rounded-full bg-forest px-5 py-2 text-xs uppercase tracking-widest text-coconut disabled:opacity-50"
+              >
+                {busy ? "Importing…" : `Approve & import ${selected.size}`}
+              </button>
+              <button
+                onClick={() => { setPreview(null); setSelected(new Set()); }}
+                className="rounded-full border border-border px-5 py-2 text-xs uppercase tracking-widest text-stone"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {editing && (
           <div className="mt-6 rounded-xl border border-border bg-card p-5">
