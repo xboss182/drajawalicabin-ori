@@ -45,20 +45,17 @@ export async function buildNightBreakdown(
     const isSchool = school.some((h: any) => iso >= h.starts_on && iso <= h.ends_on);
     const isPublic = publicH.some((h: any) => iso >= h.starts_on && iso <= h.ends_on);
     const dow = d.getUTCDay();
-    let rate: number;
-    let scope: DiscountScope;
+    const isWeekend = dow === 5 || dow === 6 || dow === 0;
+    let rate = isWeekend ? weekendRate : weekdayRate;
+    let scope: DiscountScope = isWeekend ? "weekend" : "weekday";
+    if (isPublic) {
+      rate = Math.max(rate, weekendRate);
+      scope = "holiday";
+    }
     if (isSchool) {
-      rate = holidayRate;
+      // Overlapping school break always wins with the highest applicable rate.
+      rate = Math.max(rate, holidayRate);
       scope = "holiday";
-    } else if (isPublic) {
-      rate = weekendRate;
-      scope = "holiday";
-    } else if (dow === 5 || dow === 6 || dow === 0) {
-      rate = weekendRate;
-      scope = "weekend";
-    } else {
-      rate = weekdayRate;
-      scope = "weekday";
     }
     nights.push({ date: iso, rate, scope });
   }
