@@ -1927,59 +1927,38 @@ export const deleteHoliday = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const seedHolidays = createServerFn({ method: "POST" })
+export const previewHolidaySeed = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context);
-    // Curated Malaysian federal public holidays + MOE school breaks through
-    // end of next year. Islamic/lunar dates are best-effort estimates —
-    // admins can edit or delete inaccurate rows.
-    const rows: Array<{
-      label: string;
-      starts_on: string;
-      ends_on: string;
-      kind: "public_holiday" | "school_break";
-    }> = [
-      // ===== 2026 =====
-      { label: "New Year's Day", starts_on: "2026-01-01", ends_on: "2026-01-01", kind: "public_holiday" },
-      { label: "Chinese New Year", starts_on: "2026-02-17", ends_on: "2026-02-18", kind: "public_holiday" },
-      { label: "Hari Raya Aidilfitri", starts_on: "2026-03-20", ends_on: "2026-03-21", kind: "public_holiday" },
-      { label: "Labour Day", starts_on: "2026-05-01", ends_on: "2026-05-01", kind: "public_holiday" },
-      { label: "Wesak Day", starts_on: "2026-05-01", ends_on: "2026-05-01", kind: "public_holiday" },
-      { label: "Agong's Birthday", starts_on: "2026-06-01", ends_on: "2026-06-01", kind: "public_holiday" },
-      { label: "Hari Raya Haji", starts_on: "2026-05-27", ends_on: "2026-05-27", kind: "public_holiday" },
-      { label: "Awal Muharram", starts_on: "2026-06-16", ends_on: "2026-06-16", kind: "public_holiday" },
-      { label: "Merdeka Day", starts_on: "2026-08-31", ends_on: "2026-08-31", kind: "public_holiday" },
-      { label: "Maulidur Rasul", starts_on: "2026-08-25", ends_on: "2026-08-25", kind: "public_holiday" },
-      { label: "Malaysia Day", starts_on: "2026-09-16", ends_on: "2026-09-16", kind: "public_holiday" },
-      { label: "Deepavali", starts_on: "2026-11-08", ends_on: "2026-11-08", kind: "public_holiday" },
-      { label: "Christmas Day", starts_on: "2026-12-25", ends_on: "2026-12-25", kind: "public_holiday" },
-      // 2026 school breaks (approx MOE calendar)
-      { label: "School Break — Term 1", starts_on: "2026-03-14", ends_on: "2026-03-22", kind: "school_break" },
-      { label: "School Break — Term 2", starts_on: "2026-05-23", ends_on: "2026-06-07", kind: "school_break" },
-      { label: "School Break — Term 3", starts_on: "2026-08-22", ends_on: "2026-08-30", kind: "school_break" },
-      { label: "School Break — Year End", starts_on: "2026-12-12", ends_on: "2027-01-03", kind: "school_break" },
+    const { buildHolidayPreview } = await import("@/lib/holiday-seed.server");
+    const { data: existing } = await context.supabase
+      .from("school_holidays")
+      .select("label, starts_on, ends_on");
+    return { rows: buildHolidayPreview(existing ?? []) };
+  });
 
-      // ===== 2027 =====
-      { label: "New Year's Day", starts_on: "2027-01-01", ends_on: "2027-01-01", kind: "public_holiday" },
-      { label: "Chinese New Year", starts_on: "2027-02-06", ends_on: "2027-02-07", kind: "public_holiday" },
-      { label: "Hari Raya Aidilfitri", starts_on: "2027-03-10", ends_on: "2027-03-11", kind: "public_holiday" },
-      { label: "Labour Day", starts_on: "2027-05-01", ends_on: "2027-05-01", kind: "public_holiday" },
-      { label: "Wesak Day", starts_on: "2027-05-20", ends_on: "2027-05-20", kind: "public_holiday" },
-      { label: "Hari Raya Haji", starts_on: "2027-05-17", ends_on: "2027-05-17", kind: "public_holiday" },
-      { label: "Agong's Birthday", starts_on: "2027-06-07", ends_on: "2027-06-07", kind: "public_holiday" },
-      { label: "Awal Muharram", starts_on: "2027-06-06", ends_on: "2027-06-06", kind: "public_holiday" },
-      { label: "Maulidur Rasul", starts_on: "2027-08-15", ends_on: "2027-08-15", kind: "public_holiday" },
-      { label: "Merdeka Day", starts_on: "2027-08-31", ends_on: "2027-08-31", kind: "public_holiday" },
-      { label: "Malaysia Day", starts_on: "2027-09-16", ends_on: "2027-09-16", kind: "public_holiday" },
-      { label: "Deepavali", starts_on: "2027-10-28", ends_on: "2027-10-28", kind: "public_holiday" },
-      { label: "Christmas Day", starts_on: "2027-12-25", ends_on: "2027-12-25", kind: "public_holiday" },
-      { label: "School Break — Term 1", starts_on: "2027-03-13", ends_on: "2027-03-21", kind: "school_break" },
-      { label: "School Break — Term 2", starts_on: "2027-05-29", ends_on: "2027-06-13", kind: "school_break" },
-      { label: "School Break — Term 3", starts_on: "2027-08-21", ends_on: "2027-08-29", kind: "school_break" },
-      { label: "School Break — Year End", starts_on: "2027-12-11", ends_on: "2028-01-02", kind: "school_break" },
-    ];
-
+export const importHolidays = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        rows: z
+          .array(
+            z.object({
+              label: z.string().trim().min(1).max(120),
+              starts_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+              ends_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+              kind: z.enum(["public_holiday", "school_break"]),
+            }),
+          )
+          .min(1)
+          .max(200),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: existing } = await supabaseAdmin
       .from("school_holidays")
@@ -1987,14 +1966,16 @@ export const seedHolidays = createServerFn({ method: "POST" })
     const seen = new Set(
       (existing ?? []).map((r: any) => `${r.label}::${r.starts_on}`),
     );
-    const toInsert = rows.filter((r) => !seen.has(`${r.label}::${r.starts_on}`));
+    const toInsert = data.rows.filter(
+      (r) => !seen.has(`${r.label}::${r.starts_on}`),
+    );
     let inserted = 0;
     if (toInsert.length > 0) {
       const { error } = await supabaseAdmin.from("school_holidays").insert(toInsert);
       if (error) throw new Error(error.message);
       inserted = toInsert.length;
     }
-    return { inserted, skipped: rows.length - toInsert.length };
+    return { inserted, skipped: data.rows.length - toInsert.length };
   });
 
 // ============== ADMIN: stats + email log ==============
