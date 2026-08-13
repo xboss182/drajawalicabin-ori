@@ -40,10 +40,11 @@ export const HOLIDAY_SEED_ROWS: SeedRow[] = [
   { label: "Malaysia Day", starts_on: "2027-09-16", ends_on: "2027-09-16", kind: "public_holiday" },
   { label: "Deepavali", starts_on: "2027-10-28", ends_on: "2027-10-28", kind: "public_holiday" },
   { label: "Christmas Day", starts_on: "2027-12-25", ends_on: "2027-12-25", kind: "public_holiday" },
-  { label: "School Break — Term 1", starts_on: "2027-03-13", ends_on: "2027-03-21", kind: "school_break" },
-  { label: "School Break — Term 2", starts_on: "2027-05-29", ends_on: "2027-06-13", kind: "school_break" },
-  { label: "School Break — Term 3", starts_on: "2027-08-21", ends_on: "2027-08-29", kind: "school_break" },
-  { label: "School Break — Year End", starts_on: "2027-12-11", ends_on: "2028-01-02", kind: "school_break" },
+  // 2027 takwim not yet published — estimates, review before approving
+  { label: "Cuti Penggal 1 (2027, estimate)", starts_on: "2027-03-13", ends_on: "2027-03-21", kind: "school_break" },
+  { label: "Cuti Pertengahan Tahun (2027, estimate)", starts_on: "2027-05-29", ends_on: "2027-06-13", kind: "school_break" },
+  { label: "Cuti Penggal 2 (2027, estimate)", starts_on: "2027-08-21", ends_on: "2027-08-29", kind: "school_break" },
+  { label: "Cuti Akhir Persekolahan (2027, estimate)", starts_on: "2027-12-11", ends_on: "2028-01-02", kind: "school_break" },
 ];
 
 export type PreviewRow = SeedRow & {
