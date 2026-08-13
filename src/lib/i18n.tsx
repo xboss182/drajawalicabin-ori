@@ -406,7 +406,7 @@ export const translations = {
         nights: "Bil malam",
         guests: "Bil Org @ pax",
         rooms: "Bil bilik",
-        roomSubtotal: "Jumlah bilik",
+        roomSubtotal: "Jumlah harga bilik",
         comforterLabel: "Comforter",
         securityDeposit: "Deposit keselamatan boleh dikembalikan",
         total: "Jumlah",
