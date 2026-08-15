@@ -913,7 +913,11 @@ function DetailsStep(props: {
                     : addDaysISO(formatLocalDate(from), 1);
                 setCheckout(checkoutIso);
               }}
-              disabled={[{ before: parseLocalDate(todayStr) }, ...blockedDates.map((d) => parseLocalDate(d))]}
+              disabled={[
+                { before: parseLocalDate(todayStr) },
+                ...(checkin ? [{ before: parseLocalDate(checkin) }] : []),
+                ...blockedDates.map((d) => parseLocalDate(d)),
+              ]}
               modifiers={{ booked: blockedDates.map((d) => parseLocalDate(d)) }}
               modifiersClassNames={{
                 booked:
