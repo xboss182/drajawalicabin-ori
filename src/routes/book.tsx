@@ -900,7 +900,7 @@ function DetailsStep(props: {
               </div>
             );
           })()}
-          <div className="mt-3 overflow-x-auto">
+          <div className="mt-3">
             <Calendar
               mode="range"
               numberOfMonths={isMobile ? 1 : 2}
@@ -944,8 +944,9 @@ function DetailsStep(props: {
                   return <CalendarDayButton {...btnProps} title={title} aria-label={title ?? undefined} />;
                 },
               }}
-              className="pointer-events-auto p-0 [--cell-size:2.25rem] sm:[--cell-size:2.5rem]"
+              className="pointer-events-auto w-full p-0 [--cell-size:2.25rem] sm:[--cell-size:2.5rem]"
               classNames={{
+                root: "w-full",
                 today: "font-semibold text-forest underline underline-offset-4",
               }}
             />
