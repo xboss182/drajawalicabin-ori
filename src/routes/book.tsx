@@ -222,7 +222,15 @@ function BookPage() {
         ),
       })) as Cabin[];
       setCabins(list);
-      const match = list.find((c) => c.name === search.room || c.cabin_type === search.room);
+      const wanted = (search.room ?? "").trim().toLowerCase();
+      const match = wanted
+        ? list.find(
+            (c) =>
+              c.name.toLowerCase() === wanted ||
+              c.cabin_type.toLowerCase() === wanted ||
+              wanted.includes(c.cabin_type.toLowerCase()),
+          )
+        : undefined;
       const startType = match?.cabin_type ?? list[0]?.cabin_type ?? "";
       if (startType) setCart([{ cabinType: startType, qty: 1 }]);
     })();
