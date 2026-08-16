@@ -480,10 +480,10 @@ function AvailabilitySearch() {
               <SelectContent>
                 {[
                   { value: t.search.anyCabin, label: t.search.anyCabin },
-                  { value: "Deluxe Queen", label: "Queen Room" },
-                  { value: "Deluxe Twin", label: "Twin Room" },
-                  { value: "Family Suite", label: "Family Room" },
-                  { value: "Triple Suite", label: "Triple Room" },
+                  { value: "Queen", label: "Queen Room" },
+                  { value: "Twin", label: "Twin Room" },
+                  { value: "Family", label: "Family Room" },
+                  { value: "Triple", label: "Triple Room" },
                 ].map((o) => (
                   <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                 ))}
