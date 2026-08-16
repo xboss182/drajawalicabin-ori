@@ -772,6 +772,18 @@ function DetailsStep(props: {
   const isMobile = useIsMobile();
   const visibleRecommendations = isMobile ? recommendations.slice(0, 2) : recommendations;
 
+  // Keep the calendar showing the month of the selected check-in date.
+  const [calMonth, setCalMonth] = useState<Date>(() =>
+    checkin ? parseLocalDate(checkin) : new Date(),
+  );
+  useEffect(() => {
+    if (!checkin) return;
+    const d = parseLocalDate(checkin);
+    setCalMonth((m) =>
+      m.getFullYear() === d.getFullYear() && m.getMonth() === d.getMonth() ? m : d,
+    );
+  }, [checkin]);
+
   function setCartLineQty(idx: number, qty: number) {
     setCart((c) =>
       c.map((it, i) => {
@@ -903,6 +915,8 @@ function DetailsStep(props: {
           <div className="mt-3">
             <Calendar
               mode="range"
+              month={calMonth}
+              onMonthChange={setCalMonth}
               numberOfMonths={isMobile ? 1 : 2}
               showOutsideDays={false}
               selected={
