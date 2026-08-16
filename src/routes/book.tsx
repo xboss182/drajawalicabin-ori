@@ -903,6 +903,8 @@ function DetailsStep(props: {
           <div className="mt-3">
             <Calendar
               mode="range"
+              month={calMonth}
+              onMonthChange={setCalMonth}
               numberOfMonths={isMobile ? 1 : 2}
               showOutsideDays={false}
               selected={
