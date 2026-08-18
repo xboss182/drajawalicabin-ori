@@ -19,6 +19,98 @@ function securityDepositForRooms(numRooms: number) {
   return SECURITY_DEPOSIT_PER_ROOM * numRooms;
 }
 
+/** Recompute automatic + coupon discounts for a booking group and persist them. */
+async function recalcGroupDiscounts(admin: any, groupId: string) {
+  const { data: rows, error: rowsErr } = await admin
+    .from("booking_requests")
+    .select("id, cabin_id, room_type, check_in, check_out, subtotal, total_amount, comforter_total, discount_id, discount_code, discount_amount, status, balance_paid_at")
+    .eq("booking_group_id", groupId)
+    .order("created_at", { ascending: true });
+  if (rowsErr) throw new Error(rowsErr.message);
+  if (!rows || rows.length === 0) return;
+
+  const cabinIds = [...new Set((rows.map((r: any) => r.cabin_id).filter(Boolean) as string[]))];
+  const { data: cabins } = await admin.from("cabins").select("id, cabin_type").in("id", cabinIds);
+  const cabinTypeById = new Map((cabins ?? []).map((c: any) => [c.id as string, c.cabin_type as string]));
+
+  const breakdownByCabin = new Map<string, NightBreakdown[]>();
+  for (const r of rows) {
+    const cid = r.cabin_id as string;
+    if (!cid || breakdownByCabin.has(cid)) continue;
+    const nights = await buildNightBreakdown(admin, cid, r.check_in as string, r.check_out as string);
+    breakdownByCabin.set(cid, nights);
+  }
+
+  const cart: PricingCart = {
+    checkIn: rows[0].check_in as string,
+    rooms: rows.map((r: any) => ({
+      cabinType: cabinTypeById.get(r.cabin_id as string) ?? r.room_type ?? "",
+      nights: breakdownByCabin.get(r.cabin_id as string) ?? [],
+    })),
+    subtotalRoomOnly: rows.reduce((s: number, r: any) => s + Number(r.subtotal ?? 0), 0),
+  };
+
+  console.log("[recalcGroupDiscounts] groupId", groupId, "cart", JSON.stringify(cart));
+
+  const { data: activeAutos } = await admin
+    .from("discounts")
+    .select("*")
+    .eq("active", true)
+    .is("code", null);
+
+  console.log("[recalcGroupDiscounts] activeAutos count", (activeAutos ?? []).length);
+
+  let couponRow: DiscountRow | null = null;
+  const code = (rows.find((r: any) => r.discount_code)?.discount_code as string | null) ?? null;
+  if (code) {
+    const nowIso = new Date().toISOString();
+    const { data: cRow } = await admin
+      .from("discounts")
+      .select("*")
+      .eq("active", true)
+      .eq("code", code)
+      .maybeSingle();
+    if (cRow) {
+      const okStart = !cRow.starts_at || cRow.starts_at <= nowIso;
+      const okEnd = !cRow.ends_at || cRow.ends_at >= nowIso;
+      if (okStart && okEnd) couponRow = cRow as DiscountRow;
+    }
+  }
+
+  const applications = pickBestDiscount(
+    cart,
+    (activeAutos ?? []) as DiscountRow[],
+    couponRow,
+  );
+  const discountAmount = applications.reduce((s, a) => s + a.amountOff, 0);
+  const leadApp = applications.find((a) => a.code) ?? applications[0] ?? null;
+
+  // Distribute the discount to the lead row and update totals.
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const isPaid = r.status === "fully_paid" || r.balance_paid_at;
+    const isLead = i === 0;
+    const rowDiscount = isLead ? Math.min(discountAmount, Number(r.subtotal ?? 0) + Number(r.comforter_total ?? 0)) : 0;
+    const newTotal = Number(r.subtotal ?? 0) + Number(r.comforter_total ?? 0) - rowDiscount;
+    const patch: Record<string, unknown> = {
+      total_amount: newTotal,
+      balance_amount: isPaid ? 0 : newTotal,
+    };
+    if (isLead) {
+      patch.discount_id = leadApp?.discountId ?? null;
+      patch.discount_code = applications.length > 0 ? applications.map((a) => a.code ?? a.name).join(" + ") : null;
+      patch.discount_amount = rowDiscount;
+    } else {
+      patch.discount_id = null;
+      patch.discount_code = null;
+      patch.discount_amount = 0;
+    }
+    await admin.from("booking_requests").update(patch as never).eq("id", r.id);
+  }
+
+  return { discountAmount, applications, cart };
+}
+
 function generateRef() {
   const n = Math.floor(1000 + Math.random() * 9000);
   return `RJW-${n}`;
@@ -634,6 +726,7 @@ export const listBookings = createServerFn({ method: "GET" })
             cabinId: r.cabin_id,
             name: cleanRoomType(r.room_type),
             nights: r.nights,
+            subtotal: Number(r.subtotal ?? 0),
             total: Number(r.total_amount ?? 0),
           })),
           proofUrl,
@@ -1045,21 +1138,83 @@ export const updateBookingRoomPrices = createServerFn({ method: "POST" })
     for (const r of data.rows) {
       const cur = byId.get(r.id);
       if (!cur) throw new Error("Row not in this booking");
-      const comforter = Number(cur.comforter_total ?? 0);
-      const total = Math.round((r.amount + comforter) * 100) / 100;
-      const isPaid = cur.status === "fully_paid" || cur.balance_paid_at;
-      const patch: Record<string, unknown> = {
-        subtotal: r.amount,
-        total_amount: total,
-        balance_amount: isPaid ? 0 : total,
-      };
       const { error: uErr } = await supabaseAdmin
         .from("booking_requests")
-        .update(patch as never)
+        .update({ subtotal: r.amount } as never)
         .eq("id", r.id);
       if (uErr) throw new Error(uErr.message);
     }
+    // Recalculate automatic/coupon discounts against the new subtotals and night rates.
+    await recalcGroupDiscounts(supabaseAdmin, gid);
     return { ok: true };
+  });
+
+// Admin: force-recalculate discounts for an existing booking group.
+const recalcDiscountsSchema = z.object({ bookingId: z.string().uuid() });
+export const recalculateBookingDiscounts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => recalcDiscountsSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+    const result = await recalcGroupDiscounts(supabaseAdmin, gid);
+    return { ok: true, result };
+  });
+
+// Debug: inspect discount recalculation for a booking group.
+const debugDiscountSchema = z.object({ bookingId: z.string().uuid() });
+export const debugDiscountRecalc = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => debugDiscountSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+    const { data: rows } = await supabaseAdmin
+      .from("booking_requests")
+      .select("id, cabin_id, room_type, check_in, check_out, subtotal, total_amount, comforter_total, discount_id, discount_code, discount_amount, status, balance_paid_at")
+      .eq("booking_group_id", gid)
+      .order("created_at", { ascending: true });
+
+    const cabinIds = [...new Set((rows?.map((r: any) => r.cabin_id).filter(Boolean) as string[]))];
+    const { data: cabins } = await supabaseAdmin.from("cabins").select("id, cabin_type").in("id", cabinIds);
+    const cabinTypeById = new Map((cabins ?? []).map((c: any) => [c.id as string, c.cabin_type as string]));
+
+    const breakdownByCabin = new Map<string, NightBreakdown[]>();
+    for (const r of rows ?? []) {
+      const cid = r.cabin_id as string;
+      if (!cid || breakdownByCabin.has(cid)) continue;
+      const nights = await buildNightBreakdown(supabaseAdmin, cid, r.check_in as string, r.check_out as string);
+      breakdownByCabin.set(cid, nights);
+    }
+
+    const cart: PricingCart = {
+      checkIn: rows?.[0]?.check_in as string,
+      rooms: (rows ?? []).map((r: any) => ({
+        cabinType: cabinTypeById.get(r.cabin_id as string) ?? r.room_type ?? "",
+        nights: breakdownByCabin.get(r.cabin_id as string) ?? [],
+      })),
+      subtotalRoomOnly: (rows ?? []).reduce((s: number, r: any) => s + Number(r.subtotal ?? 0), 0),
+    };
+
+    const { data: activeAutos } = await supabaseAdmin
+      .from("discounts")
+      .select("*")
+      .eq("active", true)
+      .is("code", null);
+
+    const applications = pickBestDiscount(cart, (activeAutos ?? []) as DiscountRow[], null);
+
+    return { cart, activeAutosCount: (activeAutos ?? []).length, applications };
   });
 
 // Admin gate: signed-in user's email must be on the admin_email_recipients allowlist.
