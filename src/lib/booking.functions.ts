@@ -50,11 +50,15 @@ async function recalcGroupDiscounts(admin: any, groupId: string) {
     subtotalRoomOnly: rows.reduce((s: number, r: any) => s + Number(r.subtotal ?? 0), 0),
   };
 
+  console.log("[recalcGroupDiscounts] groupId", groupId, "cart", JSON.stringify(cart));
+
   const { data: activeAutos } = await admin
     .from("discounts")
     .select("*")
     .eq("active", true)
     .is("code", null);
+
+  console.log("[recalcGroupDiscounts] activeAutos count", (activeAutos ?? []).length);
 
   let couponRow: DiscountRow | null = null;
   const code = (rows.find((r: any) => r.discount_code)?.discount_code as string | null) ?? null;
@@ -78,6 +82,7 @@ async function recalcGroupDiscounts(admin: any, groupId: string) {
     (activeAutos ?? []) as DiscountRow[],
     couponRow,
   );
+  console.log("[recalcGroupDiscounts] applications", JSON.stringify(applications));
   const discountAmount = applications.reduce((s, a) => s + a.amountOff, 0);
   const leadApp = applications.find((a) => a.code) ?? applications[0] ?? null;
 
@@ -101,6 +106,7 @@ async function recalcGroupDiscounts(admin: any, groupId: string) {
       patch.discount_code = null;
       patch.discount_amount = 0;
     }
+    console.log("[recalcGroupDiscounts] patch row", r.id, patch);
     await admin.from("booking_requests").update(patch as never).eq("id", r.id);
   }
 }
