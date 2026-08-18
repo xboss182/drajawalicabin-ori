@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadReceipt } from "@/lib/upload-proof";
 import {
   getBookingForGuest,
   attachBalanceProof,
