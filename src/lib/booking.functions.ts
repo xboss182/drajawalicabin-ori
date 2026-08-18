@@ -1137,6 +1137,23 @@ export const updateBookingRoomPrices = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Admin: force-recalculate discounts for an existing booking group.
+const recalcDiscountsSchema = z.object({ bookingId: z.string().uuid() });
+export const recalculateBookingDiscounts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => recalcDiscountsSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+    await recalcGroupDiscounts(supabaseAdmin, gid);
+    return { ok: true };
+  });
+
 // Admin gate: signed-in user's email must be on the admin_email_recipients allowlist.
 export const isAdminRecipient = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
