@@ -21,12 +21,17 @@ function securityDepositForRooms(numRooms: number) {
 
 /** Recompute automatic + coupon discounts for a booking group and persist them. */
 async function recalcGroupDiscounts(admin: any, groupId: string) {
-  const { data: rows } = await admin
+  const { data: rows, error: rowsErr } = await admin
     .from("booking_requests")
-    .select("id, cabin_id, cabin_id:cabins!inner(id, cabin_type), room_type, check_in, check_out, subtotal, total_amount, comforter_total, discount_id, discount_code, discount_amount, status, balance_paid_at")
+    .select("id, cabin_id, room_type, check_in, check_out, subtotal, total_amount, comforter_total, discount_id, discount_code, discount_amount, status, balance_paid_at")
     .eq("booking_group_id", groupId)
     .order("created_at", { ascending: true });
+  if (rowsErr) throw new Error(rowsErr.message);
   if (!rows || rows.length === 0) return;
+
+  const cabinIds = [...new Set((rows.map((r: any) => r.cabin_id).filter(Boolean) as string[]))];
+  const { data: cabins } = await admin.from("cabins").select("id, cabin_type").in("id", cabinIds);
+  const cabinTypeById = new Map((cabins ?? []).map((c: any) => [c.id as string, c.cabin_type as string]));
 
   const breakdownByCabin = new Map<string, NightBreakdown[]>();
   for (const r of rows) {
@@ -39,7 +44,7 @@ async function recalcGroupDiscounts(admin: any, groupId: string) {
   const cart: PricingCart = {
     checkIn: rows[0].check_in as string,
     rooms: rows.map((r: any) => ({
-      cabinType: r.cabins?.cabin_type ?? r.room_type ?? "",
+      cabinType: cabinTypeById.get(r.cabin_id as string) ?? r.room_type ?? "",
       nights: breakdownByCabin.get(r.cabin_id as string) ?? [],
     })),
     subtotalRoomOnly: rows.reduce((s: number, r: any) => s + Number(r.subtotal ?? 0), 0),
@@ -81,7 +86,7 @@ async function recalcGroupDiscounts(admin: any, groupId: string) {
     const r = rows[i];
     const isPaid = r.status === "fully_paid" || r.balance_paid_at;
     const isLead = i === 0;
-    const rowDiscount = isLead ? Math.min(discountAmount, Number(r.total_amount ?? 0) + Number(r.discount_amount ?? 0)) : 0;
+    const rowDiscount = isLead ? Math.min(discountAmount, Number(r.subtotal ?? 0) + Number(r.comforter_total ?? 0)) : 0;
     const newTotal = Number(r.subtotal ?? 0) + Number(r.comforter_total ?? 0) - rowDiscount;
     const patch: Record<string, unknown> = {
       total_amount: newTotal,
