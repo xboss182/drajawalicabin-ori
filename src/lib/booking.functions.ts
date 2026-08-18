@@ -726,6 +726,7 @@ export const listBookings = createServerFn({ method: "GET" })
             cabinId: r.cabin_id,
             name: cleanRoomType(r.room_type),
             nights: r.nights,
+            subtotal: Number(r.subtotal ?? 0),
             total: Number(r.total_amount ?? 0),
           })),
           proofUrl,
