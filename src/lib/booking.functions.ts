@@ -82,7 +82,6 @@ async function recalcGroupDiscounts(admin: any, groupId: string) {
     (activeAutos ?? []) as DiscountRow[],
     couponRow,
   );
-  console.log("[recalcGroupDiscounts] applications", JSON.stringify(applications));
   const discountAmount = applications.reduce((s, a) => s + a.amountOff, 0);
   const leadApp = applications.find((a) => a.code) ?? applications[0] ?? null;
 
@@ -106,9 +105,10 @@ async function recalcGroupDiscounts(admin: any, groupId: string) {
       patch.discount_code = null;
       patch.discount_amount = 0;
     }
-    console.log("[recalcGroupDiscounts] patch row", r.id, patch);
     await admin.from("booking_requests").update(patch as never).eq("id", r.id);
   }
+
+  return { discountAmount, applications, cart };
 }
 
 function generateRef() {
