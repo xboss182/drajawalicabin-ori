@@ -399,7 +399,8 @@ function Card({
     const d: Record<string, number> = {};
     const c: Record<string, string> = {};
     for (const r of b.rooms ?? []) {
-      d[r.id] = Number(r.total ?? 0);
+      // Edit the gross room subtotal; automatic discounts are recalculated separately.
+      d[r.id] = Number(r.subtotal ?? r.total ?? 0);
       c[r.id] = r.cabinId ?? "";
     }
     setDraft(d);
@@ -417,6 +418,7 @@ function Card({
         data: { cabinIds: [cabinId], checkIn: b.check_in, checkOut: b.check_out },
       });
       const q = res.quotes?.[0];
+      // quoteRoomPrices returns the gross room rate total for these dates.
       if (q) setDraft((prev) => ({ ...prev, [roomId]: Number(q.total) }));
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to fetch room rate");
