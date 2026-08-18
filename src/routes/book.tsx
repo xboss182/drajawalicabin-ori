@@ -595,12 +595,7 @@ function BookPage() {
     setUploading(true);
     setError(null);
     try {
-      const ext = proofFile.name.split(".").pop() ?? "jpg";
-      const path = `bookings/${booking.bookingId}/proof-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("payment-proofs")
-        .upload(path, proofFile, { upsert: false });
-      if (upErr) throw upErr;
+      const path = await uploadReceipt(booking.bookingId, proofFile, "proof");
       await attachPaymentProof({
         data: { bookingId: booking.bookingId, reference: booking.reference, path },
       });
