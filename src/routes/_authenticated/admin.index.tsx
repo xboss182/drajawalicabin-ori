@@ -392,6 +392,8 @@ function Card({
   const [draft, setDraft] = useState<Record<string, number>>({});
   const [savingPrice, setSavingPrice] = useState(false);
   const [cabinDraft, setCabinDraft] = useState<Record<string, string>>({});
+  const [customPrice, setCustomPrice] = useState(false);
+  const [quoting, setQuoting] = useState(false);
 
   function openEdit() {
     const d: Record<string, number> = {};
@@ -402,7 +404,25 @@ function Card({
     }
     setDraft(d);
     setCabinDraft(c);
+    setCustomPrice(false);
     setEditing(true);
+  }
+
+  async function onCabinChange(roomId: string, cabinId: string) {
+    setCabinDraft((prev) => ({ ...prev, [roomId]: cabinId }));
+    if (!cabinId || customPrice) return;
+    setQuoting(true);
+    try {
+      const res = await quoteRoomPrices({
+        data: { cabinIds: [cabinId], checkIn: b.check_in, checkOut: b.check_out },
+      });
+      const q = res.quotes?.[0];
+      if (q) setDraft((prev) => ({ ...prev, [roomId]: Number(q.total) }));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to fetch room rate");
+    } finally {
+      setQuoting(false);
+    }
   }
   async function savePrices() {
     setSavingPrice(true);
@@ -489,7 +509,7 @@ function Card({
               <li key={r.id} className="flex flex-wrap items-center justify-between gap-2">
                 <select
                   value={cabinDraft[r.id] ?? ""}
-                  onChange={(e) => setCabinDraft((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                  onChange={(e) => onCabinChange(r.id, e.target.value)}
                   className="min-w-[10rem] flex-1 rounded border border-border bg-white px-2 py-1 text-sm"
                 >
                   {!cabinDraft[r.id] && <option value="">{r.name}</option>}
@@ -507,14 +527,25 @@ function Card({
                     onChange={(e) =>
                       setDraft((prev) => ({ ...prev, [r.id]: Number(e.target.value) }))
                     }
-                    className="w-24 rounded border border-border bg-white px-2 py-1 text-sm"
+                    readOnly={!customPrice}
+                    className="w-24 rounded border border-border bg-white px-2 py-1 text-sm read-only:bg-stone-100 read-only:text-stone-500"
                   />
                 </span>
               </li>
             ))}
           </ul>
+          <label className="mt-2 flex items-center gap-2 text-[11px] text-stone">
+            <input
+              type="checkbox"
+              checked={customPrice}
+              onChange={(e) => setCustomPrice(e.target.checked)}
+              className="h-3.5 w-3.5 accent-forest"
+            />
+            Set custom price (otherwise price follows the room rate for these dates)
+          </label>
           <p className="mt-2 text-[11px] text-stone">
             New total: RM {Object.values(draft).reduce((s, v) => s + (Number(v) || 0), 0).toFixed(2)}
+            {quoting ? " · updating rate…" : ""}
           </p>
           <div className="mt-3 flex gap-2">
             <button
