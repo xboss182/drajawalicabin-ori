@@ -8,6 +8,7 @@ import {
   previewPriceDetailed,
   attachPaymentProof,
   recommendCabins,
+  getBookingForGuest,
 } from "@/lib/booking.functions";
 import { listActiveAutoDiscounts, validateCoupon } from "@/lib/discounts.functions";
 import { computeDiscountAmount, pickBestDiscount, type DiscountRow, type PricingCart } from "@/lib/discounts";
@@ -178,7 +179,30 @@ function BookPage() {
 
   const [booking, setBooking] = useState<{ bookingId: string; reference: string; total: number; securityDeposit: number; holdExpiresAt: string; guestToken: string; discount?: { label: string; amount: number } | null } | null>(null);
   const [remembered, setRemembered] = useState<ReturnType<typeof readRememberedBooking>>(null);
-  useEffect(() => { setRemembered(readRememberedBooking()); }, []);
+  // Verify the locally remembered booking still exists (and is not cancelled or
+  // expired) in the database before offering it — otherwise clear it.
+  useEffect(() => {
+    const saved = readRememberedBooking();
+    if (!saved) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await getBookingForGuest({
+          data: { bookingId: saved.id, guestToken: saved.token },
+        });
+        const status = (data as { status?: string } | null)?.status ?? "";
+        if (cancelled) return;
+        if (!data || status === "cancelled" || status === "expired") {
+          forgetBooking();
+          return;
+        }
+        setRemembered({ ...saved, reference: (data as { reference?: string }).reference ?? saved.reference });
+      } catch {
+        if (!cancelled) forgetBooking();
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [agreed, setAgreed] = useState(false);
