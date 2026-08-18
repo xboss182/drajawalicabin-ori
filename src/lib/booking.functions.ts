@@ -1161,8 +1161,8 @@ export const recalculateBookingDiscounts = createServerFn({ method: "POST" })
     if (!isAdmin.data) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const gid = await groupIdFor(supabaseAdmin, data.bookingId);
-    await recalcGroupDiscounts(supabaseAdmin, gid);
-    return { ok: true };
+    const result = await recalcGroupDiscounts(supabaseAdmin, gid);
+    return { ok: true, result };
   });
 
 // Debug: inspect discount recalculation for a booking group.
