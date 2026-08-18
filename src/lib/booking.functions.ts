@@ -1165,6 +1165,57 @@ export const recalculateBookingDiscounts = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Debug: inspect discount recalculation for a booking group.
+const debugDiscountSchema = z.object({ bookingId: z.string().uuid() });
+export const debugDiscountRecalc = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => debugDiscountSchema.parse(d))
+  .handler(async ({ data, context }) => {
+    const isAdmin = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin.data) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+    const { data: rows } = await supabaseAdmin
+      .from("booking_requests")
+      .select("id, cabin_id, room_type, check_in, check_out, subtotal, total_amount, comforter_total, discount_id, discount_code, discount_amount, status, balance_paid_at")
+      .eq("booking_group_id", gid)
+      .order("created_at", { ascending: true });
+
+    const cabinIds = [...new Set((rows?.map((r: any) => r.cabin_id).filter(Boolean) as string[]))];
+    const { data: cabins } = await supabaseAdmin.from("cabins").select("id, cabin_type").in("id", cabinIds);
+    const cabinTypeById = new Map((cabins ?? []).map((c: any) => [c.id as string, c.cabin_type as string]));
+
+    const breakdownByCabin = new Map<string, NightBreakdown[]>();
+    for (const r of rows ?? []) {
+      const cid = r.cabin_id as string;
+      if (!cid || breakdownByCabin.has(cid)) continue;
+      const nights = await buildNightBreakdown(supabaseAdmin, cid, r.check_in as string, r.check_out as string);
+      breakdownByCabin.set(cid, nights);
+    }
+
+    const cart: PricingCart = {
+      checkIn: rows?.[0]?.check_in as string,
+      rooms: (rows ?? []).map((r: any) => ({
+        cabinType: cabinTypeById.get(r.cabin_id as string) ?? r.room_type ?? "",
+        nights: breakdownByCabin.get(r.cabin_id as string) ?? [],
+      })),
+      subtotalRoomOnly: (rows ?? []).reduce((s: number, r: any) => s + Number(r.subtotal ?? 0), 0),
+    };
+
+    const { data: activeAutos } = await supabaseAdmin
+      .from("discounts")
+      .select("*")
+      .eq("active", true)
+      .is("code", null);
+
+    const applications = pickBestDiscount(cart, (activeAutos ?? []) as DiscountRow[], null);
+
+    return { cart, activeAutosCount: (activeAutos ?? []).length, applications };
+  });
+
 // Admin gate: signed-in user's email must be on the admin_email_recipients allowlist.
 export const isAdminRecipient = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
