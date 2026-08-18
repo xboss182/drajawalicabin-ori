@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { uploadReceipt } from "@/lib/upload-proof";
 import {
   createBooking,
   previewPrice,
@@ -595,12 +595,7 @@ function BookPage() {
     setUploading(true);
     setError(null);
     try {
-      const ext = proofFile.name.split(".").pop() ?? "jpg";
-      const path = `bookings/${booking.bookingId}/proof-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("payment-proofs")
-        .upload(path, proofFile, { upsert: false });
-      if (upErr) throw upErr;
+      const path = await uploadReceipt(booking.bookingId, proofFile, "proof");
       await attachPaymentProof({
         data: { bookingId: booking.bookingId, reference: booking.reference, path },
       });

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Fragment, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { uploadReceipt } from "@/lib/upload-proof";
 import {
   getBookingForGuest,
   attachBalanceProof,
@@ -271,12 +271,8 @@ function ManagePage() {
     setUploading(true);
     setErr(null);
     try {
-      const ext = file.name.split(".").pop() ?? "jpg";
       const isDeposit = stage === "deposit" || (stage === "review" && !b.balancePaidAt);
-      const prefix = isDeposit ? "proof" : "balance";
-      const path = `bookings/${b.id}/${prefix}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("payment-proofs").upload(path, file, { upsert: false });
-      if (upErr) throw upErr;
+      const path = await uploadReceipt(b.id, file, isDeposit ? "proof" : "balance");
       if (isDeposit) {
         await attachPaymentProof({ data: { bookingId: b.id, reference: b.reference ?? "", path } });
       } else {
