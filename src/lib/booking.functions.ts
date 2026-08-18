@@ -19,6 +19,87 @@ function securityDepositForRooms(numRooms: number) {
   return SECURITY_DEPOSIT_PER_ROOM * numRooms;
 }
 
+/** Recompute automatic + coupon discounts for a booking group and persist them. */
+async function recalcGroupDiscounts(admin: any, groupId: string) {
+  const { data: rows } = await admin
+    .from("booking_requests")
+    .select("id, cabin_id, cabin_id:cabins!inner(id, cabin_type), room_type, check_in, check_out, subtotal, total_amount, comforter_total, discount_id, discount_code, discount_amount, status, balance_paid_at")
+    .eq("booking_group_id", groupId)
+    .order("created_at", { ascending: true });
+  if (!rows || rows.length === 0) return;
+
+  const breakdownByCabin = new Map<string, NightBreakdown[]>();
+  for (const r of rows) {
+    const cid = r.cabin_id as string;
+    if (!cid || breakdownByCabin.has(cid)) continue;
+    const nights = await buildNightBreakdown(admin, cid, r.check_in as string, r.check_out as string);
+    breakdownByCabin.set(cid, nights);
+  }
+
+  const cart: PricingCart = {
+    checkIn: rows[0].check_in as string,
+    rooms: rows.map((r: any) => ({
+      cabinType: r.cabins?.cabin_type ?? r.room_type ?? "",
+      nights: breakdownByCabin.get(r.cabin_id as string) ?? [],
+    })),
+    subtotalRoomOnly: rows.reduce((s: number, r: any) => s + Number(r.subtotal ?? 0), 0),
+  };
+
+  const { data: activeAutos } = await admin
+    .from("discounts")
+    .select("*")
+    .eq("active", true)
+    .is("code", null);
+
+  let couponRow: DiscountRow | null = null;
+  const code = (rows.find((r: any) => r.discount_code)?.discount_code as string | null) ?? null;
+  if (code) {
+    const nowIso = new Date().toISOString();
+    const { data: cRow } = await admin
+      .from("discounts")
+      .select("*")
+      .eq("active", true)
+      .eq("code", code)
+      .maybeSingle();
+    if (cRow) {
+      const okStart = !cRow.starts_at || cRow.starts_at <= nowIso;
+      const okEnd = !cRow.ends_at || cRow.ends_at >= nowIso;
+      if (okStart && okEnd) couponRow = cRow as DiscountRow;
+    }
+  }
+
+  const applications = pickBestDiscount(
+    cart,
+    (activeAutos ?? []) as DiscountRow[],
+    couponRow,
+  );
+  const discountAmount = applications.reduce((s, a) => s + a.amountOff, 0);
+  const leadApp = applications.find((a) => a.code) ?? applications[0] ?? null;
+
+  // Distribute the discount to the lead row and update totals.
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const isPaid = r.status === "fully_paid" || r.balance_paid_at;
+    const isLead = i === 0;
+    const rowDiscount = isLead ? Math.min(discountAmount, Number(r.total_amount ?? 0) + Number(r.discount_amount ?? 0)) : 0;
+    const newTotal = Number(r.subtotal ?? 0) + Number(r.comforter_total ?? 0) - rowDiscount;
+    const patch: Record<string, unknown> = {
+      total_amount: newTotal,
+      balance_amount: isPaid ? 0 : newTotal,
+    };
+    if (isLead) {
+      patch.discount_id = leadApp?.discountId ?? null;
+      patch.discount_code = applications.length > 0 ? applications.map((a) => a.code ?? a.name).join(" + ") : null;
+      patch.discount_amount = rowDiscount;
+    } else {
+      patch.discount_id = null;
+      patch.discount_code = null;
+      patch.discount_amount = 0;
+    }
+    await admin.from("booking_requests").update(patch as never).eq("id", r.id);
+  }
+}
+
 function generateRef() {
   const n = Math.floor(1000 + Math.random() * 9000);
   return `RJW-${n}`;
