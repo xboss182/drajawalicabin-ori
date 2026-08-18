@@ -92,8 +92,8 @@ function InvoicePage() {
             <div>
               <p className="font-display text-2xl text-forest">Rajawali D'Cabin Chalet</p>
               <p className="mt-1 max-w-[16rem] text-xs leading-relaxed text-stone">
-                Lot 1234, Kampung Chendering,<br />
-                21080 Kuala Terengganu,<br />
+                307, Pengkalan Rajawali,<br />
+                Chendering, Kuala Terengganu,<br />
                 Terengganu, Malaysia
               </p>
               <p className="mt-1 text-xs text-stone">WhatsApp 011-5500 7204</p>
