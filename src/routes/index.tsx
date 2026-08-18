@@ -81,7 +81,7 @@ export const Route = createFileRoute("/")({
             addressRegion: "Terengganu",
             addressCountry: "MY",
             postalCode: "21080",
-            streetAddress: "Chendering, Kuala Terengganu",
+            streetAddress: "307, Pengkalan Rajawali, Chendering",
           },
           checkinTime: "15:00",
           checkoutTime: "12:00",
