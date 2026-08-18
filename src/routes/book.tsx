@@ -18,7 +18,7 @@ import cabinFamilyImg from "@/assets/cabin-family.jpg";
 import cabinTripleImg from "@/assets/cabin-triple.jpg";
 import duitnowQrAsset from "@/assets/duitnow-qr.png.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
-import { rememberBooking, readRememberedBooking } from "@/lib/my-booking";
+import { rememberBooking, readRememberedBooking, forgetBooking } from "@/lib/my-booking";
 import {
   formatIcNumber,
   formatPhone,
