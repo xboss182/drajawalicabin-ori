@@ -1126,20 +1126,14 @@ export const updateBookingRoomPrices = createServerFn({ method: "POST" })
     for (const r of data.rows) {
       const cur = byId.get(r.id);
       if (!cur) throw new Error("Row not in this booking");
-      const comforter = Number(cur.comforter_total ?? 0);
-      const total = Math.round((r.amount + comforter) * 100) / 100;
-      const isPaid = cur.status === "fully_paid" || cur.balance_paid_at;
-      const patch: Record<string, unknown> = {
-        subtotal: r.amount,
-        total_amount: total,
-        balance_amount: isPaid ? 0 : total,
-      };
       const { error: uErr } = await supabaseAdmin
         .from("booking_requests")
-        .update(patch as never)
+        .update({ subtotal: r.amount } as never)
         .eq("id", r.id);
       if (uErr) throw new Error(uErr.message);
     }
+    // Recalculate automatic/coupon discounts against the new subtotals and night rates.
+    await recalcGroupDiscounts(supabaseAdmin, gid);
     return { ok: true };
   });
 
