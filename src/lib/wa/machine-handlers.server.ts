@@ -161,10 +161,50 @@ export async function handleEventsClaim(req: Request): Promise<Response> {
     })
     .select("event_id");
   if (error) {
-    if (error.code === "23505") return json({ ok: true, claimed: false, duplicate: true });
+    if (error.code === "23505") {
+      // Duplicate. Claim only if the previous claimant never completed (e.g.
+      // bridge crashed mid-processing) and the reclaim window has passed;
+      // otherwise it's a genuine replay.
+      const { data: rows } = await admin
+        .from("wa_events")
+        .select("processed_at, received_at")
+        .eq("event_id", parsed.data.event_id)
+        .maybeSingle();
+      const processed = rows?.processed_at ?? null;
+      const staleMs = rows ? Date.now() - Date.parse(rows.received_at) : 0;
+      const RECLAIM_MS = 10 * 60 * 1000; // > worst-case bridge processing
+      if (processed || staleMs < RECLAIM_MS) {
+        return json({ ok: true, claimed: false, duplicate: true });
+      }
+      // Re-claim a stranded event: refresh received_at so the window restarts.
+      const { error: updErr } = await admin
+        .from("wa_events")
+        .update({ received_at: new Date().toISOString() })
+        .eq("event_id", parsed.data.event_id)
+        .is("processed_at", null);
+      if (updErr) return json({ ok: false, error: updErr.message }, 500);
+      return json({ ok: true, claimed: true, reclaimed: true });
+    }
     return json({ ok: false, error: error.message }, 500);
   }
   return json({ ok: true, claimed: (data?.length ?? 0) > 0 });
+}
+
+export async function handleEventsComplete(req: Request): Promise<Response> {
+  const auth = await verifyMachineRequest(req);
+  if (!auth.ok) return auth.response;
+  const { body, err } = await readBody(req);
+  if (err) return err;
+  const parsed = z.object({ event_id: z.string().trim().min(8).max(64) }).safeParse(body);
+  if (!parsed.success) return json({ ok: false, error: "invalid" }, 400);
+
+  const admin = await adminClient();
+  const { error } = await admin
+    .from("wa_events")
+    .update({ processed_at: new Date().toISOString() })
+    .eq("event_id", parsed.data.event_id);
+  if (error) return json({ ok: false, error: error.message }, 500);
+  return json({ ok: true });
 }
 
 export async function handleStateGet(req: Request): Promise<Response> {
@@ -213,6 +253,8 @@ export async function handleStatePut(req: Request): Promise<Response> {
   const d = parsed.data;
 
   // Optimistic concurrency: transitions keyed on the version read earlier.
+  // Version is incremented atomically by this update, so every durable state
+  // change advances the chain (review finding: version never incremented).
   const { data: updated, error: upErr } = await admin
     .from("wa_conversations")
     .update({
@@ -220,6 +262,7 @@ export async function handleStatePut(req: Request): Promise<Response> {
       data: d.data as Json,
       lang: d.lang,
       failure_count: d.failure_count,
+      version: d.version + 1,
       ...(d.booking_group_id ? { booking_group_id: d.booking_group_id } : {}),
     })
     .eq("chat_id", d.chat_id)
@@ -433,7 +476,29 @@ export async function handleProofsUploadUrl(req: Request): Promise<Response> {
     })
     .select("id");
   if (insErr) {
-    if (insErr.code === "23505") return json({ ok: true, duplicate: true });
+    if (insErr.code === "23505") {
+      // Retry of a message we've seen. Only a stored proof is a true
+      // duplicate; an `uploading`/`failed` row is a resumable attempt whose
+      // upload never completed — re-issue the URL for the same path.
+      const { data: existing } = await admin
+        .from("wa_proofs")
+        .select("id, status, file_path")
+        .eq("wa_message_id", d.wa_message_id)
+        .eq("chat_id", d.chat_id)
+        .maybeSingle();
+      if (existing?.status === "stored") return json({ ok: true, duplicate: true });
+      if (existing) {
+        const path = existing.file_path ?? `bookings/${lead.id}/wa-${d.wa_message_id}.${ext}`;
+        const { data: urlData, error: urlErr } = await admin.storage
+          .from("payment-proofs")
+          .createSignedUploadUrl(path);
+        if (urlErr || !urlData?.signedUrl) {
+          return json({ ok: false, error: urlErr?.message ?? "signed url failed" }, 500);
+        }
+        return json({ ok: true, upload_url: urlData.signedUrl, path, content_type: d.mime });
+      }
+      return json({ ok: true, duplicate: true });
+    }
     return json({ ok: false, error: insErr.message }, 500);
   }
 
@@ -608,6 +673,45 @@ export async function handleOutboxAck(req: Request): Promise<Response> {
     .in("status", ["sending"]);
   if (error) return json({ ok: false, error: error.message }, 500);
   return json({ ok: true });
+}
+
+// Owner-approved payment settings for the bridge (MNC-961 remediation).
+// Returns payment text + a short-lived signed READ url for the QR image so
+// the bridge never needs storage credentials. Empty config => bridge uses
+// the "contact staff" fallback copy.
+export async function handleSettingsGet(req: Request): Promise<Response> {
+  const auth = await verifyMachineRequest(req);
+  if (!auth.ok) return auth.response;
+
+  const admin = await adminClient();
+  const { data: row, error } = await admin
+    .from("wa_settings")
+    .select("payment_text_en, payment_text_bm, qr_storage_path, hold_minutes")
+    .eq("id", true)
+    .maybeSingle();
+  if (error) return json({ ok: false, error: error.message }, 500);
+  if (!row) return json({ ok: true, configured: false });
+
+  let qrUrl: string | null = null;
+  if (row.qr_storage_path) {
+    const { data: urlData, error: urlErr } = await admin.storage
+      .from("payment-proofs")
+      .createSignedUrl(row.qr_storage_path, 600);
+    if (urlErr || !urlData?.signedUrl) {
+      return json({ ok: false, error: urlErr?.message ?? "signed url failed" }, 500);
+    }
+    qrUrl = urlData.signedUrl;
+  }
+
+  return json({
+    ok: true,
+    configured: true,
+    payment_text_en: row.payment_text_en ?? "",
+    payment_text_bm: row.payment_text_bm ?? "",
+    hold_minutes: row.hold_minutes ?? 30,
+    qr_url: qrUrl,
+    qr_mime: row.qr_storage_path?.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg",
+  });
 }
 
 export async function handleAgent(req: Request): Promise<Response> {

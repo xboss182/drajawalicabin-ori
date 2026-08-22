@@ -54,6 +54,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as ApiMachineWaEventsClaimRouteImport } from './routes/api/machine/wa/events/claim'
+import { Route as ApiMachineWaEventsCompleteRouteImport } from './routes/api/machine/wa/events/complete'
 import { Route as ApiMachineWaHoldsClaimRouteImport } from './routes/api/machine/wa/holds/claim'
 import { Route as ApiMachineWaHoldsExpireSweepRouteImport } from './routes/api/machine/wa/holds/expire-sweep'
 import { Route as ApiMachineWaHoldsPrepareRouteImport } from './routes/api/machine/wa/holds/prepare'
@@ -62,6 +63,7 @@ import { Route as ApiMachineWaOutboxClaimRouteImport } from './routes/api/machin
 import { Route as ApiMachineWaOutboxEnqueueRouteImport } from './routes/api/machine/wa/outbox/enqueue'
 import { Route as ApiMachineWaProofsAttachRouteImport } from './routes/api/machine/wa/proofs/attach'
 import { Route as ApiMachineWaProofsUploadUrlRouteImport } from './routes/api/machine/wa/proofs/upload-url'
+import { Route as ApiMachineWaSettingsGetRouteImport } from './routes/api/machine/wa/settings/get'
 import { Route as ApiMachineWaStateGetRouteImport } from './routes/api/machine/wa/state/get'
 import { Route as ApiMachineWaStatePutRouteImport } from './routes/api/machine/wa/state/put'
 
@@ -307,6 +309,12 @@ const ApiMachineWaEventsClaimRoute = ApiMachineWaEventsClaimRouteImport.update({
   path: '/api/machine/wa/events/claim',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMachineWaEventsCompleteRoute =
+  ApiMachineWaEventsCompleteRouteImport.update({
+    id: '/api/machine/wa/events/complete',
+    path: '/api/machine/wa/events/complete',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMachineWaHoldsClaimRoute = ApiMachineWaHoldsClaimRouteImport.update({
   id: '/api/machine/wa/holds/claim',
   path: '/api/machine/wa/holds/claim',
@@ -352,6 +360,11 @@ const ApiMachineWaProofsUploadUrlRoute =
     path: '/api/machine/wa/proofs/upload-url',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiMachineWaSettingsGetRoute = ApiMachineWaSettingsGetRouteImport.update({
+  id: '/api/machine/wa/settings/get',
+  path: '/api/machine/wa/settings/get',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMachineWaStateGetRoute = ApiMachineWaStateGetRouteImport.update({
   id: '/api/machine/wa/state/get',
   path: '/api/machine/wa/state/get',
@@ -408,6 +421,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/api/machine/wa/events/claim': typeof ApiMachineWaEventsClaimRoute
+  '/api/machine/wa/events/complete': typeof ApiMachineWaEventsCompleteRoute
   '/api/machine/wa/holds/claim': typeof ApiMachineWaHoldsClaimRoute
   '/api/machine/wa/holds/expire-sweep': typeof ApiMachineWaHoldsExpireSweepRoute
   '/api/machine/wa/holds/prepare': typeof ApiMachineWaHoldsPrepareRoute
@@ -416,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/api/machine/wa/outbox/enqueue': typeof ApiMachineWaOutboxEnqueueRoute
   '/api/machine/wa/proofs/attach': typeof ApiMachineWaProofsAttachRoute
   '/api/machine/wa/proofs/upload-url': typeof ApiMachineWaProofsUploadUrlRoute
+  '/api/machine/wa/settings/get': typeof ApiMachineWaSettingsGetRoute
   '/api/machine/wa/state/get': typeof ApiMachineWaStateGetRoute
   '/api/machine/wa/state/put': typeof ApiMachineWaStatePutRoute
 }
@@ -463,6 +478,7 @@ export interface FileRoutesByTo {
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/api/machine/wa/events/claim': typeof ApiMachineWaEventsClaimRoute
+  '/api/machine/wa/events/complete': typeof ApiMachineWaEventsCompleteRoute
   '/api/machine/wa/holds/claim': typeof ApiMachineWaHoldsClaimRoute
   '/api/machine/wa/holds/expire-sweep': typeof ApiMachineWaHoldsExpireSweepRoute
   '/api/machine/wa/holds/prepare': typeof ApiMachineWaHoldsPrepareRoute
@@ -471,6 +487,7 @@ export interface FileRoutesByTo {
   '/api/machine/wa/outbox/enqueue': typeof ApiMachineWaOutboxEnqueueRoute
   '/api/machine/wa/proofs/attach': typeof ApiMachineWaProofsAttachRoute
   '/api/machine/wa/proofs/upload-url': typeof ApiMachineWaProofsUploadUrlRoute
+  '/api/machine/wa/settings/get': typeof ApiMachineWaSettingsGetRoute
   '/api/machine/wa/state/get': typeof ApiMachineWaStateGetRoute
   '/api/machine/wa/state/put': typeof ApiMachineWaStatePutRoute
 }
@@ -521,6 +538,7 @@ export interface FileRoutesById {
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/api/machine/wa/events/claim': typeof ApiMachineWaEventsClaimRoute
+  '/api/machine/wa/events/complete': typeof ApiMachineWaEventsCompleteRoute
   '/api/machine/wa/holds/claim': typeof ApiMachineWaHoldsClaimRoute
   '/api/machine/wa/holds/expire-sweep': typeof ApiMachineWaHoldsExpireSweepRoute
   '/api/machine/wa/holds/prepare': typeof ApiMachineWaHoldsPrepareRoute
@@ -529,6 +547,7 @@ export interface FileRoutesById {
   '/api/machine/wa/outbox/enqueue': typeof ApiMachineWaOutboxEnqueueRoute
   '/api/machine/wa/proofs/attach': typeof ApiMachineWaProofsAttachRoute
   '/api/machine/wa/proofs/upload-url': typeof ApiMachineWaProofsUploadUrlRoute
+  '/api/machine/wa/settings/get': typeof ApiMachineWaSettingsGetRoute
   '/api/machine/wa/state/get': typeof ApiMachineWaStateGetRoute
   '/api/machine/wa/state/put': typeof ApiMachineWaStatePutRoute
 }
@@ -579,6 +598,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
     | '/api/machine/wa/events/claim'
+    | '/api/machine/wa/events/complete'
     | '/api/machine/wa/holds/claim'
     | '/api/machine/wa/holds/expire-sweep'
     | '/api/machine/wa/holds/prepare'
@@ -587,6 +607,7 @@ export interface FileRouteTypes {
     | '/api/machine/wa/outbox/enqueue'
     | '/api/machine/wa/proofs/attach'
     | '/api/machine/wa/proofs/upload-url'
+    | '/api/machine/wa/settings/get'
     | '/api/machine/wa/state/get'
     | '/api/machine/wa/state/put'
   fileRoutesByTo: FileRoutesByTo
@@ -634,6 +655,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
     | '/api/machine/wa/events/claim'
+    | '/api/machine/wa/events/complete'
     | '/api/machine/wa/holds/claim'
     | '/api/machine/wa/holds/expire-sweep'
     | '/api/machine/wa/holds/prepare'
@@ -642,6 +664,7 @@ export interface FileRouteTypes {
     | '/api/machine/wa/outbox/enqueue'
     | '/api/machine/wa/proofs/attach'
     | '/api/machine/wa/proofs/upload-url'
+    | '/api/machine/wa/settings/get'
     | '/api/machine/wa/state/get'
     | '/api/machine/wa/state/put'
   id:
@@ -691,6 +714,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/preview'
     | '/lovable/email/transactional/send'
     | '/api/machine/wa/events/claim'
+    | '/api/machine/wa/events/complete'
     | '/api/machine/wa/holds/claim'
     | '/api/machine/wa/holds/expire-sweep'
     | '/api/machine/wa/holds/prepare'
@@ -699,6 +723,7 @@ export interface FileRouteTypes {
     | '/api/machine/wa/outbox/enqueue'
     | '/api/machine/wa/proofs/attach'
     | '/api/machine/wa/proofs/upload-url'
+    | '/api/machine/wa/settings/get'
     | '/api/machine/wa/state/get'
     | '/api/machine/wa/state/put'
   fileRoutesById: FileRoutesById
@@ -735,6 +760,7 @@ export interface RootRouteChildren {
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
   ApiMachineWaEventsClaimRoute: typeof ApiMachineWaEventsClaimRoute
+  ApiMachineWaEventsCompleteRoute: typeof ApiMachineWaEventsCompleteRoute
   ApiMachineWaHoldsClaimRoute: typeof ApiMachineWaHoldsClaimRoute
   ApiMachineWaHoldsExpireSweepRoute: typeof ApiMachineWaHoldsExpireSweepRoute
   ApiMachineWaHoldsPrepareRoute: typeof ApiMachineWaHoldsPrepareRoute
@@ -743,6 +769,7 @@ export interface RootRouteChildren {
   ApiMachineWaOutboxEnqueueRoute: typeof ApiMachineWaOutboxEnqueueRoute
   ApiMachineWaProofsAttachRoute: typeof ApiMachineWaProofsAttachRoute
   ApiMachineWaProofsUploadUrlRoute: typeof ApiMachineWaProofsUploadUrlRoute
+  ApiMachineWaSettingsGetRoute: typeof ApiMachineWaSettingsGetRoute
   ApiMachineWaStateGetRoute: typeof ApiMachineWaStateGetRoute
   ApiMachineWaStatePutRoute: typeof ApiMachineWaStatePutRoute
 }
@@ -1064,6 +1091,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMachineWaEventsClaimRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/machine/wa/events/complete': {
+      id: '/api/machine/wa/events/complete'
+      path: '/api/machine/wa/events/complete'
+      fullPath: '/api/machine/wa/events/complete'
+      preLoaderRoute: typeof ApiMachineWaEventsCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/machine/wa/holds/claim': {
       id: '/api/machine/wa/holds/claim'
       path: '/api/machine/wa/holds/claim'
@@ -1118,6 +1152,13 @@ declare module '@tanstack/react-router' {
       path: '/api/machine/wa/proofs/upload-url'
       fullPath: '/api/machine/wa/proofs/upload-url'
       preLoaderRoute: typeof ApiMachineWaProofsUploadUrlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/machine/wa/settings/get': {
+      id: '/api/machine/wa/settings/get'
+      path: '/api/machine/wa/settings/get'
+      fullPath: '/api/machine/wa/settings/get'
+      preLoaderRoute: typeof ApiMachineWaSettingsGetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/machine/wa/state/get': {
@@ -1227,6 +1268,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
   ApiMachineWaEventsClaimRoute: ApiMachineWaEventsClaimRoute,
+  ApiMachineWaEventsCompleteRoute: ApiMachineWaEventsCompleteRoute,
   ApiMachineWaHoldsClaimRoute: ApiMachineWaHoldsClaimRoute,
   ApiMachineWaHoldsExpireSweepRoute: ApiMachineWaHoldsExpireSweepRoute,
   ApiMachineWaHoldsPrepareRoute: ApiMachineWaHoldsPrepareRoute,
@@ -1235,6 +1277,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMachineWaOutboxEnqueueRoute: ApiMachineWaOutboxEnqueueRoute,
   ApiMachineWaProofsAttachRoute: ApiMachineWaProofsAttachRoute,
   ApiMachineWaProofsUploadUrlRoute: ApiMachineWaProofsUploadUrlRoute,
+  ApiMachineWaSettingsGetRoute: ApiMachineWaSettingsGetRoute,
   ApiMachineWaStateGetRoute: ApiMachineWaStateGetRoute,
   ApiMachineWaStatePutRoute: ApiMachineWaStatePutRoute,
 }

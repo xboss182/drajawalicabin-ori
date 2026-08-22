@@ -25,14 +25,21 @@ function cfg(overrides = {}) {
 }
 
 function makeMocks() {
-  const calls = { sends: [], acks: [], claims: [], state: [], enqueues: [] };
+  const calls = { sends: [], acks: [], claims: [], state: [], enqueues: [], order: [], completes: [] };
   const machine = {
     claimEvent: async (eventId, chatId, type, payload) => {
       calls.claims.push({ eventId, chatId });
       return { ok: true, claimed: true };
     },
+    completeEvent: async (eventId) => {
+      calls.order.push("completeEvent");
+      calls.completes.push(eventId);
+      return { ok: true };
+    },
+    getSettings: async () => ({ ok: true, configured: false }),
     getState: async () => ({ ok: true, conversation: null, draft: null }),
     putState: async (s) => {
+      calls.order.push("putState");
       calls.state.push(s);
       return { ok: true, conflict: false, version: s.version + 1 };
     },
@@ -54,10 +61,12 @@ function makeMocks() {
   };
   const waha = {
     sendText: async (chatId, text) => {
+      calls.order.push("send");
       calls.sends.push({ type: "text", chatId, text });
       return { id: "wa-1", chatId };
     },
     sendImage: async (chatId, buf, mime, filename, caption) => {
+      calls.order.push("send");
       calls.sends.push({ type: "image", chatId, mime, filename, caption, bytes: buf.length });
       return { id: "wa-2", chatId };
     },
@@ -221,5 +230,215 @@ test("double attachment resolves as duplicate (same wa message id)", async () =>
     { chatId: CHAT, messageId: "m4", media: { url: "http://waha/files/m4", mime: "image/jpeg" } },
     { bookingGroupId: "g1" },
   );
-  assert.equal(outcome, "duplicate");
+  assert.deepEqual(outcome, { kind: "duplicate" });
+});
+
+// ---------------------------------------------------------------------------
+// Durability remediation tests (MNC-961 review findings)
+// ---------------------------------------------------------------------------
+
+test("state is persisted BEFORE any reply is sent", async () => {
+  const { calls, machine, waha } = makeMocks();
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("hi");
+  await bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) });
+  assert.ok(calls.state.length >= 1, "state must be saved");
+  assert.ok(calls.sends.length >= 1, "reply must be sent");
+  assert.ok(
+    calls.order.indexOf("putState") < calls.order.indexOf("send"),
+    "putState must precede send",
+  );
+});
+
+test("event is completed after processing (durable lifecycle close)", async () => {
+  const { calls, machine, waha } = makeMocks();
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("hi");
+  await bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) });
+  assert.deepEqual(calls.completes, ["m-1"]);
+  assert.ok(calls.order.indexOf("send") < calls.order.indexOf("completeEvent"));
+});
+
+test("processing failure does not complete the event (reclaimable)", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.putState = async () => {
+    throw new Error("db down");
+  };
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("hi");
+  // Must not throw to the webhook layer beyond logging.
+  await bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) });
+  assert.equal(calls.completes.length, 0, "failed processing must leave event uncompleted");
+});
+
+test("version conflict re-reads and re-runs the transition once", async () => {
+  const { calls, machine, waha } = makeMocks();
+  let conflicts = 0;
+  machine.putState = async (s) => {
+    if (conflicts++ === 0) return { ok: true, conflict: true };
+    calls.state.push(s);
+    return { ok: true, conflict: false, version: s.version + 1 };
+  };
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("hi");
+  await bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) });
+  assert.equal(calls.claims.length, 1, "event claimed once");
+  assert.ok(calls.state.length >= 1, "eventually persisted");
+});
+
+test("claim success without approved settings sends no fabricated bank details", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.getSettings = async () => ({ ok: true, configured: false });
+  const bridge = new Bridge(cfg(), { machine, waha });
+  await bridge.runHoldStep(
+    { chatId: CHAT, messageId: "m-9" },
+    {
+      chatId: CHAT,
+      state: "SUMMARY",
+      data: {
+        checkIn: "2026-09-01",
+        checkOut: "2026-09-03",
+        guests: 2,
+        comforter: false,
+        cabinType: "Queen",
+        guestName: "Ali",
+        phone: "601155007204",
+        prepared: { cabinId: "c-1", subtotal: 160, comforterTotal: 0 },
+      },
+      lang: "en",
+      failureCount: 0,
+      bookingGroupId: null,
+      version: 3,
+    },
+    "claim",
+  );
+  assert.ok(calls.sends.length >= 1);
+  const text = calls.sends.map((s) => s.text + (s.caption ?? "")).join("\n");
+  assert.ok(!/CIMB|8601234567/.test(text), "no hardcoded bank details");
+  assert.match(text, /RJW-1/, "payment instructions carry the booking reference");
+});
+
+test("claim success with approved settings sends the settings QR image", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.getSettings = async () => ({
+    ok: true,
+    configured: true,
+    payment_text_en: "- DuitNow QR (photo below)\n- Maybank 1234567890",
+    payment_text_bm: "",
+    qr_mime: "image/png",
+    qr_url: "http://store/qr.png",
+  });
+  const oldFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer });
+  try {
+    const bridge = new Bridge(cfg(), { machine, waha });
+    await bridge.runHoldStep(
+      { chatId: CHAT, messageId: "m-10" },
+      {
+        chatId: CHAT,
+        state: "SUMMARY",
+        data: {
+          checkIn: "2026-09-01",
+          checkOut: "2026-09-03",
+          guests: 2,
+          comforter: false,
+          cabinType: "Queen",
+          guestName: "Ali",
+          phone: "601155007204",
+          prepared: { cabinId: "c-1", subtotal: 160, comforterTotal: 0 },
+        },
+        lang: "en",
+        failureCount: 0,
+        bookingGroupId: null,
+        version: 3,
+      },
+      "claim",
+    );
+    const img = calls.sends.find((s) => s.type === "image");
+    assert.ok(img, "settings QR image must be sent");
+    assert.equal(img.mime, "image/png");
+    assert.match(img.caption, /Maybank 1234567890/);
+    assert.match(img.caption, /RJW-1/);
+  } finally {
+    globalThis.fetch = oldFetch;
+  }
+});
+
+test("proof success message carries the booking reference", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.getState = async () => ({
+    ok: true,
+    conversation: null,
+    draft: { payment_reference: "RJW-77", status: "awaiting_review" },
+  });
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const oldFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true, status: 200 });
+  try {
+    const outcome = await bridge.runProofPipeline(
+      { chatId: CHAT, messageId: "m1", media: { url: "http://waha/files/m1", mime: "image/jpeg" } },
+      { bookingGroupId: "g1", data: { booking: { reference: "RJW-77" } } },
+    );
+    assert.deepEqual(outcome, { kind: "received", ref: "RJW-77" });
+  } finally {
+    globalThis.fetch = oldFetch;
+  }
+});
+
+test("proof failure leaves no completed send of success copy", async () => {
+  const { machine, waha } = makeMocks();
+  machine.proofAttach = async () => ({ ok: false });
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const oldFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: false, status: 500 });
+  try {
+    const outcome = await bridge.runProofPipeline(
+      { chatId: CHAT, messageId: "m5", media: { url: "http://waha/files/m5", mime: "image/jpeg" } },
+      { bookingGroupId: "g1" },
+    );
+    assert.equal(outcome, "fetchFailed");
+  } finally {
+    globalThis.fetch = oldFetch;
+  }
+});
+
+test("failed proof upload re-issues a URL instead of reporting duplicate", async () => {
+  const { machine, waha } = makeMocks();
+  machine.getState = async () => ({
+    ok: true,
+    conversation: null,
+    draft: { payment_reference: "RJW-9", status: "awaiting_review" },
+  });
+  let calls_ = 0;
+  machine.proofUploadUrl = async () => {
+    calls_++;
+    // First attempt crashed mid-upload (row left 'uploading'); retry must
+    // return a fresh upload URL, NOT { duplicate: true }.
+    return calls_ === 1
+      ? { ok: true, upload_url: "http://store/put1", path: "bookings/b1/wa-m6.jpg" }
+      : { ok: true, upload_url: "http://store/put2", path: "bookings/b1/wa-m6.jpg" };
+  };
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const urls = [];
+  const oldFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    urls.push(url);
+    if (url === "http://store/put1") return { ok: false, status: 500 }; // first PUT fails
+    return { ok: true, status: 200 };
+  };
+  try {
+    const o1 = await bridge.runProofPipeline(
+      { chatId: CHAT, messageId: "m6", media: { url: "http://waha/files/m6", mime: "image/jpeg" } },
+      { bookingGroupId: "g1" },
+    );
+    assert.equal(o1, "fetchFailed");
+    const o2 = await bridge.runProofPipeline(
+      { chatId: CHAT, messageId: "m6", media: { url: "http://waha/files/m6", mime: "image/jpeg" } },
+      { bookingGroupId: "g1" },
+    );
+    assert.equal(o2.kind, "received", "retry must succeed once the server re-issues the URL");
+    assert.deepEqual(urls, ["http://store/put1", "http://store/put2"]);
+  } finally {
+    globalThis.fetch = oldFetch;
+  }
 });

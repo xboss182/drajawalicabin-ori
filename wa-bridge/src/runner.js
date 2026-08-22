@@ -1,10 +1,13 @@
 // Bridge orchestrator: WAHA webhooks -> event claim -> conversation state ->
 // state machine -> effects (WAHA sends + machine API calls) -> state save.
 // Also runs the outbox poller and the stale-hold sweeper.
+//
+// Durability order (MNC-961 remediation): every conversation frame is
+// persisted with an incremented version BEFORE any reply is sent, so a crash
+// between save and send can at worst duplicate a send (WAHA dedupes by
+// message id on the session), never lose a booking step. Version conflicts
+// re-read and re-run the transition once.
 
-import { readFile } from "node:fs/promises";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { MachineClient, sleep } from "./machine.js";
 import { WahaClient } from "./waha.js";
 import { verifyHmacHex } from "./crypto.js";
@@ -18,9 +21,8 @@ import {
 } from "./state-machine.js";
 import { detectLang, outboxText } from "./copy.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(__dirname, "..");
-export const QR_ASSET_PATH = join(ROOT, "assets", "duitnow-qr.png");
+const SETTINGS_TTL_MS = 5 * 60 * 1000;
+const VERSION_RETRY = 2;
 
 export class Bridge {
   constructor(cfg, { machine, waha } = {}) {
@@ -29,10 +31,40 @@ export class Bridge {
     this.waha = waha ?? new WahaClient(cfg);
     this.pollerRunning = false;
     this.sweeperRunning = false;
+    this.settingsCache = { at: 0, value: null };
   }
 
   log(...args) {
     console.error("[bridge]", ...args);
+  }
+
+  // Owner-approved payment settings (fetched from Lovable Cloud, cached).
+  // Returns { configured, paymentText(lang), qr } where qr is a Buffer.
+  async getSettings(force = false) {
+    if (!force && this.settingsCache.value && Date.now() - this.settingsCache.at < SETTINGS_TTL_MS) {
+      return this.settingsCache.value;
+    }
+    let s = { configured: false, paymentText: () => null, qr: null, qrMime: null };
+    try {
+      const res = await this.machine.getSettings();
+      if (res?.ok && res.configured) {
+        let qr = null;
+        if (res.qr_url) {
+          const r = await fetch(res.qr_url).catch(() => null);
+          if (r?.ok) qr = Buffer.from(await r.arrayBuffer());
+        }
+        s = {
+          configured: true,
+          paymentText: (lang) => (lang === "bm" ? res.payment_text_bm : res.payment_text_en) || null,
+          qr,
+          qrMime: res.qr_mime,
+        };
+      }
+    } catch (e) {
+      this.log("settings fetch failed, using fallback", e?.message ?? e);
+    }
+    this.settingsCache = { at: Date.now(), value: s };
+    return s;
   }
 
   // -------------------------------------------------------------------------
@@ -82,10 +114,28 @@ export class Bridge {
       if (claimed.duplicate || !claimed.claimed) {
         return; // replay or out-of-order duplicate: no work
       }
+      await this.processClaimedMessage(msg);
+      // Durable lifecycle close: only after the frame is persisted (or the
+      // error path gave up) do we mark the event processed. A crash before
+      // this point leaves the row unprocessed and reclaimable.
+      await this.machine.completeEvent(msg.messageId).catch((e) => {
+        this.log("event complete failed", msg.messageId, e?.message ?? e);
+      });
+    } catch (err) {
+      // Never let one bad message kill the loop. The event stays
+      // unprocessed; the reclaim window re-delivers it later.
+      this.log("processMessage error", err?.message ?? err, err?.stack?.slice(0, 500) ?? "");
+    }
+  }
 
+  // Runs the transition with optimistic-concurrency retry on the version
+  // chain: read -> transition -> persist -> THEN send effects.
+  async processClaimedMessage(msg) {
+    for (let attempt = 0; attempt < VERSION_RETRY; attempt++) {
       const snap = await this.machine.getState(msg.chatId);
-      const convRow = snap?.ok ? snap.conversation : null;
-      const draft = snap?.ok ? snap.draft ?? null : null;
+      if (!snap?.ok) throw new Error("state get failed");
+      const convRow = snap.conversation;
+      const draft = snap.draft ?? null;
       const convo = convRow
         ? {
             chatId: convRow.chat_id,
@@ -100,88 +150,123 @@ export class Bridge {
 
       const { convo: next, effects } = transition(convo, msg, { draft });
 
-      // Execute effects in order; proof pipelines and booking ops can re-enter.
+      const saved = await this.saveConversation(next);
+      if (saved?.conflict) {
+        continue; // someone else advanced the chain: re-read, re-run
+      }
+      if (!saved?.ok) {
+        throw new Error(`state put failed: ${saved?.error ?? "unknown"}`);
+      }
+
+      // Frame is durable at the next version — now execute effects.
       for (const eff of effects) {
         if (eff.op === "send") {
           await this.sendEffect(msg.chatId, eff);
         } else if (eff.op === "agent") {
           await this.machine.notifyAgent(msg.chatId, eff.note ?? null).catch((e) => this.log("agent email failed", e));
         } else if (eff.op === "prepare") {
-          const res = await this.machine.prepareHold({
-            cabinType: next.data.cabinType,
-            checkIn: next.data.checkIn,
-            checkOut: next.data.checkOut,
-            comforter: next.data.comforter,
-            guests: next.data.guests,
-          }).catch((e) => {
-            this.log("prepareHold failed", e);
-            return { ok: false };
-          });
-          const more = onPrepareResult(next, res);
-          for (const mEff of more.effects) {
-            if (mEff.op === "send") await this.sendEffect(msg.chatId, mEff).catch((e) => this.log("send failed", e));
-          }
+          await this.runHoldStep(msg, next, "prepare");
         } else if (eff.op === "claim") {
-          const p = next.data.prepared ?? {};
-          const res = await this.machine.claimHold({
-            cabinId: p.cabinId,
-            checkIn: next.data.checkIn,
-            checkOut: next.data.checkOut,
-            comforter: next.data.comforter,
-            guests: next.data.guests,
-            guestName: next.data.guestName,
-            phone: next.data.phone,
-            chatId: msg.chatId,
-            subtotal: p.subtotal,
-            comforterTotal: p.comforterTotal,
-            discountId: p.discountId ?? null,
-            discountCode: p.discountCode ?? null,
-            discountAmount: p.discountAmount ?? 0,
-          }).catch((e) => {
-            this.log("claimHold failed", e);
-            return { ok: false };
-          });
-          const more = onClaimResult(next, res);
-          for (const mEff of more.effects) {
-            if (mEff.op === "send") await this.sendEffect(msg.chatId, mEff).catch((e) => this.log("send failed", e));
-          }
+          await this.runHoldStep(msg, next, "claim");
         } else if (eff.op === "proof") {
-          const outcome = await this.runProofPipeline(msg, next);
-          const more = proofResult(next, outcome);
-          for (const mEff of more.effects) {
-            if (mEff.op === "send") await this.sendEffect(msg.chatId, mEff).catch((e) => this.log("send failed", e));
-          }
+          await this.runProofStep(msg, next);
         }
       }
+      return;
+    }
+    this.log("version conflict persisted, dropping message", msg.chatId, msg.messageId);
+  }
 
-      // Persist the conversation frame (last write wins per version chain).
-      await this.saveConversation(next, msg);
-    } catch (err) {
-      // Never let one bad message kill the loop; WAHA will retry delivery.
-      this.log("processMessage error", err?.message ?? err, err?.stack?.slice(0, 500) ?? "");
+  // 'prepare' and 'claim' both follow the durable pattern: run the machine
+  // call, apply the result to the frame, persist, then send.
+  async runHoldStep(msg, convo, kind) {
+    const settings = kind === "claim" ? await this.getSettings() : null;
+    const res =
+      kind === "prepare"
+        ? await this.machine
+            .prepareHold({
+              cabinType: convo.data.cabinType,
+              checkIn: convo.data.checkIn,
+              checkOut: convo.data.checkOut,
+              comforter: convo.data.comforter,
+              guests: convo.data.guests,
+            })
+            .catch((e) => {
+              this.log("prepareHold failed", e?.message ?? e);
+              return { ok: false };
+            })
+        : await this.machine
+            .claimHold({
+              cabinId: convo.data.prepared?.cabinId,
+              checkIn: convo.data.checkIn,
+              checkOut: convo.data.checkOut,
+              comforter: convo.data.comforter,
+              guests: convo.data.guests,
+              guestName: convo.data.guestName,
+              phone: convo.data.phone,
+              chatId: msg.chatId,
+              subtotal: convo.data.prepared?.subtotal,
+              comforterTotal: convo.data.prepared?.comforterTotal,
+              discountId: convo.data.prepared?.discountId ?? null,
+              discountCode: convo.data.prepared?.discountCode ?? null,
+              discountAmount: convo.data.prepared?.discountAmount ?? 0,
+            })
+            .catch((e) => {
+              this.log("claimHold failed", e?.message ?? e);
+              return { ok: false };
+            });
+
+    const { convo: after, effects } =
+      kind === "prepare"
+        ? onPrepareResult(convo, res)
+        : onClaimResult(convo, res, settings?.paymentText ? settings.paymentText(convo.lang) : null);
+
+    if (kind === "claim" && res?.ok && res?.claimed) {
+      // Cache the booking reference so the proof-success message can carry it.
+      this.draftRefCache = this.draftRefCache ?? {};
+      this.draftRefCache[msg.chatId] = res.booking?.payment_reference ?? null;
+    }
+
+    const saved = await this.saveConversation(after);
+    if (!saved?.ok) {
+      this.log("post-claim persist failed", saved?.error ?? "");
+      // The hold/booking is durable on the app side; the frame not advancing
+      // worst-case re-asks the guest. Do not send effects from a stale frame
+      // for 'claim' (payment instructions reference a booking that exists).
+    }
+    for (const eff of effects) {
+      if (eff.op === "send") await this.sendEffect(msg.chatId, eff).catch((e) => this.log("send failed", e));
+    }
+  }
+
+  async runProofStep(msg, convo) {
+    const outcome = await this.runProofPipeline(msg, convo);
+    const { effects } = proofResult(convo, outcome);
+    for (const eff of effects) {
+      if (eff.op === "send") await this.sendEffect(msg.chatId, eff).catch((e) => this.log("send failed", e));
     }
   }
 
   async sendEffect(chatId, eff) {
-    if (eff.image) {
-      let buf;
-      try {
-        buf = await readFile(join(ROOT, eff.image));
-      } catch {
-        this.log("missing image asset", eff.image, "falling back to text");
-        await this.waha.sendText(chatId, eff.text);
+    // Settings-driven QR image (owner-approved, fetched from protected
+    // Lovable Cloud config — never from a committed asset).
+    if (eff.image === "qr") {
+      const s = await this.getSettings();
+      if (s.configured && s.paymentText && s.qr) {
+        await this.waha.sendImage(chatId, s.qr, s.qrMime, "payment-qr", eff.text);
         return;
       }
-      const isJpeg = eff.image.toLowerCase().endsWith(".jpg") || eff.image.toLowerCase().endsWith(".jpeg");
-      await this.waha.sendImage(chatId, buf, isJpeg ? "image/jpeg" : "image/png", eff.image.split("/").pop(), eff.text);
+      // No approved QR yet: text-only instructions; the methods block already
+      // says staff will send payment details. Never fabricate bank details.
+      await this.waha.sendText(chatId, eff.text);
       return;
     }
     await this.waha.sendText(chatId, eff.text);
   }
 
-  async saveConversation(convo, msg) {
+  async saveConversation(convo) {
     try {
-      await this.machine.putState({
+      const res = await this.machine.putState({
         chatId: convo.chatId,
         state: convo.state,
         data: convo.data,
@@ -190,8 +275,10 @@ export class Bridge {
         bookingGroupId: convo.bookingGroupId ?? null,
         version: convo.version,
       });
+      return res ?? { ok: false };
     } catch (e) {
       this.log("putState failed", e?.message ?? e);
+      return { ok: false, error: e?.message ?? String(e) };
     }
   }
 
@@ -234,7 +321,7 @@ export class Bridge {
         return { ok: false };
       });
     if (up.ok === false) return "fetchFailed";
-    if (up.duplicate) return "duplicate";
+    if (up.duplicate) return { kind: "duplicate" };
     if (!up.upload_url) return "fetchFailed";
 
     const putRes = await fetch(up.upload_url, {
@@ -258,7 +345,15 @@ export class Bridge {
         this.log("proofAttach failed", e?.message ?? e);
         return { ok: false };
       });
-    return att?.ok ? "received" : "fetchFailed";
+    if (att?.ok && att.attached) {
+      // Success message must carry the booking reference: prefer the live
+      // draft, fall back to the reference cached at claim time.
+      const snap = await this.machine.getState(msg.chatId).catch(() => null);
+      const ref =
+        snap?.draft?.payment_reference ?? this.draftRefCache?.[msg.chatId] ?? null;
+      return ref ? { kind: "received", ref } : "received";
+    }
+    return "fetchFailed";
   }
 
   // -------------------------------------------------------------------------

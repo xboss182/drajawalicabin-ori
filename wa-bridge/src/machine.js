@@ -61,6 +61,14 @@ export class MachineClient {
     });
   }
 
+  completeEvent(eventId) {
+    return this.call("/api/machine/wa/events/complete", { event_id: eventId });
+  }
+
+  getSettings() {
+    return this.call("/api/machine/wa/settings/get", {});
+  }
+
   getState(chatId) {
     return this.call("/api/machine/wa/state/get", { chat_id: chatId });
   }
