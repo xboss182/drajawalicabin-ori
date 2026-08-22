@@ -489,7 +489,7 @@ export function onPrepareResult(convo, res) {
 }
 
 // Called by the bridge once machine.claimHold resolves.
-export function onClaimResult(convo, res) {
+export function onClaimResult(convo, res, paymentText = null) {
   const effects = [];
   const send = (text, imagePath) => effects.push(imagePath ? { op: "send", text, image: imagePath } : { op: "send", text });
   if (convo.state !== STATES.SUMMARY) return { convo, effects };
@@ -515,11 +515,20 @@ export function onClaimResult(convo, res) {
   };
   convo.bookingGroupId = b.booking_group_id;
   convo.state = STATES.AWAIT_PROOF;
-  send(instructionsText(convo.lang, {
-    payment_reference: b.payment_reference,
-    deposit_amount: Number(b.deposit_amount),
-    total_amount: Number(b.total_amount),
-  }), "assets/duitnow-qr.jpg");
+  // `image: "qr"` marks the settings-driven QR (owner-approved, fetched from
+  // Lovable Cloud at send time — no committed asset).
+  send(
+    instructionsText(
+      convo.lang,
+      {
+        payment_reference: b.payment_reference,
+        deposit_amount: Number(b.deposit_amount),
+        total_amount: Number(b.total_amount),
+      },
+      paymentText,
+    ),
+    "qr",
+  );
   return { convo, effects };
 }
 
@@ -527,9 +536,11 @@ export function proofResult(convo, outcome) {
   const effects = [];
   const send = (text) => effects.push({ op: "send", text });
   const lang = convo.lang;
-  if (outcome === "duplicate") send(copy(lang, "proofAlready", outcome.ref));
-  else if (outcome === "received") send(copy(lang, "proofReceived", outcome.ref));
-  else send(copy(lang, outcome === "tooLarge" ? "proofTooLarge" : outcome === "badType" ? "proofBadType" : "proofFetchFailed"));
+  const o = typeof outcome === "string" ? { kind: outcome } : (outcome ?? {});
+  const ref = o.ref ?? convo.data.booking?.reference ?? "";
+  if (o.kind === "duplicate") send(copy(lang, "proofAlready", ref));
+  else if (o.kind === "received") send(copy(lang, "proofReceived", ref));
+  else send(copy(lang, o.kind === "tooLarge" ? "proofTooLarge" : o.kind === "badType" ? "proofBadType" : "proofFetchFailed"));
   return { convo, effects };
 }
 

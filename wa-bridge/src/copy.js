@@ -161,20 +161,27 @@ export function summaryText(lang, p) {
   return lang === "bm" ? bm : en;
 }
 
-export function instructionsText(lang, b) {
+// Payment instructions text. The payment methods block (`paymentText`) comes
+// from owner-approved wa_settings in Lovable Cloud — never hardcoded here.
+export function instructionsText(lang, b, paymentText = null) {
   const rm = (n) => Number(n).toFixed(2);
   const ref = b.payment_reference;
+  const methods = paymentText?.trim()
+    ? paymentText.trim()
+    : lang === "bm"
+      ? `Kaedah pembayaran akan dikirim oleh staf kami di chat ini sebentar lagi.`
+      : `Payment methods will be sent by our staff in this chat shortly.`;
   const en =
     `Booking ${ref} is reserved for 30 minutes ⏳\n\n` +
     `Pay the deposit of RM${rm(b.deposit_amount)} via:\n\n` +
-    `- DuitNow QR (photo below)\n- Bank transfer: CIMB 8601234567 (D'Rajawali Cabin)\n\n` +
+    `${methods}\n\n` +
     `After paying, send a photo of the receipt here.\n\n` +
     `Total: RM${rm(b.total_amount)} · Balance due before check-in.\n\n` +
     `(type "agent" for help)`;
   const bm =
     `Tempahan ${ref} dipegang selama 30 minit ⏳\n\n` +
     `Bayar deposit RM${rm(b.deposit_amount)} melalui:\n\n` +
-    `- DuitNow QR (gambar di bawah)\n- Pindahan bank: CIMB 8601234567 (D'Rajawali Cabin)\n\n` +
+    `${methods}\n\n` +
     `Selepas membayar, hantar gambar resit di sini.\n\n` +
     `Jumlah: RM${rm(b.total_amount)} · Baki perlu dibayar sebelum daftar masuk.\n\n` +
     `(taip "agent" untuk bantuan)`;

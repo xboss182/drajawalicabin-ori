@@ -980,6 +980,44 @@ export type Database = {
           },
         ]
       }
+      wa_settings: {
+        Row: {
+          hold_minutes: number
+          id: boolean
+          payment_text_bm: string
+          payment_text_en: string
+          qr_storage_path: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          hold_minutes?: number
+          id?: boolean
+          payment_text_bm?: string
+          payment_text_en?: string
+          qr_storage_path?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          hold_minutes?: number
+          id?: boolean
+          payment_text_bm?: string
+          payment_text_en?: string
+          qr_storage_path?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

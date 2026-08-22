@@ -143,6 +143,43 @@ CREATE TABLE IF NOT EXISTS public.wa_nonces (
 );
 
 -- ---------------------------------------------------------------------------
+-- 6b. wa_settings — owner-approved payment instructions, set by staff in the
+--     admin (never hardcoded in the bridge/Git). QR image bytes are stored
+--     as base64 in the private payment-proofs bucket path given by
+--     `qr_storage_path`; the bridge fetches it via a signed read URL.
+--     ponytail: single-row settings table; a full key/value settings system
+--     can replace it when more settings arrive.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.wa_settings (
+  id boolean PRIMARY KEY DEFAULT true CHECK (id),
+  payment_text_en text NOT NULL DEFAULT '',
+  payment_text_bm text NOT NULL DEFAULT '',
+  qr_storage_path text,
+  hold_minutes integer NOT NULL DEFAULT 30 CHECK (hold_minutes BETWEEN 5 AND 240),
+  updated_by uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.wa_settings ENABLE ROW LEVEL SECURITY;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.wa_settings TO service_role;
+-- Owner/staff may read the payment settings they configured (not the QR
+-- secret bucket path — that stays service_role only through the column grant
+-- trick below is unnecessary since the path itself is not a secret; the
+-- bucket is private and signed URLs are minted server-side).
+DROP POLICY IF EXISTS "Admins manage wa settings" ON public.wa_settings;
+CREATE POLICY "Admins manage wa settings" ON public.wa_settings
+  FOR ALL TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+-- ---------------------------------------------------------------------------
+-- 6c. wa_events lifecycle: unprocessed events older than the reclaim window
+--     are re-claimable so a crashed bridge does not strand the message.
+-- ---------------------------------------------------------------------------
+CREATE INDEX IF NOT EXISTS wa_events_reclaim_idx
+  ON public.wa_events (received_at)
+  WHERE processed_at IS NULL;
+
+-- ---------------------------------------------------------------------------
 -- RLS: deny everything to anon/authenticated; service_role only.
 -- (wa_proofs additionally readable by admins for audit from the admin UI.)
 -- ---------------------------------------------------------------------------

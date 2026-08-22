@@ -125,8 +125,28 @@ test("claim result success parks at AWAIT_PROOF and sends QR + instructions", ()
   });
   assert.equal(next.state, "AWAIT_PROOF");
   assert.equal(next.bookingGroupId, "22222222-2222-4222-8222-222222222222");
-  assert.ok(effects.some((e) => e.image === "assets/duitnow-qr.jpg"));
+  // Settings-driven QR marker; no committed asset path.
+  assert.ok(effects.some((e) => e.image === "qr"));
   assert.ok(effects.some((e) => /30 minit|30 minutes/.test(e.text)));
+  // Without approved settings the copy must NOT contain bank details.
+  assert.ok(effects.every((e) => !/CIMB|8601234567|DuitNow QR \(photo/.test(e.text)));
+});
+
+test("claim result uses owner-approved payment text when provided", () => {
+  const convo = { ...freshConversation(chat), state: "SUMMARY" };
+  const { effects } = onClaimResult(convo, {
+    ok: true,
+    claimed: true,
+    booking: {
+      booking_id: "11111111-1111-4111-8111-111111111111",
+      booking_group_id: "22222222-2222-4222-8222-222222222222",
+      payment_reference: "RJW-1234",
+      hold_expires_at: new Date(Date.now() + 30 * 60000).toISOString(),
+      total_amount: 180,
+      deposit_amount: 50,
+    },
+  }, "- DuitNow QR (photo below)\n- Maybank 1234567890 (D'Rajawali Cabin)");
+  assert.ok(effects.some((e) => /Maybank 1234567890/.test(e.text)));
 });
 
 test("claim result taken pushes back to dates", () => {
