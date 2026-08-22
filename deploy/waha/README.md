@@ -25,12 +25,26 @@ Customer WA  ⇄  WhatsApp servers  ⇄  WAHA container (127.0.0.1:3100)
 | Path | Purpose |
 |---|---|
 | `/opt/waha/docker-compose.yml` | pinned image (`devlikeapro/waha@sha256:269a1ab2…`, tag `noweb`, 2026-08-14) |
-| `/opt/waha/.env` | `WAHA_API_KEY` (mode 600, never committed) |
+| `/opt/waha/.env` | `WAHA_API_KEY`, `WAHA_WEBHOOK_HMAC_KEY` (mode 600, never committed) |
+| `/opt/waha/.env.example` | env var names only — copy to `.env`, fill, chmod 600 |
 | `/opt/waha/backup.sh` | nightly cron: sessions + media tarball |
 | `/opt/waha/restore.sh` | interactive restore, wipes volumes |
-| `/opt/waha/healthcheck.sh` | exit 0/2/3 = ok / waha down / QR-required |
+| `/opt/waha/healthcheck.sh` | exit 0/1/2/3 = ok / bridge down / waha down / QR-required |
+| `/opt/waha/bridge.Dockerfile` | build context for the bridge service (node:22-alpine, zero deps) |
 
-Copies of the executable scripts (not `.env`) live in this directory for review.
+Copies of the executable scripts (not the filled `.env`) live in this directory
+for review.
+
+## Secrets policy (post Stage-1 review)
+
+- The `WAHA_API_KEY` was **rotated on 2026-08-22** after the Stage-1 review
+  treated it as compromised. The old value is destroyed (no backup retained).
+- No WAHA credential exists anywhere in Git. Compose/healthcheck read the key
+  from `/opt/waha/.env` via `$$WAHA_API_KEY` / `grep` — never a literal.
+- `.env` is mode `600 root:root` and listed in `.gitignore` (`.env*`).
+- Webhook integrity: WAHA signs outbound webhooks with `WAHA_WEBHOOK_HMAC_KEY`;
+  the bridge verifies the `x-webhook-hmac` header. Configure the WAHA session
+  webhook with `hmac.key = WAHA_WEBHOOK_HMAC_KEY` (see below).
 
 ## Operations
 
@@ -106,16 +120,40 @@ docker compose -f /opt/waha/docker-compose.yml up -d
   healthcheck alerting.
 - **No Meta SLA.** Internal SLO only.
 
-## Remaining integration dependency
+## Bridge integration & webhook HMAC
 
-The booking-bridge process (MNC-961) is **not deployed** — Backend Developer
-artifact is not yet pushed. Once it lands:
+The compose file already defines the `bridge` service: it builds from the
+repo's `wa-bridge/` tree (via `deploy/waha/bridge.Dockerfile`), joins
+`waha-net`, binds loopback `8180`, and `depends_on` a healthy `waha`. Deploy it
+once the Backend Developer's **corrected** `wa-bridge/` lands on this branch:
 
-1. Add bridge service to this compose file (loopback-only port, e.g. `3101`).
-2. Point bridge at `http://waha:3000` (same docker network) with the API key
-   from `/opt/waha/.env`.
-3. Extend `healthcheck.sh` to probe bridge `/healthz` and return exit 1 on
-   bridge failure (distinguishing bridge-down from WAHA-down).
+```bash
+cd /opt/waha
+docker compose up -d --build bridge
+```
+
+Then point the WAHA session webhook at the bridge with HMAC signing, so WAHA
+signs each event and the bridge verifies `x-webhook-hmac`:
+
+```bash
+KEY=$(grep ^WAHA_API_KEY /opt/waha/.env | cut -d= -f2-)
+HMAC=$(grep ^WAHA_WEBHOOK_HMAC_KEY /opt/waha/.env | cut -d= -f2-)
+curl -X POST -H "X-Api-Key: $KEY" -H 'Content-Type: application/json' \
+  http://127.0.0.1:3100/api/sessions/default \
+  -d "$(cat <<EOF
+{"name":"default","config":{"webhooks":[{"url":"http://wa-bridge:8080/webhook/waha","events":["message","session.status"],"hmac":{"key":"$HMAC"}}]}}
+EOF
+)"
+```
+
+`healthcheck.sh` exit codes (dependency-aware — WAHA checked before bridge):
+
+| Exit | Meaning |
+|---|---|
+| 0 | WAHA `WORKING` and bridge `/health` ok (or bridge not yet deployed) |
+| 1 | bridge container down or `/health` unreachable (WAHA is fine) |
+| 2 | WAHA container unhealthy or API not responding |
+| 3 | QR/session required (`SCAN_QR_CODE`/`STARTING`/`STOPPED`/`FAILED`) or unknown |
 
 No second conversation engine is introduced here; the bridge owns the state
 machine.
