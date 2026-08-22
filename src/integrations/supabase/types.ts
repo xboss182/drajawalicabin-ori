@@ -112,6 +112,7 @@ export type Database = {
           phone: string
           relationship: string | null
           room_type: string
+          source: string
           status: Database["public"]["Enums"]["booking_status"]
           stripe_balance_payment_intent_id: string | null
           stripe_balance_session_id: string | null
@@ -121,6 +122,7 @@ export type Database = {
           total_amount: number | null
           vehicle_number: string | null
           vehicle_type: string | null
+          wa_chat_id: string | null
         }
         Insert: {
           actual_check_out_at?: string | null
@@ -218,6 +220,7 @@ export type Database = {
           phone?: string
           relationship?: string | null
           room_type?: string
+          source?: string
           status?: Database["public"]["Enums"]["booking_status"]
           stripe_balance_payment_intent_id?: string | null
           stripe_balance_session_id?: string | null
@@ -227,6 +230,7 @@ export type Database = {
           total_amount?: number | null
           vehicle_number?: string | null
           vehicle_type?: string | null
+          wa_chat_id?: string | null
         }
         Relationships: [
           {
@@ -800,6 +804,182 @@ export type Database = {
         }
         Relationships: []
       }
+      wa_conversations: {
+        Row: {
+          booking_group_id: string | null
+          chat_id: string
+          created_at: string
+          data: Json
+          failure_count: number
+          lang: string
+          state: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          booking_group_id?: string | null
+          chat_id: string
+          created_at?: string
+          data?: Json
+          failure_count?: number
+          lang?: string
+          state?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          booking_group_id?: string | null
+          chat_id?: string
+          created_at?: string
+          data?: Json
+          failure_count?: number
+          lang?: string
+          state?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      wa_events: {
+        Row: {
+          chat_id: string
+          event_id: string
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          type: string
+        }
+        Insert: {
+          chat_id: string
+          event_id: string
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          type: string
+        }
+        Update: {
+          chat_id?: string
+          event_id?: string
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      wa_nonces: {
+        Row: {
+          expires_at: string
+          key_id: string
+          nonce: string
+        }
+        Insert: {
+          expires_at: string
+          key_id: string
+          nonce: string
+        }
+        Update: {
+          expires_at?: string
+          key_id?: string
+          nonce?: string
+        }
+        Relationships: []
+      }
+      wa_outbox: {
+        Row: {
+          attempts: number
+          chat_id: string
+          created_at: string
+          dedupe_key: string
+          id: string
+          kind: string
+          last_error: string | null
+          payload: Json
+          status: string
+          updated_at: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          chat_id: string
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          kind: string
+          last_error?: string | null
+          payload?: Json
+          status?: string
+          updated_at?: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          chat_id?: string
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          payload?: Json
+          status?: string
+          updated_at?: string
+          wa_message_id?: string | null
+        }
+        Relationships: []
+      }
+      wa_proofs: {
+        Row: {
+          booking_group_id: string
+          bytes: number | null
+          chat_id: string
+          created_at: string
+          file_path: string | null
+          id: string
+          kind: string
+          mime: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          wa_message_id: string
+        }
+        Insert: {
+          booking_group_id: string
+          bytes?: number | null
+          chat_id: string
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          kind?: string
+          mime?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          wa_message_id: string
+        }
+        Update: {
+          booking_group_id?: string
+          bytes?: number | null
+          chat_id?: string
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          kind?: string
+          mime?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          wa_message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_proofs_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -858,6 +1038,54 @@ export type Database = {
           message: Json
           msg_id: number
           read_ct: number
+        }[]
+      }
+      wa_claim_hold: {
+        Args: {
+          _cabin_id: string
+          _check_in: string
+          _check_out: string
+          _comforter: boolean
+          _guests: number
+          _guest_name: string
+          _phone: string
+          _chat_id: string
+          _subtotal: number
+          _comforter_total: number
+          _discount_id?: string
+          _discount_code?: string
+          _discount_amount?: number
+        }
+        Returns: {
+          booking_id: string
+          booking_group_id: string
+          guest_token: string
+          payment_reference: string
+          nights: number
+          subtotal: number
+          comforter_total: number
+          total_amount: number
+          deposit_amount: number
+          balance_amount: number
+          hold_expires_at: string
+          created_at: string
+        }[]
+      }
+      wa_expire_stale_holds: {
+        Args: Record<string, never>
+        Returns: {
+          chat_id: string
+          booking_group_id: string
+        }[]
+      }
+      wa_outbox_claim: {
+        Args: { _batch?: number }
+        Returns: {
+          id: string
+          chat_id: string
+          kind: string
+          payload: Json
+          attempts: number
         }[]
       }
     }
