@@ -1,0 +1,57 @@
+name: waha
+
+# WAHA Core (NOWEB engine) — private sidecar for drajawalicabin booking bridge.
+# WAHA is bound to 127.0.0.1 only; no public exposure. The booking bridge
+# (MNC-961 artifact, pending) reaches it via http://127.0.0.1:3100 with header
+# X-Api-Key. QR pairing requires an SSH tunnel:  ssh -L 3100:127.0.0.1:3100 root@77.90.27.247
+#
+# ponytail: WAHA Core + NOWEB is the MVP floor (no license needed). Upgrade to
+# waha-plus when we need multi-session, S3 media offload, or webhook retry
+# policies — tracked as a known limitation on MNC-962.
+
+services:
+  waha:
+    image: devlikeapro/waha@sha256:269a1ab26478763609af03c7fb30f3657a3256b2a287976cc416c61ed29c1542  # waha:noweb 2026-08-14
+    container_name: waha
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      WHATSAPP_DEFAULT_ENGINE: NOWEB
+      WAHA_PRINT_QR: "false"           # QR served via /api/sessions/{s}/auth/qr over the tunnel
+      WAHA_DASHBOARD_ENABLED: "false"  # no web UI; API-only, smaller attack surface
+      WAHA_SWAGGER_ENABLED: "false"    # same reason
+      WAHA_MEDIA_STORAGE: LOCAL        # bridge pulls proof media and re-persists to Supabase
+      WAHA_AUTO_DOWNLOAD_MEDIA: "true" # required for payment-proof images
+      WHATSAPP_FILES_LIFETIME: "604800" # 7d local cache, matches MNC-958 §9
+    ports:
+      - "127.0.0.1:3100:3000"
+    volumes:
+      - waha-sessions:/app/.sessions
+      - waha-media:/app/.media
+    healthcheck:
+      # /api/server/version is the lightest authenticated liveness probe on Core.
+      test: ["CMD-SHELL", "curl -fsS -H \"X-Api-Key: $$WAHA_API_KEY\" http://127.0.0.1:3000/api/server/version >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G           # MNC-958 §11: NOWEB floor is ~1 GB
+          cpus: "1.0"
+        reservations:
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+        labels: "service=waha,project=drajawali"
+
+volumes:
+  waha-sessions:
+    name: waha-sessions
+  waha-media:
+    name: waha-media
