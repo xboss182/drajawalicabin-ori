@@ -1,0 +1,15 @@
+{
+  "name": "drajawali-wa-bridge",
+  "private": true,
+  "version": "0.1.0",
+  "description": "VPS booking bridge: WAHA webhooks -> Lovable Cloud machine API -> WhatsApp replies (MNC-961)",
+  "type": "module",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {}
+}
