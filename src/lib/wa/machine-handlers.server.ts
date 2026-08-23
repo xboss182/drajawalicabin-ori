@@ -3,10 +3,11 @@
 // verifyMachineRequest from ./machine-auth.server. Thin route wrappers live
 // under src/routes/api/machine/wa and only forward the Request here.
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { verifyMachineRequest } from "./machine-auth.server";
 import { pickBestDiscount } from "@/lib/discounts";
-import type { Json } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 const MAX_PROOF_BYTES = 10 * 1024 * 1024; // matches web-side 10 MB proof budget
 const ALLOWED_PROOF_MIME: Record<string, string> = {
@@ -23,7 +24,10 @@ function json(data: unknown, status = 200): Response {
   });
 }
 
-async function readBody(req: Request): Promise<{ body: any; err?: Response }> {
+async function readBody(req: Request): Promise<{
+  body: unknown;
+  err?: Response;
+}> {
   try {
     return { body: await req.json() };
   } catch {
@@ -114,7 +118,15 @@ const agentSchema = z.object({
   note: z.string().trim().max(500).optional(),
 });
 
-async function adminClient() {
+const runtimeReportSchema = z.object({
+  state: z.string().trim().min(1).max(40),
+  session: z.string().trim().max(120).optional().nullable(),
+  error: z.string().trim().max(500).optional().nullable(),
+});
+
+type AdminClient = SupabaseClient<Database>;
+
+async function adminClient(): Promise<AdminClient> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   return supabaseAdmin;
 }
@@ -125,12 +137,10 @@ async function adminClient() {
 
 // Leave the earliest group row as proof target; proofs attach per booking id
 // exactly like the web path (bookings/{bookingId}/...).
-async function findWaLead(admin: any, bookingGroupId: string, chatId: string) {
+async function findWaLead(admin: AdminClient, bookingGroupId: string, chatId: string) {
   const { data, error } = await admin
     .from("booking_requests")
-    .select(
-      "id, booking_group_id, status, payment_reference, guest_name, wa_chat_id, source",
-    )
+    .select("id, booking_group_id, status, payment_reference, guest_name, wa_chat_id, source")
     .eq("booking_group_id", bookingGroupId)
     .order("created_at", { ascending: true })
     .limit(1);
@@ -148,7 +158,8 @@ export async function handleEventsClaim(req: Request): Promise<Response> {
   const { body, err } = await readBody(req);
   if (err) return err;
   const parsed = eventsClaimSchema.safeParse(body);
-  if (!parsed.success) return json({ ok: false, error: parsed.error.issues[0]?.message ?? "invalid" }, 400);
+  if (!parsed.success)
+    return json({ ok: false, error: parsed.error.issues[0]?.message ?? "invalid" }, 400);
 
   const admin = await adminClient();
   const { data, error } = await admin
@@ -302,7 +313,8 @@ export async function handleHoldsPrepare(req: Request): Promise<Response> {
   const { body, err } = await readBody(req);
   if (err) return err;
   const parsed = prepareSchema.safeParse(body);
-  if (!parsed.success) return json({ ok: false, error: parsed.error.issues[0]?.message ?? "invalid" }, 400);
+  if (!parsed.success)
+    return json({ ok: false, error: parsed.error.issues[0]?.message ?? "invalid" }, 400);
   const d = parsed.data;
   if (new Date(d.check_out) <= new Date(d.check_in)) {
     return json({ ok: false, error: "check-out must be after check-in" }, 400);
@@ -403,7 +415,8 @@ export async function handleHoldsClaim(req: Request): Promise<Response> {
   const { body, err } = await readBody(req);
   if (err) return err;
   const parsed = claimSchema.safeParse(body);
-  if (!parsed.success) return json({ ok: false, error: parsed.error.issues[0]?.message ?? "invalid" }, 400);
+  if (!parsed.success)
+    return json({ ok: false, error: parsed.error.issues[0]?.message ?? "invalid" }, 400);
   const d = parsed.data;
   if (new Date(d.check_out) <= new Date(d.check_in)) {
     return json({ ok: false, error: "check-out must be after check-in" }, 400);
@@ -442,7 +455,12 @@ export async function handleHoldsExpireSweep(req: Request): Promise<Response> {
   const admin = await adminClient();
   const { data, error } = await admin.rpc("wa_expire_stale_holds");
   if (error) return json({ ok: false, error: error.message }, 500);
-  return json({ ok: true, expired: (data ?? []).filter((r: any) => r && r.chat_id) });
+  return json({
+    ok: true,
+    expired: (data ?? []).filter((row): row is { chat_id: string; booking_group_id: string } =>
+      Boolean(row && row.chat_id),
+    ),
+  });
 }
 
 export async function handleProofsUploadUrl(req: Request): Promise<Response> {
@@ -460,7 +478,8 @@ export async function handleProofsUploadUrl(req: Request): Promise<Response> {
 
   const admin = await adminClient();
   const { lead, error: leadErr } = await findWaLead(admin, d.booking_group_id, d.chat_id);
-  if (!lead) return json({ ok: false, error: (leadErr as Error)?.message ?? "booking not found" }, 404);
+  if (!lead)
+    return json({ ok: false, error: (leadErr as Error)?.message ?? "booking not found" }, 404);
   if (lead.status !== "pending_payment" && lead.status !== "awaiting_review") {
     return json({ ok: false, error: "booking no longer accepts proof" }, 409);
   }
@@ -558,14 +577,17 @@ export async function handleProofsAttach(req: Request): Promise<Response> {
   try {
     const { data: lead } = await admin
       .from("booking_requests")
-      .select("id, guest_name, phone, check_in, check_out, guests, room_type, payment_reference, total_amount, deposit_amount, balance_amount, guest_token")
+      .select(
+        "id, guest_name, phone, check_in, check_out, guests, room_type, payment_reference, total_amount, deposit_amount, balance_amount, guest_token",
+      )
       .eq("booking_group_id", groupId)
       .order("created_at", { ascending: true })
       .limit(1);
     if (lead && lead.length > 0) {
       const r = lead[0];
       const origin = new URL(req.url).origin;
-      const { sendTransactionalEmail, getAdminRecipients } = await import("@/lib/email/send.server");
+      const { sendTransactionalEmail, getAdminRecipients } =
+        await import("@/lib/email/send.server");
       const templateData = {
         guestName: r.guest_name,
         reference: r.payment_reference ?? (r.id as string).slice(0, 8),
@@ -630,7 +652,10 @@ export async function handleOutboxEnqueue(req: Request): Promise<Response> {
 export async function handleOutboxClaim(req: Request): Promise<Response> {
   const auth = await verifyMachineRequest(req);
   if (!auth.ok) return auth.response;
-  const { body, err } = await readBody(req).catch(() => ({ body: {}, err: undefined as Response | undefined }));
+  const { body, err } = await readBody(req).catch(() => ({
+    body: {},
+    err: undefined as Response | undefined,
+  }));
   if (err) return err;
   const parsed = outboxClaimSchema.safeParse(body ?? {});
   if (!parsed.success) return json({ ok: false, error: "invalid" }, 400);
@@ -766,5 +791,24 @@ export async function handleAgent(req: Request): Promise<Response> {
     console.error("[wa agent handoff] staff email failed", e);
     return json({ ok: false, error: "staff email failed" }, 500);
   }
+  return json({ ok: true });
+}
+
+export async function handleRuntimeReport(req: Request): Promise<Response> {
+  const auth = await verifyMachineRequest(req);
+  if (!auth.ok) return auth.response;
+  const { body, err } = await readBody(req);
+  if (err) return err;
+  const parsed = runtimeReportSchema.safeParse(body);
+  if (!parsed.success) return json({ ok: false, error: "invalid" }, 400);
+
+  const { error } = await (await adminClient()).from("wa_runtime_status").upsert({
+    id: true,
+    state: parsed.data.state,
+    session: parsed.data.session ?? null,
+    last_error: parsed.data.error ?? null,
+    observed_at: new Date().toISOString(),
+  });
+  if (error) return json({ ok: false, error: error.message }, 500);
   return json({ ok: true });
 }

@@ -162,6 +162,14 @@ export class MachineClient {
   notifyAgent(chatId, note) {
     return this.call("/api/machine/wa/agent", { chat_id: chatId, note: note ?? null });
   }
+
+  reportRuntime({ state, session, error = null }) {
+    return this.call("/api/machine/wa/runtime/report", {
+      state,
+      session: session ?? null,
+      error,
+    });
+  }
 }
 
 export function sleep(ms) {

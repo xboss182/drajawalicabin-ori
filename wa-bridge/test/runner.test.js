@@ -25,7 +25,15 @@ function cfg(overrides = {}) {
 }
 
 function makeMocks() {
-  const calls = { sends: [], acks: [], claims: [], state: [], enqueues: [], order: [], completes: [] };
+  const calls = {
+    sends: [],
+    acks: [],
+    claims: [],
+    state: [],
+    enqueues: [],
+    order: [],
+    completes: [],
+  };
   const machine = {
     claimEvent: async (eventId, chatId, type, payload) => {
       calls.claims.push({ eventId, chatId });
@@ -43,8 +51,31 @@ function makeMocks() {
       calls.state.push(s);
       return { ok: true, conflict: false, version: s.version + 1 };
     },
-    prepareHold: async () => ({ ok: true, available: true, cabin_id: "c-1", cabin_name: "Q1", nights: 2, subtotal: 160, comforter_total: 0, discount_amount: 0, discount: null, total: 160, deposit: 50 }),
-    claimHold: async () => ({ ok: true, claimed: true, booking: { booking_id: "b-1", booking_group_id: "g-1", payment_reference: "RJW-1", hold_expires_at: "x", total_amount: 160, deposit_amount: 50 } }),
+    prepareHold: async () => ({
+      ok: true,
+      available: true,
+      cabin_id: "c-1",
+      cabin_name: "Q1",
+      nights: 2,
+      subtotal: 160,
+      comforter_total: 0,
+      discount_amount: 0,
+      discount: null,
+      total: 160,
+      deposit: 50,
+    }),
+    claimHold: async () => ({
+      ok: true,
+      claimed: true,
+      booking: {
+        booking_id: "b-1",
+        booking_group_id: "g-1",
+        payment_reference: "RJW-1",
+        hold_expires_at: "x",
+        total_amount: 160,
+        deposit_amount: 50,
+      },
+    }),
     sweepHolds: async () => ({ ok: true, expired: [] }),
     outboxClaim: async () => ({ ok: true, rows: [] }),
     outboxAck: async (id, ok, extra) => {
@@ -55,7 +86,11 @@ function makeMocks() {
       calls.enqueues.push(body);
       return { ok: true, enqueued: true, id: "o-1" };
     },
-    proofUploadUrl: async () => ({ ok: true, upload_url: "http://store/put", path: "bookings/b1/wa-m1.jpg" }),
+    proofUploadUrl: async () => ({
+      ok: true,
+      upload_url: "http://store/put",
+      path: "bookings/b1/wa-m1.jpg",
+    }),
     proofAttach: async () => ({ ok: true, attached: true }),
     notifyAgent: async () => ({ ok: true }),
   };
@@ -70,7 +105,11 @@ function makeMocks() {
       calls.sends.push({ type: "image", chatId, mime, filename, caption, bytes: buf.length });
       return { id: "wa-2", chatId };
     },
-    downloadMedia: async (url) => ({ buffer: Buffer.from("fake-jpeg-data"), contentType: "image/jpeg", status: 200 }),
+    downloadMedia: async (url) => ({
+      buffer: Buffer.from("fake-jpeg-data"),
+      contentType: "image/jpeg",
+      status: 200,
+    }),
   };
   return { calls, machine, waha };
 }
@@ -121,6 +160,31 @@ test("replayed webhook (duplicate event id) does zero work", async () => {
   assert.equal(calls.state.length, 0);
 });
 
+test("staff-paused conversations do not resume from a customer menu message", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.getState = async () => ({
+    ok: true,
+    conversation: {
+      chat_id: CHAT,
+      state: "AGENT",
+      data: { staffPaused: true },
+      lang: "en",
+      failure_count: 0,
+      booking_group_id: null,
+      version: 4,
+    },
+    draft: null,
+  });
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("menu");
+
+  await bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) });
+
+  assert.equal(calls.state.length, 0);
+  assert.equal(calls.sends.length, 0);
+  assert.deepEqual(calls.completes, ["m-1"]);
+});
+
 test("group and self messages are ignored without machine calls", async () => {
   const { calls, machine, waha } = makeMocks();
   const bridge = new Bridge(cfg(), { machine, waha });
@@ -143,8 +207,27 @@ test("outbox poll sends rows and acks successes and failures", async () => {
   machine.outboxClaim = async () => ({
     ok: true,
     rows: [
-      { id: "22222222-0000-4000-8000-000000000001", chat_id: CHAT, kind: "staff-confirmed", payload: { reference: "RJW-2", room_type: "Queen", check_in: "x", check_out: "y", total_amount: 10, deposit_amount: 50 }, attempts: 1 },
-      { id: "22222222-0000-4000-8000-000000000002", chat_id: CHAT, kind: "staff-resubmit", payload: { reference: "RJW-3" }, attempts: 1 },
+      {
+        id: "22222222-0000-4000-8000-000000000001",
+        chat_id: CHAT,
+        kind: "staff-confirmed",
+        payload: {
+          reference: "RJW-2",
+          room_type: "Queen",
+          check_in: "x",
+          check_out: "y",
+          total_amount: 10,
+          deposit_amount: 50,
+        },
+        attempts: 1,
+      },
+      {
+        id: "22222222-0000-4000-8000-000000000002",
+        chat_id: CHAT,
+        kind: "staff-resubmit",
+        payload: { reference: "RJW-3" },
+        attempts: 1,
+      },
     ],
   });
   const bridge = new Bridge(cfg(), { machine, waha });
@@ -179,7 +262,11 @@ test("proof pipeline: valid media uploads, attaches and returns received", async
   const { machine, waha } = makeMocks();
   let putCalls = 0;
   const bridge = new Bridge(cfg(), { machine, waha });
-  bridge.machine.proofUploadUrl = async () => ({ ok: true, upload_url: "http://store/put", path: "bookings/b1/wa-m1.jpg" });
+  bridge.machine.proofUploadUrl = async () => ({
+    ok: true,
+    upload_url: "http://store/put",
+    path: "bookings/b1/wa-m1.jpg",
+  });
   const oldFetch = globalThis.fetch;
   globalThis.fetch = async (url, opts) => {
     if (url === "http://store/put") {
@@ -213,10 +300,17 @@ test("proof pipeline: oversized media rejected before upload", async () => {
 
 test("proof pipeline: disallowed mime rejected", async () => {
   const { machine, waha } = makeMocks();
-  waha.downloadMedia = async () => ({ buffer: Buffer.from("evil.exe"), contentType: "application/x-msdownload" });
+  waha.downloadMedia = async () => ({
+    buffer: Buffer.from("evil.exe"),
+    contentType: "application/x-msdownload",
+  });
   const bridge = new Bridge(cfg(), { machine, waha });
   const outcome = await bridge.runProofPipeline(
-    { chatId: CHAT, messageId: "m3", media: { url: "http://waha/files/m3", mime: "application/x-msdownload" } },
+    {
+      chatId: CHAT,
+      messageId: "m3",
+      media: { url: "http://waha/files/m3", mime: "application/x-msdownload" },
+    },
     { bookingGroupId: "g1" },
   );
   assert.equal(outcome, "badType");
@@ -329,7 +423,10 @@ test("claim success with approved settings sends the settings QR image", async (
     qr_url: "http://store/qr.png",
   });
   const oldFetch = globalThis.fetch;
-  globalThis.fetch = async () => ({ ok: true, arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer });
+  globalThis.fetch = async () => ({
+    ok: true,
+    arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+  });
   try {
     const bridge = new Bridge(cfg(), { machine, waha });
     await bridge.runHoldStep(

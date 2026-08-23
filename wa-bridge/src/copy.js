@@ -1,8 +1,5 @@
 // Message copy for the numbered-text conversation. Bilingual (EN default,
-// BM for chats that greet in Malay). "talk to staff" numbers route to the
-// human WhatsApp number that already receives wa.me links today.
-
-const HUMAN_PHONE = "601155007204"; // falls back to the existing human channel
+// BM for chats that greet in Malay). Staff takeovers continue in this chat.
 
 export const CABIN_TYPES = [
   { n: "1", label: "Queen" },
@@ -32,14 +29,15 @@ const T = {
     askName: () => `What name should the booking be under?`,
     badName: () => `Please reply with the guest name (2-100 characters).`,
     askPhone: () => `What's your phone number? (Reply "same" to use your WhatsApp number)`,
-    badPhone: () => `That phone number doesn't look right. Please reply with digits only, or "same".`,
+    badPhone: () =>
+      `That phone number doesn't look right. Please reply with digits only, or "same".`,
     soldOut: () =>
       `Sorry, those dates were just taken for that cabin type. Please pick different dates:\n\nReply with check-in - check-out, e.g. 25-27 Aug 2026`,
-    tryAgain: () => `Something went wrong on our side. Please reply with your dates again:\n\n25-27 Aug 2026`,
+    tryAgain: () =>
+      `Something went wrong on our side. Please reply with your dates again:\n\n25-27 Aug 2026`,
     agent: (note) =>
       `Okay — our staff will take over from here. Please keep this chat open, a human will reply soon.\n` +
-      (note ? `(You wrote: ${note})\n` : "") +
-      `\nYou can also reach us at wa.me/${HUMAN_PHONE}`,
+      (note ? `(You wrote: ${note})` : ""),
     invalid: (state) =>
       `I didn't understand that. ${HintText.en[state] ?? ""}\n\nType "menu" to start over or "agent" to talk to our staff.`,
     proofNudge: () => `Please send a photo of your payment proof here, or type "agent" for help.`,
@@ -47,11 +45,9 @@ const T = {
       `Thank you! Payment proof received for ${ref}. Our staff will review it shortly — I'll message you here with the result. 📎`,
     proofAlready: () =>
       `We already received that proof — our staff are reviewing it. I'll message you when there's an update.`,
-    proofTooLarge: () =>
-      `That file is too large (max 10 MB). Please send a smaller photo or PDF.`,
+    proofTooLarge: () => `That file is too large (max 10 MB). Please send a smaller photo or PDF.`,
     proofBadType: () => `Please send the proof as a photo (JPG/PNG) or PDF.`,
-    proofFetchFailed: () =>
-      `I couldn't download that file. Please send the proof photo again.`,
+    proofFetchFailed: () => `I couldn't download that file. Please send the proof photo again.`,
   },
   bm: {
     menu: (ctx) =>
@@ -73,22 +69,27 @@ const T = {
     askName: () => `Tempahan atas nama siapa?`,
     badName: () => `Sila balas dengan nama tetamu (2-100 aksara).`,
     askPhone: () => `Nombor telefon anda? (Balas "same" untuk guna nombor WhatsApp anda)`,
-    badPhone: () => `Nombor telefon itu tidak kelihatan betul. Sila balas nombor sahaja, atau "same".`,
+    badPhone: () =>
+      `Nombor telefon itu tidak kelihatan betul. Sila balas nombor sahaja, atau "same".`,
     soldOut: () =>
       `Maaf, tarikh itu baru sahaja diambil untuk jenis kabin itu. Sila pilih tarikh lain:\n\nBalas daftar masuk - daftar keluar, cth. 25-27 Ogos 2026`,
-    tryAgain: () => `Berlaku masalah teknikal. Sila balas tarikh anda sekali lagi:\n\n25-27 Ogos 2026`,
+    tryAgain: () =>
+      `Berlaku masalah teknikal. Sila balas tarikh anda sekali lagi:\n\n25-27 Ogos 2026`,
     agent: (note) =>
       `Baik — staf kami akan menyambung dari sini. Sila kekalkan chat ini terbuka, seorang staf akan membalas sebentar lagi.\n` +
-      (note ? `(Anda menulis: ${note})\n` : "") +
-      `\nAnda juga boleh hubungi kami di wa.me/${HUMAN_PHONE}`,
+      (note ? `(Anda menulis: ${note})` : ""),
     invalid: (state) => `Saya tidak faham. ${HintText.bm[state] ?? ""}`,
-    proofNudge: () => `Sila hantar gambar bukti pembayaran di sini, atau taip "agent" untuk bantuan.`,
+    proofNudge: () =>
+      `Sila hantar gambar bukti pembayaran di sini, atau taip "agent" untuk bantuan.`,
     proofReceived: (ref) =>
       `Terima kasih! Bukti pembayaran untuk ${ref} telah diterima. Staf kami akan menyemaknya sebentar lagi — saya akan mesej anda di sini dengan keputusannya. 📎`,
-    proofAlready: () => `Bukti itu sudah kami terima — staf sedang menyemak. Saya akan mesej anda bila ada kemas kini.`,
-    proofTooLarge: () => `Fail terlalu besar (maks 10 MB). Sila hantar gambar atau PDF yang lebih kecil.`,
+    proofAlready: () =>
+      `Bukti itu sudah kami terima — staf sedang menyemak. Saya akan mesej anda bila ada kemas kini.`,
+    proofTooLarge: () =>
+      `Fail terlalu besar (maks 10 MB). Sila hantar gambar atau PDF yang lebih kecil.`,
     proofBadType: () => `Sila hantar bukti sebagai gambar (JPG/PNG) atau PDF.`,
-    proofFetchFailed: () => `Saya tidak dapat memuat turun fail itu. Sila hantar semula gambar bukti.`,
+    proofFetchFailed: () =>
+      `Saya tidak dapat memuat turun fail itu. Sila hantar semula gambar bukti.`,
   },
 };
 
@@ -201,17 +202,35 @@ const O = {
     "staff-confirmed": (p, rm) =>
       `✅ Good news — your booking ${p.reference} (${p.room_type}, ${p.check_in} → ${p.check_out}) is CONFIRMED.\n\nTotal: RM${rm(p.total_amount)} · Deposit paid: RM${rm(p.deposit_amount)}\n\nWe'll send your check-in details before arrival. See you soon! 🌿`,
     "staff-resubmit": (p, rm) =>
-      `❌ Our staff reviewed your payment proof for ${p.reference} and could not accept it. Please send a new proof photo here. Your booking is held for another 30 minutes.`,
+      `❌ Our staff reviewed your payment proof for ${p.reference} and could not accept it.${p.reason ? ` Reason: ${p.reason}` : ""} Please send a new proof photo here. Your booking is held for another 30 minutes.`,
+    "staff-hold-extended": (p) =>
+      `⏳ Your booking hold has been extended until ${p.hold_expires_at ?? "the time confirmed by staff"}. Please send payment proof here when ready.`,
+    "staff-cancelled": (p) =>
+      `Your booking has been cancelled.${p.reason ? ` Reason: ${p.reason}` : ""}`,
     "hold-expired": () =>
       `⏳ Your booking hold expired before payment was received, so the dates were released. Reply "menu" to book again — we'll hold them for 30 minutes when you confirm.`,
+    "staff-message": (p) => String(p.message ?? ""),
+    "staff-paused": () => `Our staff are reviewing this chat. Please wait for their reply here.`,
+    "staff-takeover": () => `A staff member has taken over this chat and will reply here shortly.`,
+    "staff-resumed": () =>
+      `The booking assistant is available again. Reply "menu" whenever you are ready.`,
   },
   bm: {
     "staff-confirmed": (p, rm) =>
       `✅ Berita baik — tempahan anda ${p.reference} (${p.room_type}, ${p.check_in} → ${p.check_out}) DISAHKAN.\n\nJumlah: RM${rm(p.total_amount)} · Deposit dibayar: RM${rm(p.deposit_amount)}\n\nKami akan hantar butiran daftar masuk sebelum ketibaan. Jumpa lagi! 🌿`,
     "staff-resubmit": (p, rm) =>
-      `❌ Staf kami menyemak bukti pembayaran untuk ${p.reference} dan tidak dapat menerimanya. Sila hantar bukti baharu di sini. Tempahan anda dipegang 30 minit lagi.`,
+      `❌ Staf kami menyemak bukti pembayaran untuk ${p.reference} dan tidak dapat menerimanya.${p.reason ? ` Sebab: ${p.reason}` : ""} Sila hantar bukti baharu di sini. Tempahan anda dipegang 30 minit lagi.`,
+    "staff-hold-extended": (p) =>
+      `⏳ Pegangan tempahan anda dilanjutkan sehingga ${p.hold_expires_at ?? "masa yang disahkan oleh staf"}. Sila hantar bukti bayaran di sini apabila bersedia.`,
+    "staff-cancelled": (p) =>
+      `Tempahan anda telah dibatalkan.${p.reason ? ` Sebab: ${p.reason}` : ""}`,
     "hold-expired": () =>
       `⏳ Pegangan tempahan anda luput sebelum bayaran diterima, jadi tarikh telah dilepaskan. Balas "menu" untuk tempah semula — kami akan pegang 30 minit apabila anda sahkan.`,
+    "staff-message": (p) => String(p.message ?? ""),
+    "staff-paused": () => `Staf kami sedang menyemak chat ini. Sila tunggu balasan mereka di sini.`,
+    "staff-takeover": () =>
+      `Seorang staf telah mengambil alih chat ini dan akan membalas di sini sebentar lagi.`,
+    "staff-resumed": () => `Pembantu tempahan tersedia semula. Balas "menu" apabila anda bersedia.`,
   },
 };
 

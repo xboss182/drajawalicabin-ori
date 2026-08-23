@@ -40,6 +40,7 @@ import { Route as AuthenticatedAdminPromoRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminStatsRouteImport } from './routes/_authenticated/admin.stats'
 import { Route as AuthenticatedAdminStoreRouteImport } from './routes/_authenticated/admin.store'
+import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as AuthenticatedAdminInvoiceIdRouteImport } from './routes/_authenticated/admin.invoice.$id'
 import { Route as ApiMachineWaAgentRouteImport } from './routes/api/machine/wa/agent'
@@ -63,6 +64,7 @@ import { Route as ApiMachineWaOutboxClaimRouteImport } from './routes/api/machin
 import { Route as ApiMachineWaOutboxEnqueueRouteImport } from './routes/api/machine/wa/outbox/enqueue'
 import { Route as ApiMachineWaProofsAttachRouteImport } from './routes/api/machine/wa/proofs/attach'
 import { Route as ApiMachineWaProofsUploadUrlRouteImport } from './routes/api/machine/wa/proofs/upload-url'
+import { Route as ApiMachineWaRuntimeReportRouteImport } from './routes/api/machine/wa/runtime/report'
 import { Route as ApiMachineWaSettingsGetRouteImport } from './routes/api/machine/wa/settings/get'
 import { Route as ApiMachineWaStateGetRouteImport } from './routes/api/machine/wa/state/get'
 import { Route as ApiMachineWaStatePutRouteImport } from './routes/api/machine/wa/state/put'
@@ -230,6 +232,12 @@ const AuthenticatedAdminStoreRoute = AuthenticatedAdminStoreRouteImport.update({
   path: '/store',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminWhatsappRoute =
+  AuthenticatedAdminWhatsappRouteImport.update({
+    id: '/whatsapp',
+    path: '/whatsapp',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
@@ -360,6 +368,12 @@ const ApiMachineWaProofsUploadUrlRoute =
     path: '/api/machine/wa/proofs/upload-url',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiMachineWaRuntimeReportRoute =
+  ApiMachineWaRuntimeReportRouteImport.update({
+    id: '/api/machine/wa/runtime/report',
+    path: '/api/machine/wa/runtime/report',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMachineWaSettingsGetRoute = ApiMachineWaSettingsGetRouteImport.update({
   id: '/api/machine/wa/settings/get',
   path: '/api/machine/wa/settings/get',
@@ -406,6 +420,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/admin/store': typeof AuthenticatedAdminStoreRoute
+  '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
@@ -430,6 +445,7 @@ export interface FileRoutesByFullPath {
   '/api/machine/wa/outbox/enqueue': typeof ApiMachineWaOutboxEnqueueRoute
   '/api/machine/wa/proofs/attach': typeof ApiMachineWaProofsAttachRoute
   '/api/machine/wa/proofs/upload-url': typeof ApiMachineWaProofsUploadUrlRoute
+  '/api/machine/wa/runtime/report': typeof ApiMachineWaRuntimeReportRoute
   '/api/machine/wa/settings/get': typeof ApiMachineWaSettingsGetRoute
   '/api/machine/wa/state/get': typeof ApiMachineWaStateGetRoute
   '/api/machine/wa/state/put': typeof ApiMachineWaStatePutRoute
@@ -463,6 +479,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/admin/store': typeof AuthenticatedAdminStoreRoute
+  '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
@@ -487,6 +504,7 @@ export interface FileRoutesByTo {
   '/api/machine/wa/outbox/enqueue': typeof ApiMachineWaOutboxEnqueueRoute
   '/api/machine/wa/proofs/attach': typeof ApiMachineWaProofsAttachRoute
   '/api/machine/wa/proofs/upload-url': typeof ApiMachineWaProofsUploadUrlRoute
+  '/api/machine/wa/runtime/report': typeof ApiMachineWaRuntimeReportRoute
   '/api/machine/wa/settings/get': typeof ApiMachineWaSettingsGetRoute
   '/api/machine/wa/state/get': typeof ApiMachineWaStateGetRoute
   '/api/machine/wa/state/put': typeof ApiMachineWaStatePutRoute
@@ -523,6 +541,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/_authenticated/admin/store': typeof AuthenticatedAdminStoreRoute
+  '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
@@ -547,6 +566,7 @@ export interface FileRoutesById {
   '/api/machine/wa/outbox/enqueue': typeof ApiMachineWaOutboxEnqueueRoute
   '/api/machine/wa/proofs/attach': typeof ApiMachineWaProofsAttachRoute
   '/api/machine/wa/proofs/upload-url': typeof ApiMachineWaProofsUploadUrlRoute
+  '/api/machine/wa/runtime/report': typeof ApiMachineWaRuntimeReportRoute
   '/api/machine/wa/settings/get': typeof ApiMachineWaSettingsGetRoute
   '/api/machine/wa/state/get': typeof ApiMachineWaStateGetRoute
   '/api/machine/wa/state/put': typeof ApiMachineWaStatePutRoute
@@ -583,6 +603,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/stats'
     | '/admin/store'
+    | '/admin/whatsapp'
     | '/lovable/email/suppression'
     | '/admin/'
     | '/admin/invoice/$id'
@@ -607,6 +628,7 @@ export interface FileRouteTypes {
     | '/api/machine/wa/outbox/enqueue'
     | '/api/machine/wa/proofs/attach'
     | '/api/machine/wa/proofs/upload-url'
+    | '/api/machine/wa/runtime/report'
     | '/api/machine/wa/settings/get'
     | '/api/machine/wa/state/get'
     | '/api/machine/wa/state/put'
@@ -640,6 +662,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/stats'
     | '/admin/store'
+    | '/admin/whatsapp'
     | '/lovable/email/suppression'
     | '/admin'
     | '/admin/invoice/$id'
@@ -664,6 +687,7 @@ export interface FileRouteTypes {
     | '/api/machine/wa/outbox/enqueue'
     | '/api/machine/wa/proofs/attach'
     | '/api/machine/wa/proofs/upload-url'
+    | '/api/machine/wa/runtime/report'
     | '/api/machine/wa/settings/get'
     | '/api/machine/wa/state/get'
     | '/api/machine/wa/state/put'
@@ -699,6 +723,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/stats'
     | '/_authenticated/admin/store'
+    | '/_authenticated/admin/whatsapp'
     | '/lovable/email/suppression'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/invoice/$id'
@@ -723,6 +748,7 @@ export interface FileRouteTypes {
     | '/api/machine/wa/outbox/enqueue'
     | '/api/machine/wa/proofs/attach'
     | '/api/machine/wa/proofs/upload-url'
+    | '/api/machine/wa/runtime/report'
     | '/api/machine/wa/settings/get'
     | '/api/machine/wa/state/get'
     | '/api/machine/wa/state/put'
@@ -769,6 +795,7 @@ export interface RootRouteChildren {
   ApiMachineWaOutboxEnqueueRoute: typeof ApiMachineWaOutboxEnqueueRoute
   ApiMachineWaProofsAttachRoute: typeof ApiMachineWaProofsAttachRoute
   ApiMachineWaProofsUploadUrlRoute: typeof ApiMachineWaProofsUploadUrlRoute
+  ApiMachineWaRuntimeReportRoute: typeof ApiMachineWaRuntimeReportRoute
   ApiMachineWaSettingsGetRoute: typeof ApiMachineWaSettingsGetRoute
   ApiMachineWaStateGetRoute: typeof ApiMachineWaStateGetRoute
   ApiMachineWaStatePutRoute: typeof ApiMachineWaStatePutRoute
@@ -993,6 +1020,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminStoreRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/whatsapp': {
+      id: '/_authenticated/admin/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/admin/whatsapp'
+      preLoaderRoute: typeof AuthenticatedAdminWhatsappRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/lovable/email/suppression': {
       id: '/lovable/email/suppression'
       path: '/lovable/email/suppression'
@@ -1154,6 +1188,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMachineWaProofsUploadUrlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/machine/wa/runtime/report': {
+      id: '/api/machine/wa/runtime/report'
+      path: '/api/machine/wa/runtime/report'
+      fullPath: '/api/machine/wa/runtime/report'
+      preLoaderRoute: typeof ApiMachineWaRuntimeReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/machine/wa/settings/get': {
       id: '/api/machine/wa/settings/get'
       path: '/api/machine/wa/settings/get'
@@ -1189,6 +1230,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminStatsRoute: typeof AuthenticatedAdminStatsRoute
   AuthenticatedAdminStoreRoute: typeof AuthenticatedAdminStoreRoute
+  AuthenticatedAdminWhatsappRoute: typeof AuthenticatedAdminWhatsappRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminInvoiceIdRoute: typeof AuthenticatedAdminInvoiceIdRoute
 }
@@ -1204,6 +1246,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminStatsRoute: AuthenticatedAdminStatsRoute,
   AuthenticatedAdminStoreRoute: AuthenticatedAdminStoreRoute,
+  AuthenticatedAdminWhatsappRoute: AuthenticatedAdminWhatsappRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminInvoiceIdRoute: AuthenticatedAdminInvoiceIdRoute,
 }
@@ -1277,6 +1320,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMachineWaOutboxEnqueueRoute: ApiMachineWaOutboxEnqueueRoute,
   ApiMachineWaProofsAttachRoute: ApiMachineWaProofsAttachRoute,
   ApiMachineWaProofsUploadUrlRoute: ApiMachineWaProofsUploadUrlRoute,
+  ApiMachineWaRuntimeReportRoute: ApiMachineWaRuntimeReportRoute,
   ApiMachineWaSettingsGetRoute: ApiMachineWaSettingsGetRoute,
   ApiMachineWaStateGetRoute: ApiMachineWaStateGetRoute,
   ApiMachineWaStatePutRoute: ApiMachineWaStatePutRoute,

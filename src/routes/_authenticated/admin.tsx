@@ -24,6 +24,7 @@ export function AdminTabs({ current }: { current: string }) {
     { id: "discounts", label: "Discounts", to: "/admin/discounts" },
     { id: "promo", label: "Promo", to: "/admin/promo" },
     { id: "store", label: "Store", to: "/admin/store" },
+    { id: "whatsapp", label: "WhatsApp", to: "/admin/whatsapp" },
     { id: "cabins", label: "Cabins", to: "/admin/cabins" },
     { id: "holidays", label: "Holidays", to: "/admin/holidays" },
     { id: "members", label: "Members", to: "/admin/members" },

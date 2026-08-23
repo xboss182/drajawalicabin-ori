@@ -41,7 +41,11 @@ export class Bridge {
   // Owner-approved payment settings (fetched from Lovable Cloud, cached).
   // Returns { configured, paymentText(lang), qr } where qr is a Buffer.
   async getSettings(force = false) {
-    if (!force && this.settingsCache.value && Date.now() - this.settingsCache.at < SETTINGS_TTL_MS) {
+    if (
+      !force &&
+      this.settingsCache.value &&
+      Date.now() - this.settingsCache.at < SETTINGS_TTL_MS
+    ) {
       return this.settingsCache.value;
     }
     let s = { configured: false, paymentText: () => null, qr: null, qrMime: null };
@@ -55,7 +59,8 @@ export class Bridge {
         }
         s = {
           configured: true,
-          paymentText: (lang) => (lang === "bm" ? res.payment_text_bm : res.payment_text_en) || null,
+          paymentText: (lang) =>
+            (lang === "bm" ? res.payment_text_bm : res.payment_text_en) || null,
           qr,
           qrMime: res.qr_mime,
         };
@@ -84,7 +89,23 @@ export class Bridge {
     }
     if (!event || typeof event !== "object") throw { status: 400, message: "bad payload" };
     if (event.event === "session.status" || event.event === "engine.event") {
-      this.log("system event", event.event, JSON.stringify(event.payload ?? event).slice(0, 300));
+      const payload = event.payload ?? event;
+      const state = String(payload?.status ?? payload?.state ?? "UNKNOWN").slice(0, 40);
+      const session =
+        String(payload?.session ?? event.session ?? this.cfg.wahaSession ?? "").slice(0, 120) ||
+        null;
+      const error =
+        typeof payload?.error === "string"
+          ? payload.error.slice(0, 500)
+          : typeof payload?.lastError === "string"
+            ? payload.lastError.slice(0, 500)
+            : null;
+      if (this.machine.reportRuntime) {
+        await this.machine.reportRuntime({ state, session, error }).catch((cause) => {
+          this.log("runtime report failed", cause?.message ?? cause);
+        });
+      }
+      this.log("system event", event.event, JSON.stringify(payload).slice(0, 300));
       return { handled: true, system: true };
     }
     const msg = normalizeInbound(event.payload ?? event, this.cfg.wahaSession);
@@ -101,12 +122,17 @@ export class Bridge {
       return;
     }
     try {
-      const claimed = await this.machine.claimEvent(msg.messageId ?? `ts-${msg.timestamp}`, msg.chatId, "message", {
-        body: msg.body,
-        hasMedia: msg.hasMedia,
-        media: msg.media ?? null,
-        timestamp: msg.timestamp,
-      });
+      const claimed = await this.machine.claimEvent(
+        msg.messageId ?? `ts-${msg.timestamp}`,
+        msg.chatId,
+        "message",
+        {
+          body: msg.body,
+          hasMedia: msg.hasMedia,
+          media: msg.media ?? null,
+          timestamp: msg.timestamp,
+        },
+      );
       if (!claimed?.ok) {
         this.log("event claim failed, skipping", msg.messageId, claimed);
         return;
@@ -136,6 +162,10 @@ export class Bridge {
       if (!snap?.ok) throw new Error("state get failed");
       const convRow = snap.conversation;
       const draft = snap.draft ?? null;
+      if (convRow?.data && typeof convRow.data === "object" && convRow.data.staffPaused) {
+        this.log("staff takeover active; leaving message for staff", msg.chatId, msg.messageId);
+        return;
+      }
       const convo = convRow
         ? {
             chatId: convRow.chat_id,
@@ -163,7 +193,9 @@ export class Bridge {
         if (eff.op === "send") {
           await this.sendEffect(msg.chatId, eff);
         } else if (eff.op === "agent") {
-          await this.machine.notifyAgent(msg.chatId, eff.note ?? null).catch((e) => this.log("agent email failed", e));
+          await this.machine
+            .notifyAgent(msg.chatId, eff.note ?? null)
+            .catch((e) => this.log("agent email failed", e));
         } else if (eff.op === "prepare") {
           await this.runHoldStep(msg, next, "prepare");
         } else if (eff.op === "claim") {
@@ -219,7 +251,11 @@ export class Bridge {
     const { convo: after, effects } =
       kind === "prepare"
         ? onPrepareResult(convo, res)
-        : onClaimResult(convo, res, settings?.paymentText ? settings.paymentText(convo.lang) : null);
+        : onClaimResult(
+            convo,
+            res,
+            settings?.paymentText ? settings.paymentText(convo.lang) : null,
+          );
 
     if (kind === "claim" && res?.ok && res?.claimed) {
       // Cache the booking reference so the proof-success message can carry it.
@@ -235,7 +271,8 @@ export class Bridge {
       // for 'claim' (payment instructions reference a booking that exists).
     }
     for (const eff of effects) {
-      if (eff.op === "send") await this.sendEffect(msg.chatId, eff).catch((e) => this.log("send failed", e));
+      if (eff.op === "send")
+        await this.sendEffect(msg.chatId, eff).catch((e) => this.log("send failed", e));
     }
   }
 
@@ -243,7 +280,8 @@ export class Bridge {
     const outcome = await this.runProofPipeline(msg, convo);
     const { effects } = proofResult(convo, outcome);
     for (const eff of effects) {
-      if (eff.op === "send") await this.sendEffect(msg.chatId, eff).catch((e) => this.log("send failed", e));
+      if (eff.op === "send")
+        await this.sendEffect(msg.chatId, eff).catch((e) => this.log("send failed", e));
     }
   }
 
@@ -349,8 +387,7 @@ export class Bridge {
       // Success message must carry the booking reference: prefer the live
       // draft, fall back to the reference cached at claim time.
       const snap = await this.machine.getState(msg.chatId).catch(() => null);
-      const ref =
-        snap?.draft?.payment_reference ?? this.draftRefCache?.[msg.chatId] ?? null;
+      const ref = snap?.draft?.payment_reference ?? this.draftRefCache?.[msg.chatId] ?? null;
       return ref ? { kind: "received", ref } : "received";
     }
     return "fetchFailed";
@@ -381,7 +418,9 @@ export class Bridge {
         this.log("outbox sent", row.kind, row.chat_id);
       } catch (e) {
         this.log("outbox send failed", row.kind, e?.message ?? e);
-        await this.machine.outboxAck(row.id, false, { error: (e?.message ?? "send failed").slice(0, 500) }).catch(() => {});
+        await this.machine
+          .outboxAck(row.id, false, { error: (e?.message ?? "send failed").slice(0, 500) })
+          .catch(() => {});
       }
     }
   }

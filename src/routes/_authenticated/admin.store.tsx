@@ -29,21 +29,23 @@ function StoreAdminPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
-  const [phone, setPhone] = useState("60103328747");
-  const [enabled, setEnabled] = useState(true);
+  const [phone, setPhone] = useState("");
+  const [enabled, setEnabled] = useState(false);
 
   async function load() {
-    const { data, error } = await supabase
-      .from("store_items")
-      .select("*")
-      .order("display_order");
+    const { data, error } = await supabase.from("store_items").select("*").order("display_order");
     if (error) return setErr(error.message);
-    setRows(((data ?? []) as any[]).map((r) => ({ ...r, price: Number(r.price) })));
+    setRows(
+      ((data ?? []) as Row[]).map((row) => ({
+        ...row,
+        price: Number(row.price),
+      })),
+    );
 
     const { data: s } = await supabase
       .from("app_settings")
       .select("value")
-      .eq("key", "whatsapp_store")
+      .eq("key", "whatsapp_booking")
       .maybeSingle();
     const cfg = (s?.value ?? {}) as Record<string, unknown>;
     if (typeof cfg.phone === "string" && cfg.phone) setPhone(cfg.phone);
@@ -60,9 +62,16 @@ function StoreAdminPage() {
 
   async function saveConfig() {
     const digits = phone.replace(/\D/g, "");
+    if (enabled && (digits.length < 8 || digits.length > 15)) {
+      setErr("Enter a valid dedicated WhatsApp number before enabling booking.");
+      return;
+    }
     const { error } = await supabase
       .from("app_settings")
-      .upsert({ key: "whatsapp_store", value: { phone: digits, enabled } }, { onConflict: "key" });
+      .upsert(
+        { key: "whatsapp_booking", value: { phone: digits, enabled } },
+        { onConflict: "key" },
+      );
     if (error) return setErr(error.message);
     setPhone(digits);
     flash("Saved");
@@ -127,12 +136,16 @@ function StoreAdminPage() {
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="60103328747"
+                placeholder="Country code and phone number"
                 className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               />
             </label>
             <label className="mt-5 flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={enabled}
+                onChange={(e) => setEnabled(e.target.checked)}
+              />
               Store is open
             </label>
           </div>
@@ -162,7 +175,9 @@ function StoreAdminPage() {
             <li key={r.id} className="rounded-xl border border-border bg-card p-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
-                  <span className="block text-[10px] uppercase tracking-widest text-stone">Name (EN)</span>
+                  <span className="block text-[10px] uppercase tracking-widest text-stone">
+                    Name (EN)
+                  </span>
                   <input
                     value={r.name_en}
                     onChange={(e) => updateItem(r.id, { name_en: e.target.value })}
@@ -170,7 +185,9 @@ function StoreAdminPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="block text-[10px] uppercase tracking-widest text-stone">Name (BM)</span>
+                  <span className="block text-[10px] uppercase tracking-widest text-stone">
+                    Name (BM)
+                  </span>
                   <input
                     value={r.name_bm}
                     onChange={(e) => updateItem(r.id, { name_bm: e.target.value })}
@@ -178,7 +195,9 @@ function StoreAdminPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="block text-[10px] uppercase tracking-widest text-stone">Description (EN)</span>
+                  <span className="block text-[10px] uppercase tracking-widest text-stone">
+                    Description (EN)
+                  </span>
                   <input
                     value={r.description_en ?? ""}
                     onChange={(e) => updateItem(r.id, { description_en: e.target.value })}
@@ -186,7 +205,9 @@ function StoreAdminPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="block text-[10px] uppercase tracking-widest text-stone">Description (BM)</span>
+                  <span className="block text-[10px] uppercase tracking-widest text-stone">
+                    Description (BM)
+                  </span>
                   <input
                     value={r.description_bm ?? ""}
                     onChange={(e) => updateItem(r.id, { description_bm: e.target.value })}
@@ -194,7 +215,9 @@ function StoreAdminPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="block text-[10px] uppercase tracking-widest text-stone">Price (RM)</span>
+                  <span className="block text-[10px] uppercase tracking-widest text-stone">
+                    Price (RM)
+                  </span>
                   <input
                     type="number"
                     value={r.price}
@@ -203,7 +226,9 @@ function StoreAdminPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="block text-[10px] uppercase tracking-widest text-stone">Unit</span>
+                  <span className="block text-[10px] uppercase tracking-widest text-stone">
+                    Unit
+                  </span>
                   <select
                     value={r.unit}
                     onChange={(e) => updateItem(r.id, { unit: e.target.value })}
@@ -217,7 +242,9 @@ function StoreAdminPage() {
                   </select>
                 </label>
                 <label className="block">
-                  <span className="block text-[10px] uppercase tracking-widest text-stone">Image URL (optional)</span>
+                  <span className="block text-[10px] uppercase tracking-widest text-stone">
+                    Image URL (optional)
+                  </span>
                   <input
                     value={r.image_url ?? ""}
                     onChange={(e) => updateItem(r.id, { image_url: e.target.value })}
@@ -225,11 +252,15 @@ function StoreAdminPage() {
                   />
                 </label>
                 <label className="block">
-                  <span className="block text-[10px] uppercase tracking-widest text-stone">Sort order</span>
+                  <span className="block text-[10px] uppercase tracking-widest text-stone">
+                    Sort order
+                  </span>
                   <input
                     type="number"
                     value={r.display_order}
-                    onChange={(e) => updateItem(r.id, { display_order: Number(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      updateItem(r.id, { display_order: Number(e.target.value) || 0 })
+                    }
                     className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
                   />
                 </label>
@@ -243,7 +274,10 @@ function StoreAdminPage() {
                   />
                   In stock / visible
                 </label>
-                <button onClick={() => removeItem(r.id)} className="text-xs uppercase tracking-widest text-red-700">
+                <button
+                  onClick={() => removeItem(r.id)}
+                  className="text-xs uppercase tracking-widest text-red-700"
+                >
                   Delete
                 </button>
               </div>

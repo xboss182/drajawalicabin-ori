@@ -4,12 +4,48 @@
 // single source of truth for valid transitions, so invalid/out-of-order
 // inputs can never mutate booking state.
 
-import { CABIN_TYPES, MENU_RE, AGENT_RE, GREETING_RE, STATUS_RE, copy, drawMenu, summaryText, instructionsText } from "./copy.js";
+import {
+  CABIN_TYPES,
+  MENU_RE,
+  AGENT_RE,
+  GREETING_RE,
+  STATUS_RE,
+  copy,
+  drawMenu,
+  summaryText,
+  instructionsText,
+} from "./copy.js";
 
 const MONTHS = {
-  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
-  januari: 1, februari: 2, mac: 3, april: 4, mei: 5, jun: 6, julai: 7,
-  ogos: 8, ogo: 8, september: 9, sept: 9, oktober: 10, okt: 10, november: 11, nov: 11, disember: 12, dis: 12,
+  jan: 1,
+  feb: 2,
+  mar: 3,
+  apr: 4,
+  may: 5,
+  jun: 6,
+  jul: 7,
+  aug: 8,
+  sep: 9,
+  oct: 10,
+  nov: 11,
+  dec: 12,
+  januari: 1,
+  februari: 2,
+  mac: 3,
+  april: 4,
+  mei: 5,
+  jun: 6,
+  julai: 7,
+  ogos: 8,
+  ogo: 8,
+  september: 9,
+  sept: 9,
+  oktober: 10,
+  okt: 10,
+  november: 11,
+  nov: 11,
+  disember: 12,
+  dis: 12,
 };
 
 const MAX_NIGHTS = 28;
@@ -116,14 +152,18 @@ export function todayIso() {
 }
 
 export function parseGuests(text) {
-  const m = String(text ?? "").trim().match(/^(\d{1,2})$/);
+  const m = String(text ?? "")
+    .trim()
+    .match(/^(\d{1,2})$/);
   if (!m) return null;
   const n = Number(m[1]);
   return n >= 1 && n <= 12 ? n : null;
 }
 
 export function parseRoomChoice(text) {
-  const t = String(text ?? "").trim().toLowerCase();
+  const t = String(text ?? "")
+    .trim()
+    .toLowerCase();
   const found = CABIN_TYPES.find(
     (c) => t === c.n || t.startsWith(c.label.toLowerCase()) || t.includes(c.label.toLowerCase()),
   );
@@ -131,7 +171,9 @@ export function parseRoomChoice(text) {
 }
 
 export function parseComforter(text) {
-  const t = String(text ?? "").trim().toLowerCase();
+  const t = String(text ?? "")
+    .trim()
+    .toLowerCase();
   if (["1", "y", "yes", "ya", "yeah", "nak", "ok", "okay"].includes(t)) return true;
   if (["2", "n", "no", "tidak", "tak", "x"].includes(t)) return false;
   return null;
@@ -223,8 +265,13 @@ export function freshConversation(chatId) {
 // ---------------------------------------------------------------------------
 export function transition(convo, msg, { draft = null } = {}) {
   const effects = [];
-  const send = (text, imagePath) => effects.push(imagePath ? { op: "send", text, image: imagePath } : { op: "send", text });
+  const send = (text, imagePath) =>
+    effects.push(imagePath ? { op: "send", text, image: imagePath } : { op: "send", text });
   const lang = convo.lang;
+
+  // Staff controls own the conversation until an authorized resume clears the
+  // flag. This guard intentionally precedes global commands such as "menu".
+  if (convo.data?.staffPaused) return { convo, effects };
 
   // Flag the failure state and hand off after 3 bad inputs in a row.
   function fail(nextState, hintState) {
@@ -424,9 +471,10 @@ export function transition(convo, msg, { draft = null } = {}) {
         return { convo, effects };
       }
       if (body && STATUS_RE.test(body) && body.split(/\s+/).length <= 3) {
-        const live = draft?.status === "awaiting_review"
-          ? `Your booking ${draft.payment_reference ?? ""} is being reviewed by our staff. I'll message you as soon as there's an update.`
-          : `Booking ${draft?.payment_reference ?? ""} is waiting for payment proof. Send a photo of the receipt here.`;
+        const live =
+          draft?.status === "awaiting_review"
+            ? `Your booking ${draft.payment_reference ?? ""} is being reviewed by our staff. I'll message you as soon as there's an update.`
+            : `Booking ${draft?.payment_reference ?? ""} is waiting for payment proof. Send a photo of the receipt here.`;
         convo.failureCount = 0;
         send(live);
         return { convo, effects };
@@ -448,7 +496,8 @@ export function transition(convo, msg, { draft = null } = {}) {
 // Called by the bridge once machine.prepareHold resolves.
 export function onPrepareResult(convo, res) {
   const effects = [];
-  const send = (text, imagePath) => effects.push(imagePath ? { op: "send", text, image: imagePath } : { op: "send", text });
+  const send = (text, imagePath) =>
+    effects.push(imagePath ? { op: "send", text, image: imagePath } : { op: "send", text });
   if (convo.state !== STATES.SUMMARY) return { convo, effects };
 
   if (!res.ok) {
@@ -491,7 +540,8 @@ export function onPrepareResult(convo, res) {
 // Called by the bridge once machine.claimHold resolves.
 export function onClaimResult(convo, res, paymentText = null) {
   const effects = [];
-  const send = (text, imagePath) => effects.push(imagePath ? { op: "send", text, image: imagePath } : { op: "send", text });
+  const send = (text, imagePath) =>
+    effects.push(imagePath ? { op: "send", text, image: imagePath } : { op: "send", text });
   if (convo.state !== STATES.SUMMARY) return { convo, effects };
 
   if (!res.ok) {
@@ -540,7 +590,17 @@ export function proofResult(convo, outcome) {
   const ref = o.ref ?? convo.data.booking?.reference ?? "";
   if (o.kind === "duplicate") send(copy(lang, "proofAlready", ref));
   else if (o.kind === "received") send(copy(lang, "proofReceived", ref));
-  else send(copy(lang, o.kind === "tooLarge" ? "proofTooLarge" : o.kind === "badType" ? "proofBadType" : "proofFetchFailed"));
+  else
+    send(
+      copy(
+        lang,
+        o.kind === "tooLarge"
+          ? "proofTooLarge"
+          : o.kind === "badType"
+            ? "proofBadType"
+            : "proofFetchFailed",
+      ),
+    );
   return { convo, effects };
 }
 

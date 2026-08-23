@@ -804,6 +804,44 @@ export type Database = {
         }
         Relationships: []
       }
+      wa_admin_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          booking_group_id: string | null
+          chat_id: string | null
+          created_at: string
+          detail: Json
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          booking_group_id?: string | null
+          chat_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          booking_group_id?: string | null
+          chat_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_admin_audit_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wa_conversations: {
         Row: {
           booking_group_id: string | null
@@ -979,6 +1017,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wa_runtime_status: {
+        Row: {
+          id: boolean
+          last_error: string | null
+          observed_at: string
+          session: string | null
+          state: string
+        }
+        Insert: {
+          id?: boolean
+          last_error?: string | null
+          observed_at?: string
+          session?: string | null
+          state: string
+        }
+        Update: {
+          id?: boolean
+          last_error?: string | null
+          observed_at?: string
+          session?: string | null
+          state?: string
+        }
+        Relationships: []
       }
       wa_settings: {
         Row: {
