@@ -57,6 +57,14 @@ export function runtimeStatus(state: string | null | undefined) {
 
 export type HandoffAction = "pause" | "takeover" | "resume";
 
+export function isHandoffConversation(
+  state: string | null | undefined,
+  staffPaused: boolean,
+  failureCount: number,
+) {
+  return String(state ?? "").toUpperCase() === "AGENT" || staffPaused || failureCount > 0;
+}
+
 export function handoffActions(staffPaused: boolean): HandoffAction[] {
   return staffPaused ? ["resume"] : ["pause", "takeover"];
 }

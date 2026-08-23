@@ -8,7 +8,13 @@ import {
   waAdminBookingAction,
   waAdminConversationAction,
 } from "@/lib/wa-admin.functions";
-import { bookingStatus, handoffActions, holdStatus, runtimeStatus } from "@/lib/whatsapp-ui";
+import {
+  bookingStatus,
+  handoffActions,
+  holdStatus,
+  isHandoffConversation,
+  runtimeStatus,
+} from "@/lib/whatsapp-ui";
 
 import { AdminTabs } from "./admin";
 
@@ -102,8 +108,9 @@ function WhatsAppOperationsPage() {
       holds: rows.filter((booking) => booking.status === "pending_payment").length,
       expired: rows.filter((booking) => booking.status === "expired").length,
       failed: (dashboard?.outbox ?? []).filter((row) => row.status === "failed").length,
-      handoffs: (dashboard?.conversations ?? []).filter((conversation) => conversation.paused)
-        .length,
+      handoffs: (dashboard?.conversations ?? []).filter((conversation) =>
+        isHandoffConversation(conversation.state, conversation.paused, conversation.failureCount),
+      ).length,
     };
   }, [dashboard]);
 
@@ -311,9 +318,9 @@ function ConversationQueue({
 }) {
   const [working, setWorking] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const rows = dashboard.conversations
-    .filter((row) => row.paused || row.failureCount > 0)
-    .slice(0, 8);
+  const rows = dashboard.conversations.filter((row) =>
+    isHandoffConversation(row.state, row.paused, row.failureCount),
+  );
 
   async function run(chatId: string, action: "pause" | "takeover" | "resume") {
     setWorking(`${chatId}-${action}`);
