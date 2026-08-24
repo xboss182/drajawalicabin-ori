@@ -1,6 +1,8 @@
-export function whatsappBookingHref(value: unknown): string | null {
+export function whatsappBookingHref(value: unknown, message = "Book"): string | null {
   const phone = String(value ?? "").replace(/\D/g, "");
-  return phone.length >= 8 && phone.length <= 15 ? `https://wa.me/${phone}?text=Book` : null;
+  return phone.length >= 8 && phone.length <= 15
+    ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+    : null;
 }
 
 export function bookingStatus(status: string | null | undefined) {

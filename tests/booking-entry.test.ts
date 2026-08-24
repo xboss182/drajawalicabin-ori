@@ -14,6 +14,8 @@ test("web booking keeps its checkout flow and adds WhatsApp", async () => {
   assert.match(book, /\battachPaymentProof\b/);
   assert.match(book, /type Step = "details" \| "payment" \| "done"/);
   assert.match(book, /<BookInWhatsAppLink\b/);
+  assert.match(book, /<BookInWhatsAppLink\s+message=/);
+  assert.doesNotMatch(book, /wa\.me\/601155007204/);
 });
 
 test("home search opens web booking while WhatsApp remains separate", async () => {

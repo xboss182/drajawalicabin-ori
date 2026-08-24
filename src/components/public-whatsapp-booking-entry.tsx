@@ -47,24 +47,26 @@ export function PublicWhatsAppBookingEntry({ title = "Book in WhatsApp" }: { tit
   );
 }
 
-function useWhatsappBookingHref() {
+function useWhatsappBookingHref(message = "Book") {
   const { data } = useQuery({
     queryKey: ["whatsapp-booking-entry"],
     queryFn: () => getWhatsappBookingEntry(),
     staleTime: 60_000,
   });
 
-  return data?.enabled ? whatsappBookingHref(data.phone) : null;
+  return data?.enabled ? whatsappBookingHref(data.phone, message) : null;
 }
 
 export function BookInWhatsAppLink({
   children,
   className,
+  message,
 }: {
   children: ReactNode;
   className?: string;
+  message?: string;
 }) {
-  const href = useWhatsappBookingHref();
+  const href = useWhatsappBookingHref(message);
   const linkClassName = `${className ?? ""} focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest`;
 
   if (!href) {

@@ -1865,18 +1865,12 @@ function DoneStep({
       </div>
 
       <div className="mt-8 flex flex-wrap justify-center gap-4">
-        <a
-          href={`https://wa.me/601155007204?text=${encodeURIComponent(
-            bt.done.whatsappText.replace("{ref}", reference).replace("{name}", name),
-          )}${encodeURIComponent(
-            `\n\nMy booking link: https://drajawalicabin.com/manage-booking?id=${bookingId}&token=${guestToken}`,
-          )}`}
-          target="_blank"
-          rel="noreferrer"
+        <BookInWhatsAppLink
+          message={`${bt.done.whatsappText.replace("{ref}", reference).replace("{name}", name)}\n\nMy booking link: https://drajawalicabin.com/manage-booking?id=${bookingId}&token=${guestToken}`}
           className="rounded-full border border-border px-7 py-3.5 text-sm"
         >
           {bt.done.whatsappCta}
-        </a>
+        </BookInWhatsAppLink>
         <Link to="/" className="rounded-full border border-border px-7 py-3.5 text-sm">
           {bt.done.backHome}
         </Link>
