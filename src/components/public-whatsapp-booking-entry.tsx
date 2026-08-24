@@ -69,7 +69,7 @@ export function BookInWhatsAppLink({
 
   if (!href) {
     return (
-      <Link to="/book" className={linkClassName}>
+      <Link to="/whatsapp-store" className={linkClassName}>
         {children}
       </Link>
     );
