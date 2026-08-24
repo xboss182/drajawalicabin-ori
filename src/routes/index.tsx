@@ -1,6 +1,17 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { MessageCircle, Sparkles } from "lucide-react";
+import { CalendarIcon, Users, BedDouble, Search, MessageCircle } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import type { DateRange } from "react-day-picker";
 import heroRiverside from "@/assets/hero-riverside.jpg";
 import cabinsExterior from "@/assets/cabins-exterior.jpg";
 import cabinQueen from "@/assets/cabin-queen.jpg";
@@ -16,9 +27,10 @@ import toilet4paxAsset from "@/assets/toilet-4pax.png.asset.json";
 import galleryPool from "@/assets/gallery/pool-01.jpg.asset.json";
 import galleryBbq from "@/assets/gallery/bbq-pavilion-01.jpg.asset.json";
 import { LanguageToggle, useLanguage } from "@/lib/i18n";
+import { Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { BookInWhatsAppLink } from "@/components/public-whatsapp-booking-entry";
 import { getHeroPromoCta } from "@/lib/promo-cta.functions";
+import { BookInWhatsAppLink } from "@/components/public-whatsapp-booking-entry";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -146,7 +158,7 @@ export const Route = createFileRoute("/")({
               name: "How do I book a cabin?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Start a booking in our official WhatsApp chat. Choose your dates, cabin and payment steps there with our booking assistant. A refundable RM50 security deposit applies per room, and the full room rate is due at least 7 days before check-in.",
+                text: "Check available dates on our website and complete the booking online. Bookings are secured with a refundable RM50 security deposit per room (not part of the room rate, refunded after check-out subject to room inspection). The full room rate must be settled at least 7 days before check-in. Cancellations within 7 days of check-in are strictly non-refundable.",
               },
             },
             {
@@ -186,10 +198,10 @@ const nearbyImages = [nearbyMosqueAsset.url, nearbyBeachAsset.url, nearbyCraftAs
 
 function Index() {
   return (
-    <main className="relative bg-background pb-16 text-foreground md:pb-0">
+    <main className="relative bg-background text-foreground">
       <Nav />
       <Hero />
-      <ChatBookingEntry />
+      <AvailabilitySearch />
       <About />
       <Accommodation />
       <WhyStay />
@@ -353,24 +365,242 @@ function Hero() {
   );
 }
 
-/* ---------------- Chat-native booking ---------------- */
-function ChatBookingEntry() {
+/* ---------------- Availability ---------------- */
+function AvailabilitySearch() {
+  const { t, lang } = useLanguage();
+  const { data: promo } = useQuery({
+    queryKey: ["hero-promo-cta"],
+    queryFn: () => getHeroPromoCta(),
+    staleTime: 60_000,
+  });
+  const activePromo = promo?.items.find((i) => i.enabled) ?? null;
+  const promoText = activePromo
+    ? lang === "bm"
+      ? activePromo.text_bm
+      : activePromo.text_en
+    : null;
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(todayDate);
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+
+  const [range, setRange] = useState<DateRange | undefined>({
+    from: todayDate,
+    to: tomorrowDate,
+  });
+  const [guests, setGuests] = useState("2");
+  const [room, setRoom] = useState(t.search.anyCabin);
+  const [openCal, setOpenCal] = useState(false);
+  const navigate = useNavigate();
+
+  const fmtISO = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const nights =
+    range?.from && range?.to
+      ? Math.max(1, Math.round((range.to.getTime() - range.from.getTime()) / 86400000))
+      : 0;
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!range?.from || !range?.to) return;
+    navigate({
+      to: "/book",
+      search: {
+        checkin: fmtISO(range.from),
+        checkout: fmtISO(range.to),
+        guests,
+        room,
+      },
+    });
+  }
+
+  const isSameDate = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  const handleRangeSelect = (newRange: DateRange | undefined) => {
+    if (!newRange?.from) {
+      setRange(newRange);
+      return;
+    }
+
+    // Determine which date the user actually clicked by comparing with the current range.
+    const clickedDate = (() => {
+      if (!range?.from) return newRange.from;
+      const oldDates = [range.from];
+      if (range.to) oldDates.push(range.to);
+      const newDates = [newRange.from];
+      if (newRange.to) newDates.push(newRange.to);
+      for (const d of newDates) {
+        if (!oldDates.some((od) => isSameDate(od, d))) return d;
+      }
+      return newRange.from;
+    })();
+
+    // No existing range or a complete range: start a new selection from the clicked date.
+    if (!range?.from || (range.from && range.to)) {
+      setRange({ from: clickedDate, to: undefined });
+      return;
+    }
+
+    // Partial range (from set, to unset)
+    if (isSameDate(clickedDate, range.from) || clickedDate < range.from) {
+      setRange({ from: clickedDate, to: undefined });
+      return;
+    }
+
+    setRange({ from: range.from, to: clickedDate });
+    setOpenCal(false);
+  };
+
   return (
     <section id="book" className="relative z-20 -mt-24 px-4 sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-6xl rounded-3xl border border-border/60 bg-card px-6 py-8 text-center shadow-2xl shadow-forest/25 sm:px-10 sm:py-10">
-        <p className="text-[11px] uppercase tracking-[0.3em] text-stone">Chat-native booking</p>
-        <h2 className="mt-2 text-balance font-display text-3xl text-forest sm:text-4xl">
-          Book in WhatsApp
-        </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-sm text-foreground/75">
-          Choose your dates, guests, cabin, add-ons and payment steps privately in WhatsApp. No
-          booking selections are collected on this website.
+      <form
+        onSubmit={submit}
+        className="mx-auto flex max-w-6xl flex-col overflow-hidden rounded-3xl border border-border/60 bg-card shadow-2xl shadow-forest/25 lg:flex-row lg:items-stretch"
+      >
+        {/* Dates - wider */}
+        <Popover open={openCal} onOpenChange={setOpenCal}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="group flex flex-[1.6] min-w-0 items-center gap-4 px-5 py-3 text-left transition hover:bg-muted/40 lg:px-7 lg:py-4"
+            >
+              <CalendarIcon className="h-5 w-5 shrink-0 text-forest" />
+              <DateCell label={t.search.checkin} date={range?.from} />
+              <div className="hidden flex-col items-center px-2 text-stone sm:flex">
+                <span className="text-[10px] uppercase tracking-[0.2em]">
+                  {nights} {nights === 1 ? "night" : "nights"}
+                </span>
+                <div className="mt-1 h-px w-8 bg-border" />
+              </div>
+              <DateCell label={t.search.checkout} date={range?.to} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="pointer-events-auto w-auto p-0">
+            <Calendar
+              mode="range"
+              selected={range}
+              onSelect={handleRangeSelect}
+              numberOfMonths={2}
+              disabled={{ before: todayDate }}
+              defaultMonth={range?.from ?? todayDate}
+              initialFocus
+              className="p-3 pointer-events-auto"
+            />
+          </PopoverContent>
+        </Popover>
+
+        <div className="h-px w-full bg-border lg:h-auto lg:w-px" />
+
+        {/* Guests - narrower */}
+        <div className="flex flex-[0.6] min-w-0 items-center gap-4 px-5 py-3 lg:px-6 lg:py-4">
+          <Users className="h-5 w-5 shrink-0 text-forest" />
+          <div className="flex flex-1 min-w-0 flex-col gap-0.5">
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
+              {t.search.guests}
+            </span>
+            <Select value={guests} onValueChange={setGuests}>
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-base font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 [&>span]:truncate">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {["1", "2", "3", "4", "5", "6+"].map((o) => (
+                  <SelectItem key={o} value={o}>
+                    {o} {t.search.guests.toLowerCase()}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="h-px w-full bg-border lg:h-auto lg:w-px" />
+
+        {/* Room type - narrower */}
+        <div className="flex flex-[0.8] min-w-0 items-center gap-4 px-5 py-3 lg:px-6 lg:py-4">
+          <BedDouble className="h-5 w-5 shrink-0 text-forest" />
+          <div className="flex flex-1 min-w-0 flex-col gap-0.5">
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">
+              {t.search.room}
+            </span>
+            <Select value={room} onValueChange={setRoom}>
+              <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-base font-semibold text-foreground shadow-none hover:bg-transparent focus:ring-0 [&>span]:truncate">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[
+                  { value: t.search.anyCabin, label: t.search.anyCabin },
+                  { value: "Queen", label: "Queen Room" },
+                  { value: "Twin", label: "Twin Room" },
+                  { value: "Family", label: "Family Room" },
+                  { value: "Triple", label: "Triple Room" },
+                ].map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className={cn(
+            "flex items-center justify-center gap-2 bg-forest px-8 py-4 text-base font-semibold text-coconut transition hover:bg-forest/90",
+            "lg:m-2 lg:rounded-2xl lg:px-10",
+          )}
+        >
+          <Search className="h-5 w-5" />
+          {t.search.submit}
+        </button>
+      </form>
+      <p className="mx-auto mt-3 max-w-3xl text-center text-xs text-foreground/70 sm:text-sm">
+        {t.search.note}
+      </p>
+      {promoText && (
+        <p className="mx-auto mt-2 hidden max-w-3xl items-center justify-center gap-1.5 text-center text-[11px] font-medium text-forest sm:flex sm:text-xs">
+          <span aria-hidden>✦</span>
+          {promoText}
         </p>
-        <BookInWhatsAppLink className="mt-6 inline-flex rounded-full bg-forest px-7 py-3.5 text-sm font-medium text-coconut transition hover:bg-forest/90">
-          Book in WhatsApp
-        </BookInWhatsAppLink>
-      </div>
+      )}
+      <p className="mx-auto mt-1.5 hidden max-w-3xl text-center text-[11px] text-foreground/60 sm:block sm:text-xs">
+        {t.search.childNote}
+      </p>
     </section>
+  );
+}
+
+function DateCell({ label, date }: { label: string; date?: Date }) {
+  return (
+    <div className="flex flex-1 min-w-0 flex-col gap-0">
+      <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-stone">{label}</span>
+      {date ? (
+        <div className="flex items-baseline gap-2">
+          <span className="font-display text-xl font-semibold leading-none text-foreground">
+            {date.getDate()}
+          </span>
+          <span className="text-sm text-foreground/80">
+            {date.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+          </span>
+        </div>
+      ) : (
+        <span className="text-base text-stone">Select date</span>
+      )}
+      {date && (
+        <span className="text-xs text-stone">
+          {date.toLocaleDateString("en-US", { weekday: "long" })}
+        </span>
+      )}
+    </div>
   );
 }
 

@@ -25,6 +25,13 @@ test("WhatsApp entry uses a configured number and the minimal Book message", () 
   assert.equal(whatsappBookingHref("123"), null);
 });
 
+test("WhatsApp entry preserves a supplied booking follow-up message", () => {
+  assert.equal(
+    whatsappBookingHref("+60 12 345 6789", "Hi Aina — booking RJW-1234"),
+    "https://wa.me/60123456789?text=Hi%20Aina%20%E2%80%94%20booking%20RJW-1234",
+  );
+});
+
 test("booking and runtime states have explicit text labels", () => {
   assert.deepEqual(bookingStatus("awaiting_review"), {
     label: "Proof awaiting review",
