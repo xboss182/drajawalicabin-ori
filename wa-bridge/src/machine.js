@@ -65,6 +65,10 @@ export class MachineClient {
     return this.call("/api/machine/wa/events/complete", { event_id: eventId });
   }
 
+  releaseEvent(eventId) {
+    return this.call("/api/machine/wa/events/complete", { event_id: eventId, release: true });
+  }
+
   getSettings() {
     return this.call("/api/machine/wa/settings/get", {});
   }

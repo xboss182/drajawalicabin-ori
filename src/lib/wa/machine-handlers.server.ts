@@ -184,8 +184,11 @@ export async function handleEventsClaim(req: Request): Promise<Response> {
       const processed = rows?.processed_at ?? null;
       const staleMs = rows ? Date.now() - Date.parse(rows.received_at) : 0;
       const RECLAIM_MS = 10 * 60 * 1000; // > worst-case bridge processing
-      if (processed || staleMs < RECLAIM_MS) {
+      if (processed) {
         return json({ ok: true, claimed: false, duplicate: true });
+      }
+      if (staleMs < RECLAIM_MS) {
+        return json({ ok: true, claimed: false, duplicate: true, pending: true });
       }
       // Re-claim a stranded event: refresh received_at so the window restarts.
       const { error: updErr } = await admin
@@ -206,10 +209,24 @@ export async function handleEventsComplete(req: Request): Promise<Response> {
   if (!auth.ok) return auth.response;
   const { body, err } = await readBody(req);
   if (err) return err;
-  const parsed = z.object({ event_id: z.string().trim().min(8).max(64) }).safeParse(body);
+  const parsed = z
+    .object({
+      event_id: z.string().trim().min(8).max(64),
+      release: z.boolean().default(false),
+    })
+    .safeParse(body);
   if (!parsed.success) return json({ ok: false, error: "invalid" }, 400);
 
   const admin = await adminClient();
+  if (parsed.data.release) {
+    const { error } = await admin
+      .from("wa_events")
+      .update({ received_at: new Date(0).toISOString() })
+      .eq("event_id", parsed.data.event_id)
+      .is("processed_at", null);
+    if (error) return json({ ok: false, error: error.message }, 500);
+    return json({ ok: true, released: true });
+  }
   const { error } = await admin
     .from("wa_events")
     .update({ processed_at: new Date().toISOString() })

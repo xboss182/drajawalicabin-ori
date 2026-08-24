@@ -40,27 +40,25 @@ export class WahaClient {
     return await res.json().catch(() => ({}));
   }
 
-  async sendText(chatId, text) {
+  async sendText(chatId, text, id = null) {
     return this._post("/api/sendText", {
       session: this.cfg.wahaSession,
       chatId,
       text,
+      ...(id ? { id } : {}),
     });
   }
 
   // Sends an image from a buffer (payment QR, etc). Uses multipart so the
   // bridge container does not need a shared volume with the WAHA container.
-  async sendImage(chatId, buffer, mime, filename, caption = "") {
+  async sendImage(chatId, buffer, mime, filename, caption = "", id = null) {
     await this._pace();
     const form = new FormData();
     form.append("session", this.cfg.wahaSession);
     form.append("chatId", chatId);
     form.append("caption", caption);
-    form.append(
-      "file",
-      new Blob([buffer], { type: mime || "image/png" }),
-      filename,
-    );
+    if (id) form.append("id", id);
+    form.append("file", new Blob([buffer], { type: mime || "image/png" }), filename);
     const res = await this.fetchImpl(`${this.cfg.wahaUrl}/api/sendImage`, {
       method: "POST",
       headers: { "X-Api-Key": this.cfg.wahaApiKey },

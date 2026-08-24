@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { Bridge } from "../src/runner.js";
+import { WahaClient } from "../src/waha.js";
 
 const CHAT = "601155007204@s.whatsapp.net";
 
@@ -33,6 +34,7 @@ function makeMocks() {
     enqueues: [],
     order: [],
     completes: [],
+    releases: [],
   };
   const machine = {
     claimEvent: async (eventId, chatId, type, payload) => {
@@ -43,6 +45,10 @@ function makeMocks() {
       calls.order.push("completeEvent");
       calls.completes.push(eventId);
       return { ok: true };
+    },
+    releaseEvent: async (eventId) => {
+      calls.releases.push(eventId);
+      return { ok: true, released: true };
     },
     getSettings: async () => ({ ok: true, configured: false }),
     getState: async () => ({ ok: true, conversation: null, draft: null }),
@@ -95,14 +101,14 @@ function makeMocks() {
     notifyAgent: async () => ({ ok: true }),
   };
   const waha = {
-    sendText: async (chatId, text) => {
+    sendText: async (chatId, text, id) => {
       calls.order.push("send");
-      calls.sends.push({ type: "text", chatId, text });
+      calls.sends.push({ type: "text", chatId, text, id });
       return { id: "wa-1", chatId };
     },
-    sendImage: async (chatId, buf, mime, filename, caption) => {
+    sendImage: async (chatId, buf, mime, filename, caption, id) => {
       calls.order.push("send");
-      calls.sends.push({ type: "image", chatId, mime, filename, caption, bytes: buf.length });
+      calls.sends.push({ type: "image", chatId, mime, filename, caption, id, bytes: buf.length });
       return { id: "wa-2", chatId };
     },
     downloadMedia: async (url) => ({
@@ -126,6 +132,27 @@ function sign(body, secret = "bebek-hmac") {
   return createHmac("sha256", secret).update(body).digest("hex");
 }
 
+function summaryConversation() {
+  return {
+    chatId: CHAT,
+    state: "SUMMARY",
+    data: {
+      checkIn: "2026-09-01",
+      checkOut: "2026-09-03",
+      guests: 2,
+      comforter: false,
+      cabinType: "Queen",
+      guestName: "Ali",
+      phone: "601155007204",
+      prepared: { cabinId: "c-1", subtotal: 160, comforterTotal: 0 },
+    },
+    lang: "en",
+    failureCount: 0,
+    bookingGroupId: null,
+    version: 3,
+  };
+}
+
 test("bad HMAC on webhook is rejected with 401", async () => {
   const { machine, waha } = makeMocks();
   const bridge = new Bridge(cfg(), { machine, waha });
@@ -145,6 +172,7 @@ test("greeting produces a menu text reply and persists state", async () => {
   const textSends = calls.sends.filter((s) => s.type === "text");
   assert.ok(textSends.length >= 1);
   assert.match(textSends[0].text, /Book a cabin|Tempah kabin/);
+  assert.match(textSends[0].id, /^3EB0[0-9A-F]{16}$/, "conversation replies use a stable id");
   const saved = calls.state[calls.state.length - 1];
   assert.equal(saved.state, "MENU");
   assert.equal(saved.version, 0);
@@ -158,6 +186,27 @@ test("replayed webhook (duplicate event id) does zero work", async () => {
   await bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) });
   assert.equal(calls.sends.length, 0);
   assert.equal(calls.state.length, 0);
+});
+
+test("an accepted but unfinished duplicate keeps the webhook retryable", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.claimEvent = async () => ({
+    ok: true,
+    claimed: false,
+    duplicate: true,
+    pending: true,
+  });
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("1");
+
+  await assert.rejects(
+    () => bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) }),
+    /pending retry/,
+  );
+
+  assert.equal(calls.sends.length, 0);
+  assert.equal(calls.state.length, 0);
+  assert.equal(calls.completes.length, 0);
 });
 
 test("staff-paused conversations do not resume from a customer menu message", async () => {
@@ -239,6 +288,84 @@ test("outbox poll sends rows and acks successes and failures", async () => {
   assert.equal(ackOk.length, 2);
   assert.equal(ackFail.length, 2);
   assert.equal(calls.sends.length, 2); // only the second round actually delivered
+});
+
+test("stale staff-decision reclaim reuses one WAHA message id", async () => {
+  const { calls, machine, waha } = makeMocks();
+  const row = {
+    id: "22222222-0000-4000-8000-000000000001",
+    chat_id: CHAT,
+    kind: "staff-confirmed",
+    payload: {
+      reference: "RJW-2",
+      room_type: "Queen",
+      check_in: "x",
+      check_out: "y",
+      total_amount: 10,
+      deposit_amount: 50,
+    },
+  };
+  let claims = 0;
+  machine.outboxClaim = async () => ({
+    ok: true,
+    rows: claims++ < 2 ? [{ ...row, attempts: claims }] : [],
+  });
+  let ackCalls = 0;
+  machine.outboxAck = async (id, ok, extra) => {
+    calls.acks.push({ id, ok, extra });
+    if (ackCalls++ === 0) throw new Error("ack response lost");
+    return { ok: true };
+  };
+  const sendIds = [];
+  const deliveredIds = new Set();
+  let customerDeliveries = 0;
+  waha.sendText = async (_chatId, _text, id) => {
+    sendIds.push(id);
+    if (!id || !deliveredIds.has(id)) customerDeliveries++;
+    if (id) deliveredIds.add(id);
+    return { id };
+  };
+
+  const bridge = new Bridge(cfg(), { machine, waha });
+  await bridge.pollOutboxOnce(); // WAHA accepted; durable ACK response was lost
+  await bridge.pollOutboxOnce(); // same row reclaimed after its stale window
+
+  assert.equal(sendIds.length, 2, "the bridge must retry the unacknowledged row");
+  assert.match(sendIds[0], /^3EB0[0-9A-F]{16}$/);
+  assert.equal(sendIds[1], sendIds[0], "reclaim must reuse the provider message id");
+  assert.equal(customerDeliveries, 1, "WAHA can dedupe both attempts to one visible decision");
+  assert.ok(
+    calls.acks.some((ack) => ack.ok),
+    "the reclaimed row is eventually acknowledged",
+  );
+});
+
+test("WAHA text sends include a supplied provider message id", async () => {
+  let request;
+  const waha = new WahaClient(cfg(), async (url, options) => {
+    request = { url, body: JSON.parse(options.body) };
+    return { ok: true, json: async () => ({ id: request.body.id }) };
+  });
+  const id = "3EB02222222200004000";
+
+  await waha.sendText(CHAT, "Booking confirmed", id);
+
+  assert.equal(request.url, "http://waha.local:3000/api/sendText");
+  assert.equal(request.body.id, id);
+});
+
+test("WAHA image sends include a supplied provider message id", async () => {
+  let request;
+  const waha = new WahaClient(cfg(), async (url, options) => {
+    request = { url, body: options.body };
+    return { ok: true, json: async () => ({ id: request.body.get("id") }) };
+  });
+  const id = "3EB02222222200004000";
+
+  await waha.sendImage(CHAT, Buffer.from([1, 2, 3]), "image/png", "qr.png", "Pay", id);
+
+  assert.equal(request.url, "http://waha.local:3000/api/sendImage");
+  assert.equal(request.body.get("id"), id);
 });
 
 test("hold sweep enqueues one deduped notice per expired group", async () => {
@@ -360,9 +487,33 @@ test("processing failure does not complete the event (reclaimable)", async () =>
   };
   const bridge = new Bridge(cfg(), { machine, waha });
   const body = webhookPayload("hi");
-  // Must not throw to the webhook layer beyond logging.
-  await bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) });
+  await assert.rejects(
+    () => bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) }),
+    /state put failed/,
+  );
   assert.equal(calls.completes.length, 0, "failed processing must leave event uncompleted");
+  assert.deepEqual(calls.releases, ["m-1"]);
+});
+
+test("exhausted state conflicts leave an accepted event reclaimable", async () => {
+  const { calls, machine, waha } = makeMocks();
+  let puts = 0;
+  machine.putState = async () => {
+    puts++;
+    return { ok: true, conflict: true };
+  };
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("1");
+
+  await assert.rejects(
+    () => bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) }),
+    /state conflict retry exhausted/,
+  );
+
+  assert.equal(puts, 2, "the bounded conflict retry budget is exhausted");
+  assert.equal(calls.sends.length, 0);
+  assert.equal(calls.completes.length, 0, "conflicted event must remain reclaimable");
+  assert.deepEqual(calls.releases, ["m-1"]);
 });
 
 test("version conflict re-reads and re-runs the transition once", async () => {
@@ -378,6 +529,323 @@ test("version conflict re-reads and re-runs the transition once", async () => {
   await bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) });
   assert.equal(calls.claims.length, 1, "event claimed once");
   assert.ok(calls.state.length >= 1, "eventually persisted");
+});
+
+test("failed post-claim state save sends nothing and leaves the event reclaimable", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.getState = async () => ({
+    ok: true,
+    conversation: {
+      chat_id: CHAT,
+      state: "SUMMARY",
+      data: {
+        checkIn: "2026-09-01",
+        checkOut: "2026-09-03",
+        guests: 2,
+        comforter: false,
+        cabinType: "Queen",
+        guestName: "Ali",
+        phone: "601155007204",
+        prepared: { cabinId: "c-1", subtotal: 160, comforterTotal: 0 },
+      },
+      lang: "en",
+      failure_count: 0,
+      booking_group_id: null,
+      version: 3,
+    },
+    draft: null,
+  });
+  const snapshots = [];
+  machine.putState = async (snapshot) => {
+    snapshots.push(structuredClone(snapshot));
+    return snapshot.state === "AWAIT_PROOF"
+      ? { ok: false, error: "db down" }
+      : { ok: true, conflict: false, version: snapshot.version + 1 };
+  };
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("1");
+
+  await assert.rejects(
+    () => bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) }),
+    /post-claim state put failed/,
+  );
+
+  assert.equal(snapshots.at(-1).state, "AWAIT_PROOF", "the failed save is the final frame");
+  assert.equal(calls.sends.length, 0, "payment instructions require durable AWAIT_PROOF state");
+  assert.equal(
+    calls.completes.length,
+    0,
+    "failed post-claim save must leave the event reclaimable",
+  );
+});
+
+test("failed post-prepare state save sends nothing and leaves the event reclaimable", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.getState = async () => ({
+    ok: true,
+    conversation: {
+      chat_id: CHAT,
+      state: "PHONE",
+      data: {
+        checkIn: "2026-09-01",
+        checkOut: "2026-09-03",
+        guests: 2,
+        comforter: false,
+        cabinType: "Queen",
+        guestName: "Ali",
+      },
+      lang: "en",
+      failure_count: 0,
+      booking_group_id: null,
+      version: 7,
+    },
+    draft: null,
+  });
+  const snapshots = [];
+  machine.putState = async (snapshot) => {
+    snapshots.push(structuredClone(snapshot));
+    return snapshot.data.prepared
+      ? { ok: false, error: "db down" }
+      : { ok: true, conflict: false, version: snapshot.version + 1 };
+  };
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("same");
+
+  await assert.rejects(
+    () => bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) }),
+    /post-prepare state put failed/,
+  );
+
+  assert.ok(snapshots.at(-1).data.prepared, "the failed save carries the prepared quote");
+  assert.equal(calls.sends.length, 0, "summary copy requires a durable prepared quote");
+  assert.equal(
+    calls.completes.length,
+    0,
+    "failed post-prepare save must leave the event reclaimable",
+  );
+});
+
+test("failed post-proof state save sends nothing and leaves the event reclaimable", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.getState = async () => ({
+    ok: true,
+    conversation: {
+      chat_id: CHAT,
+      state: "AWAIT_PROOF",
+      data: { booking: { reference: "RJW-1" } },
+      lang: "en",
+      failure_count: 0,
+      booking_group_id: "g-1",
+      version: 9,
+    },
+    draft: { payment_reference: "RJW-1", status: "pending_payment" },
+  });
+  machine.putState = async () => ({ ok: false, error: "db down" });
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("", {
+    hasMedia: true,
+    media: { url: "http://waha/files/m-proof", mimetype: "image/jpeg" },
+  });
+  const oldFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true, status: 200 });
+  try {
+    await assert.rejects(
+      () => bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) }),
+      /post-proof state put failed/,
+    );
+  } finally {
+    globalThis.fetch = oldFetch;
+  }
+
+  assert.equal(calls.sends.length, 0, "proof receipt copy requires a durable frame");
+  assert.equal(
+    calls.completes.length,
+    0,
+    "failed post-proof save must leave the event reclaimable",
+  );
+  assert.deepEqual(calls.releases, ["m-1"]);
+});
+
+test("proof result state conflict sends nothing", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.putState = async () => ({ ok: true, conflict: true });
+  const bridge = new Bridge(cfg(), { machine, waha });
+
+  await assert.rejects(
+    () =>
+      bridge.runProofStep(
+        { chatId: CHAT, messageId: "m-proof-conflict", media: null },
+        {
+          chatId: CHAT,
+          state: "AWAIT_PROOF",
+          data: { booking: { reference: "RJW-1" } },
+          lang: "en",
+          failureCount: 0,
+          bookingGroupId: "g-1",
+          version: 9,
+        },
+      ),
+    /post-proof state conflict/,
+  );
+
+  assert.equal(calls.sends.length, 0);
+});
+
+test("prepare result persists one final frame against the read version", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.getState = async () => ({
+    ok: true,
+    conversation: {
+      chat_id: CHAT,
+      state: "PHONE",
+      data: {
+        checkIn: "2026-09-01",
+        checkOut: "2026-09-03",
+        guests: 2,
+        comforter: false,
+        cabinType: "Queen",
+        guestName: "Ali",
+      },
+      lang: "en",
+      failure_count: 0,
+      booking_group_id: null,
+      version: 7,
+    },
+    draft: null,
+  });
+  const versions = [];
+  machine.putState = async (snapshot) => {
+    versions.push(snapshot.version);
+    return { ok: true, conflict: false, version: snapshot.version + 1 };
+  };
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("same");
+
+  await bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) });
+
+  assert.deepEqual(versions, [7]);
+  assert.equal(calls.sends.length, 1);
+  assert.deepEqual(calls.completes, ["m-1"]);
+});
+
+test("reclaimed claim event resumes its existing hold without claiming twice", async () => {
+  const { calls, machine, waha } = makeMocks();
+  let conversation = {
+    chat_id: CHAT,
+    state: "SUMMARY",
+    data: {
+      checkIn: "2026-09-01",
+      checkOut: "2026-09-03",
+      guests: 2,
+      comforter: false,
+      cabinType: "Queen",
+      guestName: "Ali",
+      phone: "601155007204",
+      prepared: { cabinId: "c-1", subtotal: 160, comforterTotal: 0 },
+    },
+    lang: "en",
+    failure_count: 0,
+    booking_group_id: null,
+    version: 3,
+  };
+  let draft = null;
+  let claimCalls = 0;
+  let failAwaitProofSave = true;
+  machine.getState = async () => ({
+    ok: true,
+    conversation: structuredClone(conversation),
+    draft: structuredClone(draft),
+  });
+  machine.claimHold = async () => {
+    claimCalls++;
+    draft = {
+      id: "b-1",
+      booking_group_id: "g-1",
+      payment_reference: "RJW-1",
+      hold_expires_at: "x",
+      total_amount: 160,
+      deposit_amount: 50,
+      status: "pending_payment",
+    };
+    return {
+      ok: true,
+      claimed: true,
+      booking: {
+        booking_id: draft.id,
+        booking_group_id: draft.booking_group_id,
+        payment_reference: draft.payment_reference,
+        hold_expires_at: draft.hold_expires_at,
+        total_amount: draft.total_amount,
+        deposit_amount: draft.deposit_amount,
+      },
+    };
+  };
+  machine.putState = async (snapshot) => {
+    if (snapshot.state === "AWAIT_PROOF" && failAwaitProofSave) {
+      failAwaitProofSave = false;
+      return { ok: false, error: "db down" };
+    }
+    conversation = {
+      chat_id: snapshot.chatId,
+      state: snapshot.state,
+      data: structuredClone(snapshot.data),
+      lang: snapshot.lang,
+      failure_count: snapshot.failureCount,
+      booking_group_id: snapshot.bookingGroupId,
+      version: snapshot.version + 1,
+    };
+    return { ok: true, conflict: false, version: conversation.version };
+  };
+  const bridge = new Bridge(cfg(), { machine, waha });
+  const body = webhookPayload("1");
+
+  await assert.rejects(
+    () => bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) }),
+    /post-claim state put failed/,
+  );
+  assert.equal(calls.completes.length, 0, "the failed first attempt remains reclaimable");
+  await bridge.handleWebhook(body, { "x-webhook-hmac": sign(body) });
+
+  assert.equal(claimCalls, 1, "the durable hold is reused on reclaim");
+  assert.equal(calls.sends.length, 1, "payment instructions become visible once");
+  assert.deepEqual(calls.completes, ["m-1"]);
+  assert.equal(conversation.state, "AWAIT_PROOF");
+});
+
+test("claim result state conflict sends nothing", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.putState = async () => ({ ok: true, conflict: true });
+  const bridge = new Bridge(cfg(), { machine, waha });
+
+  await assert.rejects(
+    () =>
+      bridge.runHoldStep(
+        { chatId: CHAT, messageId: "m-claim-conflict" },
+        summaryConversation(),
+        "claim",
+      ),
+    /post-claim state conflict/,
+  );
+
+  assert.equal(calls.sends.length, 0);
+});
+
+test("prepare result state conflict sends nothing", async () => {
+  const { calls, machine, waha } = makeMocks();
+  machine.putState = async () => ({ ok: true, conflict: true });
+  const bridge = new Bridge(cfg(), { machine, waha });
+
+  await assert.rejects(
+    () =>
+      bridge.runHoldStep(
+        { chatId: CHAT, messageId: "m-prepare-conflict" },
+        summaryConversation(),
+        "prepare",
+      ),
+    /post-prepare state conflict/,
+  );
+
+  assert.equal(calls.sends.length, 0);
 });
 
 test("claim success without approved settings sends no fabricated bank details", async () => {
@@ -454,6 +922,7 @@ test("claim success with approved settings sends the settings QR image", async (
     const img = calls.sends.find((s) => s.type === "image");
     assert.ok(img, "settings QR image must be sent");
     assert.equal(img.mime, "image/png");
+    assert.match(img.id, /^3EB0[0-9A-F]{16}$/, "QR sends use a stable provider id");
     assert.match(img.caption, /Maybank 1234567890/);
     assert.match(img.caption, /RJW-1/);
   } finally {
