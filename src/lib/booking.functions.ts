@@ -131,6 +131,54 @@ async function groupIdFor(admin: any, bookingId: string): Promise<string> {
   return (data?.booking_group_id as string) ?? bookingId;
 }
 
+// WA bridge (MNC-961): staff decisions on a WA-source booking become outbox
+// rows; the VPS bridge polls wa_outbox and delivers them through WAHA.
+// Duplicate decisions collapse on dedupe_key (UNIQUE) — never double-message.
+async function enqueueWaOutcome(
+  admin: any,
+  chatId: string,
+  kind: string,
+  dedupeKey: string,
+  payload: Record<string, unknown>,
+) {
+  await admin
+    .from("wa_outbox")
+    .insert({ chat_id: chatId, kind, dedupe_key: dedupeKey, payload, status: "pending" });
+}
+
+// Look up the WA chat for a booking group and enqueue a staff-decision
+// message for delivery by the bridge. No-op (best effort) for web bookings
+// and when the outbox insert conflicts on a duplicate decision.
+async function notifyWaOutcome(admin: any, groupId: string, outcome: "confirmed" | "resubmit") {
+  try {
+    const { data: rows } = await admin
+      .from("booking_requests")
+      .select("source, wa_chat_id, guest_name, payment_reference, check_in, check_out, room_type, total_amount, deposit_amount")
+      .eq("booking_group_id", groupId)
+      .order("created_at", { ascending: true });
+    const lead = rows?.[0];
+    if (lead?.source !== "wa" || !lead.wa_chat_id) return;
+    const payload = {
+      guest_name: lead.guest_name,
+      reference: lead.payment_reference ?? groupId.slice(0, 8),
+      check_in: lead.check_in,
+      check_out: lead.check_out,
+      room_type: lead.room_type,
+      total_amount: Number(lead.total_amount ?? 0),
+      deposit_amount: Number(lead.deposit_amount ?? 50),
+    };
+    await enqueueWaOutcome(
+      admin,
+      lead.wa_chat_id,
+      outcome === "confirmed" ? "staff-confirmed" : "staff-resubmit",
+      `${outcome}-${groupId}`,
+      payload,
+    );
+  } catch (e) {
+    console.error(`[notifyWaOutcome] ${outcome} enqueue failed`, e);
+  }
+}
+
 const createSchema = z.object({
   items: z
     .array(
@@ -771,6 +819,7 @@ export const confirmBooking = createServerFn({ method: "POST" })
         })
         .eq("booking_group_id", gid);
       if (error) throw new Error(error.message);
+      await notifyWaOutcome(supabaseAdmin, gid, "confirmed");
       return { ok: true, fullPayment: true };
     }
 
@@ -807,6 +856,7 @@ export const confirmBooking = createServerFn({ method: "POST" })
       })
       .eq("booking_group_id", gid);
     if (error) throw new Error(error.message);
+    await notifyWaOutcome(supabaseAdmin, gid, "confirmed");
     return { ok: true };
   });
 
@@ -821,6 +871,37 @@ export const rejectBooking = createServerFn({ method: "POST" })
     if (!isAdmin.data) throw new Error("Forbidden");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const gid = await groupIdFor(supabaseAdmin, data.bookingId);
+
+    // WA-source bookings reject as "resubmit": reopen payment with a fresh
+    // 30-minute hold and ask the guest for new proof. Web rows keep the
+    // original cancel semantics.
+    const { data: waInfo } = await supabaseAdmin
+      .from("booking_requests")
+      .select("source, wa_chat_id")
+      .eq("booking_group_id", gid)
+      .limit(1);
+    const isWa = waInfo?.[0]?.source === "wa";
+
+    if (isWa) {
+      const nowIso = new Date().toISOString();
+      const { error } = await supabaseAdmin
+        .from("booking_requests")
+        .update({
+          status: "pending_payment",
+          payment_proof_path: null,
+          hold_expires_at: new Date(Date.now() + 30 * 60_000).toISOString(),
+        })
+        .eq("booking_group_id", gid);
+      if (error) throw new Error(error.message);
+      await supabaseAdmin
+        .from("wa_proofs")
+        .update({ status: "rejected", reviewed_by: context.userId, reviewed_at: nowIso })
+        .eq("booking_group_id", gid)
+        .eq("status", "stored");
+      await notifyWaOutcome(supabaseAdmin, gid, "resubmit");
+      return { ok: true };
+    }
+
     const { error } = await supabaseAdmin
       .from("booking_requests")
       .update({ status: "cancelled" })
