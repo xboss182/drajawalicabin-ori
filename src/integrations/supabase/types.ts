@@ -167,6 +167,7 @@ export type Database = {
           phone: string
           relationship?: string | null
           room_type: string
+          source?: string
           status?: Database["public"]["Enums"]["booking_status"]
           stripe_balance_payment_intent_id?: string | null
           stripe_balance_session_id?: string | null
@@ -176,6 +177,7 @@ export type Database = {
           total_amount?: number | null
           vehicle_number?: string | null
           vehicle_type?: string | null
+          wa_chat_id?: string | null
         }
         Update: {
           actual_check_out_at?: string | null
@@ -806,42 +808,34 @@ export type Database = {
       }
       wa_admin_audit: {
         Row: {
-          action: string;
-          actor_id: string | null;
-          booking_group_id: string | null;
-          chat_id: string | null;
-          created_at: string;
-          detail: Json;
-          id: string;
-        };
+          action: string
+          actor_id: string | null
+          booking_group_id: string | null
+          chat_id: string | null
+          created_at: string
+          detail: Json
+          id: string
+        }
         Insert: {
-          action: string;
-          actor_id?: string | null;
-          booking_group_id?: string | null;
-          chat_id?: string | null;
-          created_at?: string;
-          detail?: Json;
-          id?: string;
-        };
+          action: string
+          actor_id?: string | null
+          booking_group_id?: string | null
+          chat_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+        }
         Update: {
-          action?: string;
-          actor_id?: string | null;
-          booking_group_id?: string | null;
-          chat_id?: string | null;
-          created_at?: string;
-          detail?: Json;
-          id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "wa_admin_audit_actor_id_fkey";
-            columns: ["actor_id"];
-            isOneToOne: false;
-            referencedRelation: "users";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
+          action?: string
+          actor_id?: string | null
+          booking_group_id?: string | null
+          chat_id?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+        }
+        Relationships: []
+      }
       wa_conversations: {
         Row: {
           booking_group_id: string | null
@@ -1008,40 +1002,32 @@ export type Database = {
           status?: string
           wa_message_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "wa_proofs_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       wa_runtime_status: {
         Row: {
-          id: boolean;
-          last_error: string | null;
-          observed_at: string;
-          session: string | null;
-          state: string;
-        };
+          id: boolean
+          last_error: string | null
+          observed_at: string
+          session: string | null
+          state: string
+        }
         Insert: {
-          id?: boolean;
-          last_error?: string | null;
-          observed_at?: string;
-          session?: string | null;
-          state: string;
-        };
+          id?: boolean
+          last_error?: string | null
+          observed_at?: string
+          session?: string | null
+          state: string
+        }
         Update: {
-          id?: boolean;
-          last_error?: string | null;
-          observed_at?: string;
-          session?: string | null;
-          state?: string;
-        };
-        Relationships: [];
-      };
+          id?: boolean
+          last_error?: string | null
+          observed_at?: string
+          session?: string | null
+          state?: string
+        }
+        Relationships: []
+      }
       wa_settings: {
         Row: {
           hold_minutes: number
@@ -1070,15 +1056,7 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "wa_settings_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -1143,49 +1121,49 @@ export type Database = {
       wa_claim_hold: {
         Args: {
           _cabin_id: string
+          _chat_id: string
           _check_in: string
           _check_out: string
           _comforter: boolean
-          _guests: number
-          _guest_name: string
-          _phone: string
-          _chat_id: string
-          _subtotal: number
           _comforter_total: number
-          _discount_id?: string
-          _discount_code?: string
           _discount_amount?: number
+          _discount_code?: string
+          _discount_id?: string
+          _guest_name: string
+          _guests: number
+          _phone: string
+          _subtotal: number
         }
         Returns: {
-          booking_id: string
-          booking_group_id: string
-          guest_token: string
-          payment_reference: string
-          nights: number
-          subtotal: number
-          comforter_total: number
-          total_amount: number
-          deposit_amount: number
           balance_amount: number
-          hold_expires_at: string
+          booking_group_id: string
+          booking_id: string
+          comforter_total: number
           created_at: string
+          deposit_amount: number
+          guest_token: string
+          hold_expires_at: string
+          nights: number
+          payment_reference: string
+          subtotal: number
+          total_amount: number
         }[]
       }
       wa_expire_stale_holds: {
-        Args: Record<string, never>
+        Args: never
         Returns: {
-          chat_id: string
           booking_group_id: string
+          chat_id: string
         }[]
       }
       wa_outbox_claim: {
         Args: { _batch?: number }
         Returns: {
-          id: string
+          attempts: number
           chat_id: string
+          id: string
           kind: string
           payload: Json
-          attempts: number
         }[]
       }
     }
