@@ -20,13 +20,11 @@ import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as ManageBookingRouteImport } from './routes/manage-booking'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as WhatsappStoreRouteImport } from './routes/whatsapp-store'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
-import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -41,7 +39,7 @@ import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminStatsRouteImport } from './routes/_authenticated/admin.stats'
 import { Route as AuthenticatedAdminStoreRouteImport } from './routes/_authenticated/admin.store'
 import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
-import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as LovableEmailEventsRouteImport } from './routes/lovable/email/events'
 import { Route as AuthenticatedAdminInvoiceIdRouteImport } from './routes/_authenticated/admin.invoice.$id'
 import { Route as ApiMachineWaAgentRouteImport } from './routes/api/machine/wa/agent'
 import { Route as ApiPublicAvailabilityTakenDatesRouteImport } from './routes/api/public/availability/taken-dates'
@@ -51,9 +49,7 @@ import { Route as ApiPublicHooksSendBalanceRemindersRouteImport } from './routes
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicRatesActiveSetRouteImport } from './routes/api/public/rates/active-set'
 import { Route as ApiPublicStoreConfigRouteImport } from './routes/api/public/store/config'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as ApiMachineWaEventsClaimRouteImport } from './routes/api/machine/wa/events/claim'
 import { Route as ApiMachineWaEventsCompleteRouteImport } from './routes/api/machine/wa/events/complete'
 import { Route as ApiMachineWaHoldsClaimRouteImport } from './routes/api/machine/wa/holds/claim'
@@ -123,11 +119,6 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UnsubscribeRoute = UnsubscribeRouteImport.update({
-  id: '/unsubscribe',
-  path: '/unsubscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WhatsappStoreRoute = WhatsappStoreRouteImport.update({
   id: '/whatsapp-store',
   path: '/whatsapp-store',
@@ -154,11 +145,6 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/return',
   path: '/return',
   getParentRoute: () => CheckoutRoute,
-} as any)
-const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
-  id: '/email/unsubscribe',
-  path: '/email/unsubscribe',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   id: '/.lovable/oauth/consent',
@@ -238,9 +224,9 @@ const AuthenticatedAdminWhatsappRoute =
     path: '/whatsapp',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
-  id: '/lovable/email/suppression',
-  path: '/lovable/email/suppression',
+const LovableEmailEventsRoute = LovableEmailEventsRouteImport.update({
+  id: '/lovable/email/events',
+  path: '/lovable/email/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminInvoiceIdRoute =
@@ -294,22 +280,10 @@ const ApiPublicStoreConfigRoute = ApiPublicStoreConfigRouteImport.update({
   path: '/api/public/store/config',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const LovableEmailTransactionalPreviewRoute =
   LovableEmailTransactionalPreviewRouteImport.update({
     id: '/lovable/email/transactional/preview',
     path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailTransactionalSendRoute =
-  LovableEmailTransactionalSendRouteImport.update({
-    id: '/lovable/email/transactional/send',
-    path: '/lovable/email/transactional/send',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiMachineWaEventsClaimRoute = ApiMachineWaEventsClaimRouteImport.update({
@@ -401,13 +375,11 @@ export interface FileRoutesByFullPath {
   '/manage-booking': typeof ManageBookingRoute
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/unsubscribe': typeof UnsubscribeRoute
   '/whatsapp-store': typeof WhatsappStoreRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
-  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
@@ -421,7 +393,7 @@ export interface FileRoutesByFullPath {
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/admin/store': typeof AuthenticatedAdminStoreRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/machine/wa/agent': typeof ApiMachineWaAgentRoute
@@ -432,9 +404,7 @@ export interface FileRoutesByFullPath {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/rates/active-set': typeof ApiPublicRatesActiveSetRoute
   '/api/public/store/config': typeof ApiPublicStoreConfigRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/api/machine/wa/events/claim': typeof ApiMachineWaEventsClaimRoute
   '/api/machine/wa/events/complete': typeof ApiMachineWaEventsCompleteRoute
   '/api/machine/wa/holds/claim': typeof ApiMachineWaHoldsClaimRoute
@@ -461,12 +431,10 @@ export interface FileRoutesByTo {
   '/manage-booking': typeof ManageBookingRoute
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/unsubscribe': typeof UnsubscribeRoute
   '/whatsapp-store': typeof WhatsappStoreRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/checkout/return': typeof CheckoutReturnRoute
-  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/admin/cabins': typeof AuthenticatedAdminCabinsRoute
@@ -480,7 +448,7 @@ export interface FileRoutesByTo {
   '/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/admin/store': typeof AuthenticatedAdminStoreRoute
   '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/machine/wa/agent': typeof ApiMachineWaAgentRoute
@@ -491,9 +459,7 @@ export interface FileRoutesByTo {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/rates/active-set': typeof ApiPublicRatesActiveSetRoute
   '/api/public/store/config': typeof ApiPublicStoreConfigRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/api/machine/wa/events/claim': typeof ApiMachineWaEventsClaimRoute
   '/api/machine/wa/events/complete': typeof ApiMachineWaEventsCompleteRoute
   '/api/machine/wa/holds/claim': typeof ApiMachineWaHoldsClaimRoute
@@ -522,13 +488,11 @@ export interface FileRoutesById {
   '/manage-booking': typeof ManageBookingRoute
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/unsubscribe': typeof UnsubscribeRoute
   '/whatsapp-store': typeof WhatsappStoreRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/checkout/return': typeof CheckoutReturnRoute
-  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/admin/cabins': typeof AuthenticatedAdminCabinsRoute
@@ -542,7 +506,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/stats': typeof AuthenticatedAdminStatsRoute
   '/_authenticated/admin/store': typeof AuthenticatedAdminStoreRoute
   '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
-  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/lovable/email/events': typeof LovableEmailEventsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/invoice/$id': typeof AuthenticatedAdminInvoiceIdRoute
   '/api/machine/wa/agent': typeof ApiMachineWaAgentRoute
@@ -553,9 +517,7 @@ export interface FileRoutesById {
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/api/public/rates/active-set': typeof ApiPublicRatesActiveSetRoute
   '/api/public/store/config': typeof ApiPublicStoreConfigRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/api/machine/wa/events/claim': typeof ApiMachineWaEventsClaimRoute
   '/api/machine/wa/events/complete': typeof ApiMachineWaEventsCompleteRoute
   '/api/machine/wa/holds/claim': typeof ApiMachineWaHoldsClaimRoute
@@ -584,13 +546,11 @@ export interface FileRouteTypes {
     | '/manage-booking'
     | '/mcp'
     | '/sitemap.xml'
-    | '/unsubscribe'
     | '/whatsapp-store'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/checkout/return'
-    | '/email/unsubscribe'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/cabins'
@@ -604,7 +564,7 @@ export interface FileRouteTypes {
     | '/admin/stats'
     | '/admin/store'
     | '/admin/whatsapp'
-    | '/lovable/email/suppression'
+    | '/lovable/email/events'
     | '/admin/'
     | '/admin/invoice/$id'
     | '/api/machine/wa/agent'
@@ -615,9 +575,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/rates/active-set'
     | '/api/public/store/config'
-    | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
     | '/api/machine/wa/events/claim'
     | '/api/machine/wa/events/complete'
     | '/api/machine/wa/holds/claim'
@@ -644,12 +602,10 @@ export interface FileRouteTypes {
     | '/manage-booking'
     | '/mcp'
     | '/sitemap.xml'
-    | '/unsubscribe'
     | '/whatsapp-store'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/checkout/return'
-    | '/email/unsubscribe'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/admin/cabins'
@@ -663,7 +619,7 @@ export interface FileRouteTypes {
     | '/admin/stats'
     | '/admin/store'
     | '/admin/whatsapp'
-    | '/lovable/email/suppression'
+    | '/lovable/email/events'
     | '/admin'
     | '/admin/invoice/$id'
     | '/api/machine/wa/agent'
@@ -674,9 +630,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/rates/active-set'
     | '/api/public/store/config'
-    | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
     | '/api/machine/wa/events/claim'
     | '/api/machine/wa/events/complete'
     | '/api/machine/wa/holds/claim'
@@ -704,13 +658,11 @@ export interface FileRouteTypes {
     | '/manage-booking'
     | '/mcp'
     | '/sitemap.xml'
-    | '/unsubscribe'
     | '/whatsapp-store'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/checkout/return'
-    | '/email/unsubscribe'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/admin/cabins'
@@ -724,7 +676,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/stats'
     | '/_authenticated/admin/store'
     | '/_authenticated/admin/whatsapp'
-    | '/lovable/email/suppression'
+    | '/lovable/email/events'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/invoice/$id'
     | '/api/machine/wa/agent'
@@ -735,9 +687,7 @@ export interface FileRouteTypes {
     | '/api/public/payments/webhook'
     | '/api/public/rates/active-set'
     | '/api/public/store/config'
-    | '/lovable/email/queue/process'
     | '/lovable/email/transactional/preview'
-    | '/lovable/email/transactional/send'
     | '/api/machine/wa/events/claim'
     | '/api/machine/wa/events/complete'
     | '/api/machine/wa/holds/claim'
@@ -766,14 +716,12 @@ export interface RootRouteChildren {
   ManageBookingRoute: typeof ManageBookingRoute
   McpRoute: typeof McpRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  UnsubscribeRoute: typeof UnsubscribeRoute
   WhatsappStoreRoute: typeof WhatsappStoreRoute
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
-  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
-  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  LovableEmailEventsRoute: typeof LovableEmailEventsRoute
   ApiMachineWaAgentRoute: typeof ApiMachineWaAgentRoute
   ApiPublicAvailabilityTakenDatesRoute: typeof ApiPublicAvailabilityTakenDatesRoute
   ApiPublicExportsBackupDotcsvRoute: typeof ApiPublicExportsBackupDotcsvRoute
@@ -782,9 +730,7 @@ export interface RootRouteChildren {
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   ApiPublicRatesActiveSetRoute: typeof ApiPublicRatesActiveSetRoute
   ApiPublicStoreConfigRoute: typeof ApiPublicStoreConfigRoute
-  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
-  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
   ApiMachineWaEventsClaimRoute: typeof ApiMachineWaEventsClaimRoute
   ApiMachineWaEventsCompleteRoute: typeof ApiMachineWaEventsCompleteRoute
   ApiMachineWaHoldsClaimRoute: typeof ApiMachineWaHoldsClaimRoute
@@ -880,13 +826,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/unsubscribe': {
-      id: '/unsubscribe'
-      path: '/unsubscribe'
-      fullPath: '/unsubscribe'
-      preLoaderRoute: typeof UnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/whatsapp-store': {
       id: '/whatsapp-store'
       path: '/whatsapp-store'
@@ -921,13 +860,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/checkout/return'
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof CheckoutRoute
-    }
-    '/email/unsubscribe': {
-      id: '/email/unsubscribe'
-      path: '/email/unsubscribe'
-      fullPath: '/email/unsubscribe'
-      preLoaderRoute: typeof EmailUnsubscribeRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/.lovable/oauth/consent': {
       id: '/.lovable/oauth/consent'
@@ -1027,11 +959,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWhatsappRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/lovable/email/suppression': {
-      id: '/lovable/email/suppression'
-      path: '/lovable/email/suppression'
-      fullPath: '/lovable/email/suppression'
-      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+    '/lovable/email/events': {
+      id: '/lovable/email/events'
+      path: '/lovable/email/events'
+      fullPath: '/lovable/email/events'
+      preLoaderRoute: typeof LovableEmailEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/invoice/$id': {
@@ -1097,25 +1029,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStoreConfigRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/lovable/email/transactional/preview': {
       id: '/lovable/email/transactional/preview'
       path: '/lovable/email/transactional/preview'
       fullPath: '/lovable/email/transactional/preview'
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/transactional/send': {
-      id: '/lovable/email/transactional/send'
-      path: '/lovable/email/transactional/send'
-      fullPath: '/lovable/email/transactional/send'
-      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/machine/wa/events/claim': {
@@ -1289,15 +1207,13 @@ const rootRouteChildren: RootRouteChildren = {
   ManageBookingRoute: ManageBookingRoute,
   McpRoute: McpRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  UnsubscribeRoute: UnsubscribeRoute,
   WhatsappStoreRoute: WhatsappStoreRoute,
   Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
-  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
-  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  LovableEmailEventsRoute: LovableEmailEventsRoute,
   ApiMachineWaAgentRoute: ApiMachineWaAgentRoute,
   ApiPublicAvailabilityTakenDatesRoute: ApiPublicAvailabilityTakenDatesRoute,
   ApiPublicExportsBackupDotcsvRoute: ApiPublicExportsBackupDotcsvRoute,
@@ -1307,9 +1223,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   ApiPublicRatesActiveSetRoute: ApiPublicRatesActiveSetRoute,
   ApiPublicStoreConfigRoute: ApiPublicStoreConfigRoute,
-  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
-  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
   ApiMachineWaEventsClaimRoute: ApiMachineWaEventsClaimRoute,
   ApiMachineWaEventsCompleteRoute: ApiMachineWaEventsCompleteRoute,
   ApiMachineWaHoldsClaimRoute: ApiMachineWaHoldsClaimRoute,
